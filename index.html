@@ -68,62 +68,13 @@
 
 <h1>Password Generator</h1>
 <div class="passwords" id="passwords"></div>
-<button id="regenerate" onclick="generate()">Regenerate</button>
+<button id="regenerate">Regenerate</button>
 
 <footer>
   <a href="https://github.com/fabian20ro/password-generator">Source Code</a>
 </footer>
 
-<script>
-const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-const LENGTHS = [23, 24, 25, 26, 27];
-
-function secureRandomPassword(len) {
-  const buf = new Uint32Array(len);
-  crypto.getRandomValues(buf);
-  let pw = "";
-  for (let i = 0; i < len; i++) {
-    pw += CHARS[buf[i] % CHARS.length];
-  }
-  return pw;
-}
-
-function copyToClipboard(text, btn) {
-  navigator.clipboard.writeText(text).then(() => {
-    btn.textContent = "Copied!";
-    btn.classList.add("copied");
-    setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
-  });
-}
-
-function generate() {
-  const container = document.getElementById("passwords");
-  container.innerHTML = "";
-  LENGTHS.forEach(len => {
-    const pw = secureRandomPassword(len);
-    const row = document.createElement("div");
-    row.className = "row";
-
-    const lenSpan = document.createElement("span");
-    lenSpan.className = "len";
-    lenSpan.textContent = len;
-
-    const code = document.createElement("code");
-    code.textContent = pw;
-
-    const btn = document.createElement("button");
-    btn.textContent = "Copy";
-    btn.onclick = () => copyToClipboard(pw, btn);
-
-    row.appendChild(lenSpan);
-    row.appendChild(code);
-    row.appendChild(btn);
-    container.appendChild(row);
-  });
-}
-
-generate();
-</script>
+<script type="module" src="/src/main.ts"></script>
 
 </body>
 </html>

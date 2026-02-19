@@ -1,5 +1,5 @@
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-export const LENGTHS = [23, 24, 25, 26, 27] as const;
+export const LENGTHS = [23, 24, 25, 26, 27, 28, 29, 30, 31, 32] as const;
 
 export function generatePassword(length: number): string {
   const buf = new Uint32Array(length);

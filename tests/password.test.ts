@@ -22,11 +22,11 @@ describe("generatePassword", () => {
 });
 
 describe("generateAll", () => {
-  it("returns exactly 5 passwords", () => {
-    expect(generateAll()).toHaveLength(5);
+  it("returns exactly 10 passwords", () => {
+    expect(generateAll()).toHaveLength(10);
   });
 
-  it("returns passwords with lengths 23 through 27", () => {
+  it("returns passwords with lengths 23 through 32", () => {
     const passwords = generateAll();
     const lengths = passwords.map((pw) => pw.length);
     expect(lengths).toEqual([...LENGTHS]);
@@ -40,7 +40,7 @@ describe("generateAll", () => {
 });
 
 describe("LENGTHS", () => {
-  it("contains exactly [23, 24, 25, 26, 27]", () => {
-    expect([...LENGTHS]).toEqual([23, 24, 25, 26, 27]);
+  it("contains exactly [23, 24, 25, 26, 27, 28, 29, 30, 31, 32]", () => {
+    expect([...LENGTHS]).toEqual([23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
   });
 });

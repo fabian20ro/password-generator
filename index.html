@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src https://github.com; base-uri 'self'; form-action 'none';">
 <title>Password Generator</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -54,6 +55,7 @@
   }
   button:hover { background: #1a5276; }
   button.copied { background: #1e6f50; }
+  button.error { background: #6b2020; }
   .copy-btn {
     display: inline-flex;
     align-items: center;

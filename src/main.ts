@@ -11,6 +11,13 @@ function copyToClipboard(text: string, btn: HTMLButtonElement): void {
       btn.innerHTML = COPY_ICON;
       btn.classList.remove("copied");
     }, 1500);
+  }).catch(() => {
+    btn.title = "Clipboard access denied";
+    btn.classList.add("error");
+    setTimeout(() => {
+      btn.title = "";
+      btn.classList.remove("error");
+    }, 2000);
   });
 }
 

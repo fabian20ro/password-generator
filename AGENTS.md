@@ -1,19 +1,51 @@
-# Password Generator
+# AGENTS.md
 
-## Purpose
+> This file provides non-discoverable bootstrap context.
+> If the model can find it in the codebase, it does not belong here.
+> For corrections and patterns, see LESSONS_LEARNED.md.
 
-A simple web app that generates 5 cryptographically secure alphanumeric passwords (lengths 23–27) on page load, with a regenerate button and copy-to-clipboard support.
+## Constraints
 
-## Tech Stack
+- **GitHub Pages base path** — Vite `base: "/password-generator/"` is required for deployment. Changing or removing it breaks the live site at `fabian20ro.github.io/password-generator/`.
+- **Strict Content Security Policy** — The CSP in `index.html` is `default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src https://github.com; base-uri 'self'; form-action 'none'`. New scripts must be ES modules from same origin. External scripts and stylesheets are blocked.
+- **Rejection sampling is intentional** — The `while (val >= REJECT_THRESHOLD)` loop in `src/password.ts` eliminates modulo bias. This is deliberate security hardening — do not simplify or remove it.
+- **README is stale** — README says "5 passwords (23–27)" but the implementation generates 10 passwords (lengths 23–32). Treat the code as source of truth.
+- **Zero runtime dependencies by design** — `package.json` has only `devDependencies`. This is intentional. Do not add runtime dependencies.
 
-- **TypeScript** — source language
-- **Vite** — dev server and production bundler (configured with `base: "/password-generator/"` for GitHub Pages)
-- **Vitest** — test runner
-- **GitHub Actions** — CI/CD pipeline deploying to GitHub Pages via `.github/workflows/deploy.yml`
+## Legacy & Deprecated
 
-## Implementation
+<!-- Nothing currently deprecated. -->
 
-- `src/password.ts` — core logic: `generatePassword(length)` uses `crypto.getRandomValues()` (Web Crypto API) to pick characters from an alphanumeric charset; `generateAll()` maps over `LENGTHS` [23..27] to produce 5 passwords
-- `src/main.ts` — DOM layer: `generate()` builds password rows (length label, password text, copy button) and appends them to `#passwords`; called on page load and on regenerate button click
-- `index.html` — single-page UI with inline CSS; loads `main.ts` as an ES module
-- `tests/password.test.ts` — unit tests for password length, character set, uniqueness, and `generateAll()` output
+## Learning System
+
+This project uses a persistent learning system. Follow this workflow every session:
+
+1. **Start of task:** Read `LESSONS_LEARNED.md` — it contains validated corrections and patterns
+2. **During work:** Note any surprises or non-obvious discoveries
+3. **End of iteration:** Append to `ITERATION_LOG.md` with what happened
+4. **If insight is reusable and validated:** Also add to `LESSONS_LEARNED.md`
+5. **If same issue appears 2+ times in log:** Promote to `LESSONS_LEARNED.md`
+6. **If something surprised you:** Flag it to the developer — they'll decide whether to fix the codebase, update LESSONS_LEARNED, or adjust this file
+
+| File | Purpose | When to Write |
+|------|---------|---------------|
+| `LESSONS_LEARNED.md` | Curated, validated wisdom and corrections | When insight is reusable |
+| `ITERATION_LOG.md` | Raw session journal (append-only, never delete) | Every iteration (always) |
+
+Rules: Never delete from ITERATION_LOG. Obsolete lessons → Archive section in LESSONS_LEARNED (not deleted). Date-stamp everything YYYY-MM-DD. When in doubt: log it.
+
+### Periodic Maintenance
+This project's config files are audited periodically using `SETUP_AI_AGENT_CONFIG.md`.
+The maintenance protocol ensures all files stay lean and current. See that document's
+"Periodic Maintenance Protocol" section for the full audit procedure.
+
+## Sub-Agents
+
+Specialized agents in `.claude/agents/`. Invoke proactively — don't wait to be asked.
+
+| Agent | File | Invoke When |
+|-------|------|-------------|
+| Architect | `.claude/agents/architect.md` | System design, scalability, refactoring, ADRs |
+| Planner | `.claude/agents/planner.md` | Complex multi-step features — plan before coding |
+| UX Expert | `.claude/agents/ux-expert.md` | UI components, interaction patterns, accessibility |
+| Agent Creator | `.claude/agents/agent-creator.md` | Need a new specialized agent for a recurring task domain |

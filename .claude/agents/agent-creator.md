@@ -68,3 +68,4 @@ When creating a new agent, produce:
 - `architect.md` — system design, crypto logic, CSP, build config
 - `planner.md` — task breakdown, sequencing, risk identification
 - `ux-expert.md` — UI/UX, inline styles, DOM interactions, accessibility
+- `agent-creator.md` — meta-agent, designs new sub-agents

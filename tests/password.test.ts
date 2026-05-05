@@ -1,5 +1,46 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { generatePassword, generateAll, LENGTHS } from "../src/password";
+
+const originalCrypto = globalThis.crypto;
+
+function installCryptoMock(sequence: number[] = []): () => number {
+  const values = [...sequence];
+  let callCount = 0;
+
+  Object.defineProperty(globalThis, "crypto", {
+    configurable: true,
+    writable: true,
+    value: {
+      getRandomValues<T extends ArrayBufferView | null>(array: T): T {
+        callCount++;
+        if (array instanceof Uint32Array) {
+          for (let i = 0; i < array.length; i++) {
+            array[i] = values.length > 0 ? (values.shift() as number) : Math.floor(Math.random() * 4294967296);
+          }
+        }
+        return array;
+      },
+    },
+  });
+
+  return () => callCount;
+}
+
+function restoreCryptoMock(): void {
+  Object.defineProperty(globalThis, "crypto", {
+    configurable: true,
+    writable: true,
+    value: originalCrypto,
+  });
+}
+
+beforeEach(() => {
+  installCryptoMock();
+});
+
+afterEach(() => {
+  restoreCryptoMock();
+});
 
 describe("generatePassword", () => {
   it("returns a string of the requested length", () => {
@@ -47,24 +88,11 @@ describe("LENGTHS", () => {
 
 describe("rejection sampling", () => {
   it("rejects biased values and resamples", () => {
-    let callCount = 0;
-    const spy = vi.spyOn(crypto, "getRandomValues").mockImplementation((array) => {
-      const u32 = array as Uint32Array;
-      callCount++;
-      if (callCount === 1) {
-        // Initial buffer fill: use a value above the rejection threshold
-        u32[0] = 4294967295; // max Uint32, above threshold 4294967292
-      } else if (callCount === 2) {
-        // Resample call: return a valid value
-        u32[0] = 42;
-      }
-      return array;
-    });
-
+    const getCallCount = installCryptoMock([4294967295, 42]);
     const pw = generatePassword(1);
+
     expect(pw).toHaveLength(1);
     expect(pw).toMatch(/^[A-Za-z0-9]$/);
-    expect(callCount).toBe(2); // initial fill + one resample
-    spy.mockRestore();
+    expect(getCallCount()).toBe(2);
   });
 });

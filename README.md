@@ -4,6 +4,6 @@
 
 **[Live Site](https://fabian20ro.github.io/password-generator/)** 
 
-Simple password generator that creates 5 cryptographically secure passwords (23–27 characters).
+Simple password generator that creates 10 cryptographically secure passwords (23–32 characters).
 
 Uses the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues) (`crypto.getRandomValues()`) — the browser's built-in CSPRNG, equivalent to Java's `SecureRandom`.

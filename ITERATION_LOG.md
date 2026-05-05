@@ -28,4 +28,15 @@
 
 ---
 
+
+### [2026-05-05] Repo hardening + UX accessibility + docs alignment
+
+**Context:** Implement full quality plan from repo review (README accuracy, CSP tightening, accessibility, test resilience, security policy).
+**What happened:** Updated README to match actual output sizes. Replaced template SECURITY.md with actionable policy. Removed external badge image dependency and tightened CSP img-src to 'self'. Added status/live-region announcements and better button accessibility in UI. Refactored tests to explicitly mock Web Crypto and keep rejection-sampling validation deterministic.
+**Outcome:** Success. Build passes and tests pass with thread pool in current environment.
+**Insight:** Vitest default worker/fork mode can OOM in constrained containers; thread pool flag stabilizes execution without changing production code.
+**Promoted to Lessons Learned:** Yes
+
+---
+
 <!-- New entries above this line, most recent first -->

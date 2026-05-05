@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="max-age=180">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src https://github.com; base-uri 'self'; form-action 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self'; base-uri 'self'; form-action 'none';">
 <title>Password Generator</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -63,15 +63,27 @@
     justify-content: center;
     padding: 0.4rem;
     line-height: 0;
+    min-width: 44px;
+    min-height: 44px;
   }
-  #regenerate { margin-top: 1.2rem; font-size: 1rem; padding: 0.6rem 1.6rem; }
-  footer {
-    margin-top: 2rem;
-    font-size: 0.8rem;
-    color: #555;
+  #regenerate { margin-top: 1.2rem; font-size: 1rem; padding: 0.6rem 1.6rem; min-height: 44px; }
+  .status {
+    min-height: 1.5rem;
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+    color: #8fa7c5;
     text-align: center;
   }
-  footer a { color: #7a8baa; }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
 </style>
 </head>
 <body>
@@ -79,10 +91,12 @@
 <h1>Password Generator</h1>
 <div class="passwords" id="passwords"></div>
 <button id="regenerate">Regenerate</button>
+<p id="status" class="status" aria-live="polite"></p>
+<div id="sr-status" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
 <footer>
   <a href="https://github.com/fabian20ro/password-generator/actions/workflows/deploy.yml">
-    <img src="https://github.com/fabian20ro/password-generator/actions/workflows/deploy.yml/badge.svg" alt="Deploy to GitHub Pages">
+    Deployment workflow status
   </a>
 </footer>
 

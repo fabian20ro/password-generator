@@ -6,6 +6,7 @@ const REJECT_THRESHOLD = MAX_U32 - (MAX_U32 % CHARSET_LEN); // 4294967292
 export const LENGTHS = [23, 24, 25, 26, 27, 28, 29, 30, 31, 32] as const;
 
 export function generatePassword(length: number): string {
+  if (length <= 0) return "";
   const buf = new Uint32Array(length);
   crypto.getRandomValues(buf);
   let pw = "";

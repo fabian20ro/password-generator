@@ -1,4 +1,5 @@
 import { generatePassword, LENGTHS } from "./password";
+import { copyTextToClipboard } from "./clipboard";
 
 const COPY_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M3.5 10.5h-1a1.5 1.5 0 0 1-1.5-1.5v-6a1.5 1.5 0 0 1 1.5-1.5h6a1.5 1.5 0 0 1 1.5 1.5v1"/></svg>`;
 const CHECK_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.5 3.5 6.5-8"/></svg>`;
@@ -22,8 +23,10 @@ function resetButtonState(btn: HTMLButtonElement): void {
   btn.setAttribute("aria-label", DEFAULT_COPY_LABEL);
 }
 
-function copyToClipboard(text: string, btn: HTMLButtonElement): void {
-  navigator.clipboard.writeText(text).then(() => {
+async function copyToClipboard(text: string, btn: HTMLButtonElement): Promise<void> {
+  const copied = await copyTextToClipboard(navigator.clipboard, text);
+
+  if (copied) {
     btn.innerHTML = CHECK_ICON;
     btn.classList.remove("error");
     btn.classList.add("copied");
@@ -33,17 +36,18 @@ function copyToClipboard(text: string, btn: HTMLButtonElement): void {
     setTimeout(() => {
       resetButtonState(btn);
     }, 1500);
-  }).catch(() => {
-    btn.classList.remove("copied");
-    btn.classList.add("error");
-    btn.title = "Clipboard access denied";
-    btn.setAttribute("aria-label", ERROR_COPY_LABEL);
-    announceStatus("Copy failed. Clipboard access denied.");
+    return;
+  }
 
-    setTimeout(() => {
-      resetButtonState(btn);
-    }, 2000);
-  });
+  btn.classList.remove("copied");
+  btn.classList.add("error");
+  btn.title = "Clipboard access unavailable or denied";
+  btn.setAttribute("aria-label", ERROR_COPY_LABEL);
+  announceStatus("Copy failed. Clipboard access unavailable or denied.");
+
+  setTimeout(() => {
+    resetButtonState(btn);
+  }, 2000);
 }
 
 function generate(): void {

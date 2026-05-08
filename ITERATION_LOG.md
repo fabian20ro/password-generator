@@ -39,4 +39,14 @@
 
 ---
 
+### [2026-05-08] Clipboard fallback hardening
+
+**Context:** Improve password-generator copy flow with a low-risk usability fix.
+**What happened:** Added a small clipboard helper, taught the UI to treat missing clipboard support the same as a clipboard failure, and added focused unit coverage for success/failure/unavailable cases. Initial `npm test` failed because `vitest` was not installed in the fresh checkout; ran `npm ci` once, then reran tests and build successfully.
+**Outcome:** Success. UI behavior hardened, tests and build pass.
+**Insight:** Fresh checkouts in this repo may need `npm ci` before the first test run.
+**Promoted to Lessons Learned:** Yes
+
+---
+
 <!-- New entries above this line, most recent first -->

@@ -29,6 +29,8 @@ Obsolete lessons → Archive section at bottom (with date and reason). Never del
 
 ## Testing & Quality
 
+**[2026-05-08] Fresh checkout needs dependencies installed before test runs — On a clean clone in this repo, `npm test` can fail with `vitest: not found` until `npm ci` has populated `node_modules`. Install once before running the suite in unattended jobs.
+
 **[2026-05-05] Vitest pool mode in constrained containers — In low-memory CI/container runs, `vitest run` may fail via fork-worker OOM; `vitest run --pool=threads` is a stable fallback for this repo's test suite.
 
 ## Performance & Infrastructure

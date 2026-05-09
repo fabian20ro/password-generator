@@ -103,4 +103,11 @@ describe("rejection sampling", () => {
     expect(getCallCount()).toBe(2);
     expect(pw).toMatch(/^[A-Za-z0-9]$/);
   });
+
+  it("does not resample when val is just below REJECT_THRESHOLD", () => {
+    const getCallCount = installCryptoMock([REJECT_THRESHOLD - 1]);
+    const pw = generatePassword(1);
+    expect(getCallCount()).toBe(1);
+    expect(pw).toMatch(/^[A-Za-z0-9]$/);
+  });
 });

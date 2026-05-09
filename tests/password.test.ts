@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { generatePassword, generateAll, LENGTHS } from "../src/password";
+import { generatePassword, generateAll, LENGTHS, REJECT_THRESHOLD } from "../src/password";
 
 const originalCrypto = globalThis.crypto;
 
@@ -94,5 +94,13 @@ describe("rejection sampling", () => {
     expect(pw).toHaveLength(1);
     expect(pw).toMatch(/^[A-Za-z0-9]$/);
     expect(getCallCount()).toBe(2);
+  });
+
+  it("handles the exact REJECT_THRESHOLD boundary", () => {
+    // When val is exactly REJECT_THRESHOLD, it should trigger resampling
+    const getCallCount = installCryptoMock([REJECT_THRESHOLD, 42]);
+    const pw = generatePassword(1);
+    expect(getCallCount()).toBe(2);
+    expect(pw).toMatch(/^[A-Za-z0-9]$/);
   });
 });

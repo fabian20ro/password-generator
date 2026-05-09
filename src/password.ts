@@ -1,7 +1,7 @@
-const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-const CHARSET_LEN = CHARS.length;
+export const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+export const CHARSET_LEN = CHARS.length;
 const MAX_U32 = 0x1_0000_0000; // 2^32
-const REJECT_THRESHOLD = MAX_U32 - (MAX_U32 % CHARSET_LEN); // 4294967292
+export const REJECT_THRESHOLD = MAX_U32 - (MAX_U32 % CHARSET_LEN); // 4294967292
 
 export const LENGTHS = [23, 24, 25, 26, 27, 28, 29, 30, 31, 32] as const;
 

@@ -16,17 +16,35 @@ const RE_SAMPLE_BUF = new Uint32Array(1);
  * @returns The generated password string.
  */
 export function generatePassword(length: number): string {
+  return generatePasswordWithCharset(length, CHARS);
+}
+
+/**
+ * Generates a cryptographically secure random password using a specific charset.
+ * Uses rejection sampling to prevent modulo bias when mapping the 32-bit
+ * random value to the character set.
+ * 
+ * @param length The desired length of the password.
+ * @param charset The character set to use.
+ * @returns The generated password string.
+ */
+export function generatePasswordWithCharset(length: number, charset: string): string {
+  if (length <= 0 || charset.length === 0) return "";
+  const charsetLen = charset.length;
+  const uint32Modulus = 0x1_0000_0000; // 2^32
+  const rejectThreshold = uint32Modulus - (uint32Modulus % charsetLen);
+
   if (length <= 0) return "";
   const buf = new Uint32Array(length);
   crypto.getRandomValues(buf);
   let pw = "";
   for (let i = 0; i < length; i++) {
     let val = buf[i];
-    while (val >= REJECT_THRESHOLD) {
+    while (val >= rejectThreshold) {
       crypto.getRandomValues(RE_SAMPLE_BUF);
       val = RE_SAMPLE_BUF[0];
     }
-    pw += CHARS[val % CHARSET_LEN];
+    pw += charset[val % charsetLen];
   }
   return pw;
 }

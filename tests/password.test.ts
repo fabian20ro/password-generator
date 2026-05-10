@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { generatePassword, generateAll, LENGTHS, REJECT_THRESHOLD } from "../src/password";
+import { generatePassword, generatePasswordWithCharset, generateAll, LENGTHS, REJECT_THRESHOLD } from "../src/password";
 
 const originalCrypto = globalThis.crypto;
 
@@ -59,6 +59,35 @@ describe("generatePassword", () => {
   it("generates different passwords on successive calls", () => {
     const passwords = new Set(Array.from({ length: 20 }, () => generatePassword(25)));
     expect(passwords.size).toBeGreaterThan(1);
+  });
+});
+
+describe("generatePasswordWithCharset", () => {
+  it("returns a string of the requested length", () => {
+    for (const len of [0, 1, 10]) {
+      expect(generatePasswordWithCharset(len, "abc")).toHaveLength(len);
+    }
+  });
+
+  it("only contains characters from the provided charset", () => {
+    const charset = "01";
+    for (let i = 0; i < 20; i++) {
+      const pw = generatePasswordWithCharset(20, charset);
+      expect(pw).toMatch(/^[01]+$/);
+    }
+  });
+
+  it("handles an empty charset by returning an empty string", () => {
+    expect(generatePasswordWithCharset(10, "")).toBe("");
+  });
+
+  it("correctly applies rejection sampling for custom charset", () => {
+    const getCallCount = installCryptoMock([4294967295, 42]);
+    // Using a charset length of 3 so that 2^32 % 3 != 0 (remainder is 1)
+    // rejectThreshold will be 4294967295. val=4294967295 triggers resample.
+    const pw = generatePasswordWithCharset(1, "012");
+    expect(getCallCount()).toBe(2);
+    expect(pw).toMatch(/^[012]$/);
   });
 });
 

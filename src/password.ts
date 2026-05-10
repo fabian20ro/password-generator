@@ -29,12 +29,10 @@ export function generatePassword(length: number): string {
  * @returns The generated password string.
  */
 export function generatePasswordWithCharset(length: number, charset: string): string {
-  if (length <= 0 || charset.length === 0) return "";
+  if (!Number.isInteger(length) || length <= 0 || charset.length === 0) return "";
   const charsetLen = charset.length;
   const uint32Modulus = 0x1_0000_0000; // 2^32
   const rejectThreshold = uint32Modulus - (uint32Modulus % charsetLen);
-
-  if (length <= 0) return "";
   const buf = new Uint32Array(length);
   crypto.getRandomValues(buf);
   let pw = "";

@@ -49,4 +49,14 @@
 
 ---
 
+### [2026-05-10] Password length validation hardening
+
+**Context:** Small correctness improvement in the password utility.
+**What happened:** Tightened `generatePasswordWithCharset` to reject non-integer lengths before allocating a `Uint32Array`, added a focused test for `NaN`/fractional/infinite lengths, and verified with `npm test` and `npm run build`.
+**Outcome:** Success. Valid inputs unchanged; invalid lengths now fail safely with an empty string instead of a runtime range error.
+**Insight:** Guarding numeric inputs early keeps utility functions predictable and easier to reuse.
+**Promoted to Lessons Learned:** Yes
+
+---
+
 <!-- New entries above this line, most recent first -->

@@ -69,6 +69,12 @@ describe("generatePasswordWithCharset", () => {
     }
   });
 
+  it("returns an empty string for non-integer lengths", () => {
+    for (const len of [NaN, 2.5, Infinity]) {
+      expect(generatePasswordWithCharset(len, "abc")).toBe("");
+    }
+  });
+
   it("only contains characters from the provided charset", () => {
     const charset = "01";
     for (let i = 0; i < 20; i++) {

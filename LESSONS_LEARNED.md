@@ -33,6 +33,8 @@ Obsolete lessons → Archive section at bottom (with date and reason). Never del
 
 **[2026-05-05] Vitest pool mode in constrained containers — In low-memory CI/container runs, `vitest run` may fail via fork-worker OOM; `vitest run --pool=threads` is a stable fallback for this repo's test suite.
 
+**[2026-05-10] Reject non-integer password lengths early — `Uint32Array(length)` throws on non-integer lengths; guard with `Number.isInteger(length)` before allocating so utility callers get a safe empty-string result instead of a runtime RangeError.
+
 ## Performance & Infrastructure
 
 

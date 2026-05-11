@@ -59,4 +59,14 @@
 
 ---
 
+### [2026-05-11] Dynamic generated-password status message
+
+**Context:** Small UX polish in the password generator UI.
+**What happened:** Replaced the hardcoded "Generated 10 new passwords." status text with a message derived from `LENGTHS.length`, so the announcement stays accurate if the password count changes later. Verified with `npm test` and `npm run build`.
+**Outcome:** Success. Behavior unchanged for current output; status text is now future-proofed.
+**Insight:** User-facing counts are safer when derived from the same source of truth as the rendered list.
+**Promoted to Lessons Learned:** No
+
+---
+
 <!-- New entries above this line, most recent first -->

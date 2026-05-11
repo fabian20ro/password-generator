@@ -53,7 +53,7 @@ async function copyToClipboard(text: string, btn: HTMLButtonElement): Promise<vo
 function generate(): void {
   const container = document.getElementById("passwords") as HTMLDivElement;
   container.innerHTML = "";
-  announceStatus("Generated 10 new passwords.");
+  announceStatus(`Generated ${LENGTHS.length} new passwords.`);
 
   for (const len of LENGTHS) {
     const pw = generatePassword(len);

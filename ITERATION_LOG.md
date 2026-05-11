@@ -79,4 +79,14 @@
 
 ---
 
+### [2026-05-11] README character-set clarification
+
+**Context:** Keep the public summary aligned with the actual password output details.
+**What happened:** Updated the README to say the generator emits alphanumeric passwords and to note that rejection sampling avoids modulo bias.
+**Outcome:** Success. The docs now describe the same contract the code and tests already enforce.
+**Insight:** User-facing summaries should name the output shape and security-relevant generation detail when those facts are already stable in code.
+**Promoted to Lessons Learned:** No
+
+---
+
 <!-- New entries above this line, most recent first -->

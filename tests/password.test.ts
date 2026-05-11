@@ -69,6 +69,10 @@ describe("generatePasswordWithCharset", () => {
     }
   });
 
+  it("returns an empty string for negative lengths", () => {
+    expect(generatePasswordWithCharset(-1, "abc")).toBe("");
+  });
+
   it("returns an empty string for non-integer lengths", () => {
     for (const len of [NaN, 2.5, Infinity]) {
       expect(generatePasswordWithCharset(len, "abc")).toBe("");

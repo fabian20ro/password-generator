@@ -69,4 +69,14 @@
 
 ---
 
+### [2026-05-11] Negative password-length coverage
+
+**Context:** Tighten boundary coverage around the password generator utility.
+**What happened:** Added a test asserting `generatePasswordWithCharset` returns an empty string for negative lengths, matching the function's existing guard for non-positive lengths. Verified with `npm exec vitest run tests/password.test.ts --pool=threads`.
+**Outcome:** Success. Behavior unchanged; coverage now documents the negative-length boundary explicitly.
+**Insight:** Boundary tests are cheap insurance when the implementation already encodes a broad guard.
+**Promoted to Lessons Learned:** No
+
+---
+
 <!-- New entries above this line, most recent first -->

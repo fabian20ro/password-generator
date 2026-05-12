@@ -79,6 +79,16 @@ describe("generatePasswordWithCharset", () => {
     }
   });
 
+  it("does not sample crypto for invalid lengths or an empty charset", () => {
+    const getCallCount = installCryptoMock();
+
+    expect(generatePasswordWithCharset(0, "abc")).toBe("");
+    expect(generatePasswordWithCharset(-1, "abc")).toBe("");
+    expect(generatePasswordWithCharset(10, "")).toBe("");
+
+    expect(getCallCount()).toBe(0);
+  });
+
   it("only contains characters from the provided charset", () => {
     const charset = "01";
     for (let i = 0; i < 20; i++) {

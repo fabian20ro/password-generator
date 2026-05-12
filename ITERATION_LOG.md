@@ -89,4 +89,12 @@
 
 ---
 
+### [2026-05-12] Invalid input no-op coverage
+
+**Context:** Tighten boundary coverage around the password generator's early-return guards.
+**What happened:** Added a regression test asserting `generatePasswordWithCharset` returns an empty string without sampling crypto for zero, negative, or empty-charset inputs. Verified with a focused Vitest run, then full `npm test` and `npm run build`.
+**Outcome:** Success. The guard path is now explicitly covered and stays cheap.
+**Insight:** Boundary tests are useful not only for return values but also for proving expensive work is skipped on invalid inputs.
+**Promoted to Lessons Learned:** Yes
+
 <!-- New entries above this line, most recent first -->

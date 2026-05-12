@@ -35,6 +35,7 @@ Obsolete lessons → Archive section at bottom (with date and reason). Never del
 
 **[2026-05-10] Reject non-integer password lengths early — `Uint32Array(length)` throws on non-integer lengths; guard with `Number.isInteger(length)` before allocating so utility callers get a safe empty-string result instead of a runtime RangeError.
 **[2026-05-12] Invalid password inputs should short-circuit before crypto sampling — zero, negative, non-integer, and empty-charset cases stay deterministic and cheap when the guard returns before `crypto.getRandomValues()`.
+**[2026-05-12] Single-character charsets deserve explicit password coverage — a `charset.length === 1` case exercises the no-resample path and guards against accidental over-rejection in custom-charset generators.
 
 ## Performance & Infrastructure
 

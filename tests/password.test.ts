@@ -97,6 +97,14 @@ describe("generatePasswordWithCharset", () => {
     }
   });
 
+  it("handles a single-character charset without resampling", () => {
+    const getCallCount = installCryptoMock([123456789]);
+    const pw = generatePasswordWithCharset(8, "X");
+
+    expect(pw).toBe("XXXXXXXX");
+    expect(getCallCount()).toBe(1);
+  });
+
   it("handles an empty charset by returning an empty string", () => {
     expect(generatePasswordWithCharset(10, "")).toBe("");
   });

@@ -97,4 +97,12 @@
 **Insight:** Boundary tests are useful not only for return values but also for proving expensive work is skipped on invalid inputs.
 **Promoted to Lessons Learned:** Yes
 
-<!-- New entries above this line, most recent first -->
+### [2026-05-12] Single-character charset boundary coverage
+
+**Context:** Add one focused regression around a custom-charset edge case.
+**What happened:** Added a Vitest case asserting `generatePasswordWithCharset(8, "X")` returns eight `X` characters and only calls `crypto.getRandomValues()` once, which exercises the no-resample path for a one-character charset. Verified with the focused password test file, the full test suite, and `npm run build`.
+**Outcome:** Success. Boundary coverage expanded without changing runtime behavior.
+**Insight:** Single-character charsets are a cheap edge case that can catch accidental over-rejection in custom-charset generators.
+**Promoted to Lessons Learned:** Yes
+
+---

@@ -106,3 +106,12 @@
 **Promoted to Lessons Learned:** Yes
 
 ---
+### [2026-05-13] Clipboard writeText shape coverage
+
+**Context:** Tighten the clipboard helper's boundary coverage after a small regression pass.
+**What happened:** Added a Vitest case asserting `copyTextToClipboard` returns `false` when a clipboard object exists but `writeText` is missing, matching the helper's existing guard for unavailable clipboard support. Verified with the focused clipboard test file and the full `npm test` suite.
+**Outcome:** Success. Coverage now documents both clipboard-unavailable and clipboard-shape-missing paths.
+**Insight:** Availability checks and method-shape checks are distinct boundaries; cover both when a browser API is optional.
+**Promoted to Lessons Learned:** No
+
+---

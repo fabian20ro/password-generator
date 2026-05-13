@@ -124,3 +124,12 @@
 **Promoted to Lessons Learned:** Yes
 
 ---
+### [2026-05-13] Clipboard callable-shape hardening
+
+**Context:** Tighten the clipboard helper against odd browser API shapes.
+**What happened:** Updated `copyTextToClipboard` to require a callable `writeText` method, added a regression test for a non-callable clipboard stub, and verified with the focused clipboard test plus the full Vitest suite and production build.
+**Outcome:** Success. Clipboard fallback now fails fast for missing or malformed clipboard shapes.
+**Insight:** Optional browser APIs are safer when helpers check callability, not just presence.
+**Promoted to Lessons Learned:** Yes
+
+---

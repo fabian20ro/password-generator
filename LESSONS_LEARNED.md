@@ -35,6 +35,7 @@ Obsolete lessons → Archive section at bottom (with date and reason). Never del
 **[2026-05-12] Invalid password inputs should short-circuit before crypto sampling — zero, negative, non-integer, and empty-charset cases stay deterministic and cheap when the guard returns before `crypto.getRandomValues()`.
 **[2026-05-12] Single-character charsets deserve explicit password coverage — a `charset.length === 1` case exercises the no-resample path and guards against accidental over-rejection in custom-charset generators.
 **[2026-05-13] Optional browser APIs can be shape-missing, not just absent — For helpers like clipboard adapters, cover both `undefined` APIs and present objects missing the expected method (`writeText`) so optional platform support stays predictable.
+**[2026-05-13] Callable shape checks beat bare presence checks for browser helpers — When an API can be monkey-patched or stubbed, treat non-function `writeText`/similar properties as unavailable so the guard fails fast instead of relying on a later TypeError.
 
 ## Performance & Infrastructure
 

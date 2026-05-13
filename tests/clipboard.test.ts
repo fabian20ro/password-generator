@@ -12,6 +12,12 @@ describe("copyTextToClipboard", () => {
     await expect(copyTextToClipboard(clipboard, "secret")).resolves.toBe(false);
   });
 
+  it("returns false when writeText is not callable", async () => {
+    const clipboard = { writeText: "nope" } as unknown as Pick<Clipboard, "writeText">;
+
+    await expect(copyTextToClipboard(clipboard, "secret")).resolves.toBe(false);
+  });
+
   it("returns true when text is written successfully", async () => {
     const writes: string[] = [];
     const clipboard = {

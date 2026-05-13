@@ -2,7 +2,7 @@ export async function copyTextToClipboard(
   clipboard: Pick<Clipboard, "writeText"> | undefined,
   text: string,
 ): Promise<boolean> {
-  if (clipboard?.writeText === undefined) {
+  if (typeof clipboard?.writeText !== "function") {
     return false;
   }
 

@@ -8,3 +8,4 @@ Simple password generator that creates 10 cryptographically secure alphanumeric 
 
 Uses the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues) (`crypto.getRandomValues()`) — the browser's built-in CSPRNG, equivalent to Java's `SecureRandom`.
 Password characters are sampled with rejection sampling to avoid modulo bias.
+Each generated password includes a copy button with success/failure feedback.

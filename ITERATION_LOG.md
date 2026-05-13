@@ -115,3 +115,12 @@
 **Promoted to Lessons Learned:** No
 
 ---
+### [2026-05-13] README clipboard feature note
+
+**Context:** Keep public docs aligned with the shipped UI surface.
+**What happened:** Added a short README note that each generated password has a copy button with success/failure feedback, matching the existing clipboard flow in the app.
+**Outcome:** Success. Docs now reflect a shipped user-facing capability that was previously undocumented.
+**Insight:** Tiny UI helpers still merit a one-line README mention when they change the visible interaction model.
+**Promoted to Lessons Learned:** Yes
+
+---

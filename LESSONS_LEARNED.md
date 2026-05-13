@@ -47,6 +47,8 @@ Obsolete lessons → Archive section at bottom (with date and reason). Never del
 
 ## Process & Workflow
 
+**[2026-05-13] Document newly visible UI interactions in README — When a shipped screen adds a concrete affordance like copy-to-clipboard with status feedback, a short README line keeps the public surface aligned with the app.
+
 <!-- Format: **[YYYY-MM-DD]** Brief title — Explanation -->
 
 ---

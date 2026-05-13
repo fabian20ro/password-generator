@@ -133,3 +133,12 @@
 **Promoted to Lessons Learned:** Yes
 
 ---
+### [2026-05-13] README regenerate control sync
+
+**Context:** Keep the public docs aligned with the shipped password-generator UI.
+**What happened:** Added a brief README note describing the Regenerate button and its status-message refresh behavior, matching the existing UI affordance in `index.html` and `src/main.ts`.
+**Outcome:** Success. README now covers both visible interaction paths: per-password copy and full-list regeneration.
+**Insight:** When a screen has both item-level actions and page-level refresh controls, documenting both avoids leaving the public surface half-described.
+**Promoted to Lessons Learned:** No
+
+---

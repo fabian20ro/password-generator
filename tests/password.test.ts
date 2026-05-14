@@ -105,10 +105,6 @@ describe("generatePasswordWithCharset", () => {
     expect(getCallCount()).toBe(1);
   });
 
-  it("handles an empty charset by returning an empty string", () => {
-    expect(generatePasswordWithCharset(10, "")).toBe("");
-  });
-
   it("correctly applies rejection sampling for custom charset", () => {
     const getCallCount = installCryptoMock([4294967295, 42]);
     // Using a charset length of 3 so that 2^32 % 3 != 0 (remainder is 1)

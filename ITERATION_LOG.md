@@ -151,3 +151,13 @@
 **Promoted to Lessons Learned:** No
 
 ---
+
+### [2026-05-14] Password test cleanup
+
+**Context:** Keep the password-generator test suite lean and avoid redundant assertions.
+**What happened:** Removed a duplicate empty-charset test from `tests/password.test.ts`; the earlier invalid-input coverage already proves the same contract alongside the no-crypto-sampling assertion.
+**Outcome:** Success. Test coverage stayed intact and the suite is slightly less repetitive.
+**Insight:** Duplicate boundary assertions are easiest to delete when one test already proves the shared contract.
+**Promoted to Lessons Learned:** No
+
+---

@@ -142,3 +142,12 @@
 **Promoted to Lessons Learned:** No
 
 ---
+### [2026-05-14] README live-region note
+
+**Context:** Keep the public summary aligned with the shipped password generator UI.
+**What happened:** Added a short README line noting that the status updates are mirrored to a screen-reader live region, matching the existing `aria-live`/`sr-status` affordance in `index.html` and `src/main.ts`.
+**Outcome:** Success. Docs now mention the accessible status announcement path.
+**Insight:** When a UI has both visible status text and an assistive-tech mirror, documenting both keeps the public surface honest.
+**Promoted to Lessons Learned:** No
+
+---

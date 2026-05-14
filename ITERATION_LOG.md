@@ -161,3 +161,13 @@
 **Promoted to Lessons Learned:** No
 
 ---
+
+### [2026-05-14] Rejection-threshold source-of-truth cleanup
+
+**Context:** Small maintainability pass on the password generator internals.
+**What happened:** Reused the shared 32-bit modulus constant in `src/password.ts` instead of re-declaring the literal inside `generatePasswordWithCharset`, and added a focused test that locks `REJECT_THRESHOLD` to the modulus/charset-length formula.
+**Outcome:** Success. Focused password tests, full test suite, and production build all passed.
+**Insight:** Small numeric constants are easier to trust when the production code and contract test derive from the same named source of truth.
+**Promoted to Lessons Learned:** No
+
+---

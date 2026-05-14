@@ -31,8 +31,7 @@ export function generatePassword(length: number): string {
 export function generatePasswordWithCharset(length: number, charset: string): string {
   if (!Number.isInteger(length) || length <= 0 || charset.length === 0) return "";
   const charsetLen = charset.length;
-  const uint32Modulus = 0x1_0000_0000; // 2^32
-  const rejectThreshold = uint32Modulus - (uint32Modulus % charsetLen);
+  const rejectThreshold = UINT32_MODULUS - (UINT32_MODULUS % charsetLen);
   const buf = new Uint32Array(length);
   crypto.getRandomValues(buf);
   let pw = "";

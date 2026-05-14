@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { generatePassword, generatePasswordWithCharset, generateAll, LENGTHS, REJECT_THRESHOLD } from "../src/password";
+import { generatePassword, generatePasswordWithCharset, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD } from "../src/password";
 
 const originalCrypto = globalThis.crypto;
 
@@ -136,6 +136,13 @@ describe("generateAll", () => {
 describe("LENGTHS", () => {
   it("contains exactly [23, 24, 25, 26, 27, 28, 29, 30, 31, 32]", () => {
     expect([...LENGTHS]).toEqual([23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
+  });
+});
+
+describe("threshold constants", () => {
+  it("derives the rejection threshold from the 32-bit modulus and charset length", () => {
+    const modulus = 0x1_0000_0000;
+    expect(REJECT_THRESHOLD).toBe(modulus - (modulus % CHARSET_LEN));
   });
 });
 

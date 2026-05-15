@@ -171,3 +171,13 @@
 **Promoted to Lessons Learned:** No
 
 ---
+
+### [2026-05-15] README footer status link sync
+
+**Context:** Keep the public docs aligned with the live footer affordance.
+**What happened:** Added a short README note that the footer links to the deployment workflow status, matching the existing link in `index.html`.
+**Outcome:** Success. README now mentions the visible status link alongside the other user-facing controls.
+**Insight:** Small footer affordances still count as public surface when they are present in the shipped UI.
+**Promoted to Lessons Learned:** No
+
+---

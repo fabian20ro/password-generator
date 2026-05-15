@@ -191,3 +191,13 @@
 **Promoted to Lessons Learned:** Yes
 
 ---
+
+### [2026-05-15] Clipboard reset timer deduplication
+
+**Context:** Harden the copy-button state reset path against rapid repeated clicks.
+**What happened:** Added a small `scheduleButtonReset` helper that cancels any prior timeout for the same button before scheduling the next reset, then switched the copy-success and copy-failure paths to use it. Added focused tests for delayed reset behavior and timer replacement, then verified with `npm test` and `npm run build`.
+**Outcome:** Success. The copy UI now keeps the newest state visible instead of letting an older timeout revert it early.
+**Insight:** Delayed visual resets should be keyed by target element when the same control can be activated repeatedly.
+**Promoted to Lessons Learned:** Yes
+
+---

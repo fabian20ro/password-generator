@@ -1,5 +1,6 @@
 import { generateAll } from "./password";
 import { copyTextToClipboard } from "./clipboard";
+import { scheduleButtonReset } from "./button-reset";
 
 const COPY_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M3.5 10.5h-1a1.5 1.5 0 0 1-1.5-1.5v-6a1.5 1.5 0 0 1 1.5-1.5h6a1.5 1.5 0 0 1 1.5 1.5v1"/></svg>`;
 const CHECK_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.5 3.5 6.5-8"/></svg>`;
@@ -33,9 +34,9 @@ async function copyToClipboard(text: string, btn: HTMLButtonElement): Promise<vo
     btn.setAttribute("aria-label", COPIED_COPY_LABEL);
     announceStatus("Password copied to clipboard.");
 
-    setTimeout(() => {
+    scheduleButtonReset(btn, 1500, () => {
       resetButtonState(btn);
-    }, 1500);
+    });
     return;
   }
 
@@ -45,9 +46,9 @@ async function copyToClipboard(text: string, btn: HTMLButtonElement): Promise<vo
   btn.setAttribute("aria-label", ERROR_COPY_LABEL);
   announceStatus("Copy failed. Clipboard access unavailable or denied.");
 
-  setTimeout(() => {
+  scheduleButtonReset(btn, 2000, () => {
     resetButtonState(btn);
-  }, 2000);
+  });
 }
 
 function generate(): void {

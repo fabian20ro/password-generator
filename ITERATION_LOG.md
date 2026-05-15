@@ -181,3 +181,13 @@
 **Promoted to Lessons Learned:** No
 
 ---
+
+### [2026-05-15] Render loop source-of-truth cleanup
+
+**Context:** Small maintainability pass in the password generator UI.
+**What happened:** Swapped `src/main.ts` over to `generateAll()` so the password list renderer consumes the same helper the module already exports, instead of duplicating the `LENGTHS` loop. Verified with `npm test` and `npm run build`.
+**Outcome:** Success. Behavior stayed the same; the render path now follows a single source of truth.
+**Insight:** When a module already owns the full collection, reusing that helper in the UI keeps future count/shape changes from drifting.
+**Promoted to Lessons Learned:** Yes
+
+---

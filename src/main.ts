@@ -1,4 +1,4 @@
-import { generatePassword, LENGTHS } from "./password";
+import { generateAll } from "./password";
 import { copyTextToClipboard } from "./clipboard";
 
 const COPY_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M3.5 10.5h-1a1.5 1.5 0 0 1-1.5-1.5v-6a1.5 1.5 0 0 1 1.5-1.5h6a1.5 1.5 0 0 1 1.5 1.5v1"/></svg>`;
@@ -53,10 +53,11 @@ async function copyToClipboard(text: string, btn: HTMLButtonElement): Promise<vo
 function generate(): void {
   const container = document.getElementById("passwords") as HTMLDivElement;
   container.innerHTML = "";
-  announceStatus(`Generated ${LENGTHS.length} new passwords.`);
+  const passwords = generateAll();
+  announceStatus(`Generated ${passwords.length} new passwords.`);
 
-  for (const len of LENGTHS) {
-    const pw = generatePassword(len);
+  passwords.forEach((pw) => {
+    const len = pw.length;
 
     const row = document.createElement("div");
     row.className = "row";
@@ -79,7 +80,7 @@ function generate(): void {
     row.appendChild(code);
     row.appendChild(btn);
     container.appendChild(row);
-  }
+  });
 }
 
 document.getElementById("regenerate")?.addEventListener("click", generate);

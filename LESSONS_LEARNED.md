@@ -25,6 +25,8 @@ Obsolete lessons → Archive section at bottom (with date and reason). Never del
 
 ## Code Patterns & Pitfalls
 
+**[2026-05-15] Use shared generators in renderers — If a UI already exposes a helper that returns the full collection, call that helper from the render loop instead of re-deriving the same sequence from constants. One source of truth keeps labels, counts, and item markup aligned.
+
 <!-- Format: **[YYYY-MM-DD]** Brief title — Explanation -->
 
 ## Testing & Quality

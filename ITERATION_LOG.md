@@ -201,3 +201,12 @@
 **Promoted to Lessons Learned:** Yes
 
 ---
+### [2026-05-15] README copy-button reset note
+
+**Context:** Keep the public docs aligned with the copy-button interaction already shipped in the UI.
+**What happened:** Updated the README to mention that copy-button success/failure feedback is temporary and resets automatically after a short delay, matching the existing button-reset behavior in `src/main.ts` and `src/button-reset.ts`.
+**Outcome:** Success. Docs now describe the full visible copy-button interaction, including the transient state.
+**Insight:** User-facing feedback that self-clears is part of the public surface and is worth naming explicitly in the README.
+**Promoted to Lessons Learned:** No
+
+---

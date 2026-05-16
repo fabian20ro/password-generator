@@ -52,6 +52,7 @@ Obsolete lessons → Archive section at bottom (with date and reason). Never del
 ## Process & Workflow
 
 **[2026-05-13] Document newly visible UI interactions in README — When a shipped screen adds a concrete affordance like copy-to-clipboard with status feedback, a short README line keeps the public surface aligned with the app.
+**[2026-05-16] Document repeated-row metadata in README — When the UI shows a per-item label or count alongside a repeated list, name that row-level metadata in the README too so the public surface matches the shipped affordance, not just the aggregate summary.
 
 <!-- Format: **[YYYY-MM-DD]** Brief title — Explanation -->
 

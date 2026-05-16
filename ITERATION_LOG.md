@@ -210,3 +210,12 @@
 **Promoted to Lessons Learned:** No
 
 ---
+### [2026-05-16] README row-length label sync
+
+**Context:** Keep the public docs aligned with the shipped password-generator list layout.
+**What happened:** Updated the README to mention the visible per-row length label alongside the existing copy button, regenerate control, status text, and live-region note. This matches the `len` display rendered next to each password row in `index.html`.
+**Outcome:** Success. The README now names one more shipped affordance that was already visible in the UI.
+**Insight:** When a repeated list exposes item-level metadata, document that metadata explicitly so the docs describe the actual row affordance, not just the aggregate count.
+**Promoted to Lessons Learned:** Yes
+
+---

@@ -4,6 +4,8 @@
 
 **[Live Site](https://fabian20ro.github.io/password-generator/)** 
 
-Simple password generator that creates 10 cryptographically secure passwords (23–32 characters).
+Simple password generator that creates 10 cryptographically secure alphanumeric passwords (23–32 characters).
 
 Uses the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues) (`crypto.getRandomValues()`) — the browser's built-in CSPRNG, equivalent to Java's `SecureRandom`.
+Password characters are sampled with rejection sampling to avoid modulo bias.
+Each generated password includes a copy button with temporary success/failure feedback that resets automatically after a short delay, plus a visible length label on the row. A Regenerate button refreshes the full list and updates the status message. Status updates are mirrored to a screen-reader live region. The footer links to the deployment workflow status.

@@ -7,9 +7,11 @@ export function scheduleButtonReset(target: object, delayMs: number, reset: () =
   }
 
   const timeoutId = setTimeout(() => {
-    if (resetTimeouts.get(target) === timeoutId) {
-      resetTimeouts.delete(target);
+    if (resetTimeouts.get(target) !== timeoutId) {
+      return;
     }
+
+    resetTimeouts.delete(target);
     reset();
   }, delayMs);
 

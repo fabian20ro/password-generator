@@ -135,7 +135,7 @@ describe("generateAll", () => {
 
 describe("LENGTHS", () => {
   it("contains exactly [23, 24, 25, 26, 27, 28, 29, 30, 31, 32]", () => {
-expect([...LENGTHS]).toEqual([23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
+    expect([...LENGTHS]).toEqual([23, 24, 25, 26, 27, 28, 29, 30, 31, 32]);
   });
 });
 
@@ -152,10 +152,9 @@ describe("rejection sampling", () => {
     const pw = generatePassword(1);
 
     expect(pw).toHaveLength(1);
-    expect(pw).toMatch(/^[A-Za-z0-9]$/); // wait, i'm doing it again.
-    // I will just use the known good regex for alphanumeric: /^[A-Za-z0-9]$/
+    expect(pw).toMatch(/^[A-Za-z0-9]$/);
+    expect(getCallCount()).toBe(2);
   });
-});
 
   it("handles the exact REJECT_THRESHOLD boundary", () => {
     const getCallCount = installCryptoMock([REJECT_THRESHOLD, 42]);
@@ -181,3 +180,4 @@ describe("rejection sampling", () => {
       }
     }
   });
+});

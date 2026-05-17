@@ -219,3 +219,13 @@
 **Promoted to Lessons Learned:** Yes
 
 ---
+
+### [2026-05-17] Rejection-sampling test cleanup
+
+**Context:** Small test-maintenance pass while keeping password-generation behavior unchanged.
+**What happened:** Tightened the biased-value rejection-sampling test to assert the expected resample call count, removed stray draft comments, fixed indentation on the LENGTHS assertion, and grouped the boundary tests under the rejection-sampling describe block.
+**Outcome:** Success. Focused password tests and production build pass.
+**Insight:** If a deterministic crypto mock exposes call counts, assert the count in boundary tests so the test proves resampling happened instead of only checking output shape.
+**Promoted to Lessons Learned:** No
+
+---

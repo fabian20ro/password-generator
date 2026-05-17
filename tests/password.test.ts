@@ -175,7 +175,7 @@ describe("rejection sampling", () => {
     const emojiCharset = "😀😎"; 
     for (let i = 0; i < 20; i++) {
       const pw = generatePasswordWithCharset(5, emojiCharset);
-      expect(pw).toHaveLength(5); // Length in terms of code points
+      expect([...pw]).toHaveLength(5); // Length in terms of code points
       for (const char of pw) {
         expect(emojiCharset).toContain(char);
       }

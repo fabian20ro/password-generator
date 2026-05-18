@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { generatePassword, generatePasswordWithCharset, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD } from "../src/password";
+import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD } from "../src/password";
 
 const originalCrypto = globalThis.crypto;
 
@@ -115,6 +115,23 @@ describe("generatePasswordWithCharset", () => {
   });
 });
 
+describe("generatePasswordWithSymbols", () => {
+  it("returns a string of the requested length", () => {
+    for (const len of [5, 10, 20]) {
+      expect(generatePasswordWithSymbols(len)).toHaveLength(len);
+    }
+  });
+
+  it("contains characters from both alphanumeric and symbols sets", () => {
+    for (let i = 0; i < 20; i++) {
+      const pw = generatePasswordWithSymbols(50);
+      // Check that it doesn't just contain alphanumeric, but also symbols
+      expect(pw).toMatch(/[!@#$%^&*()\-=_+[\]{}|;:,.<>?]/);
+    }
+    // probability of 50 chars not having a symbol is very low if we use the full charset.
+  });
+});
+
 describe("generateAll", () => {
   it("returns exactly 10 passwords", () => {
     expect(generateAll()).toHaveLength(10);
@@ -157,9 +174,9 @@ describe("rejection sampling", () => {
   });
 
   it("handles the exact REJECT_THRESHOLD boundary", () => {
-    const getCallCount = installCryptoMock([REJECT_THRESHOLD, 42]);
+    const getCallCT = installCryptoMock([REJECT_THRESHOLD, 42]);
     const pw = generatePassword(1);
-    expect(getCallCount()).toBe(2);
+    expect(getCallCT()).toBe(2);
     expect(pw).toMatch(/^[A-Za-z0-9]$/);
   });
 

@@ -1,4 +1,5 @@
 export const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+export const SYMBOLS = "!@#$%^&*()-_=+[]{}|;:,.<>?";
 export const CHARSET_LEN = CHARS.length;
 const UINT32_MODULUS = 0x1_0000_0000; // 2^32
 /**
@@ -21,6 +22,16 @@ const RE_SAMPLE_BUF = new Uint32Array(1);
  */
 export function generatePassword(length: number): string {
   return generatePasswordWithCharset(length, CHARS);
+}
+
+/**
+ * Generates a cryptographically secure random password including symbols.
+ * 
+ * @param length The desired length of the password.
+ * @returns The generated password string.
+ */
+export function generatePasswordWithSymbols(length: number): string {
+  return generatePasswordWithCharset(length, CHARS + SYMBOLS);
 }
 
 /**

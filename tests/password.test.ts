@@ -107,9 +107,8 @@ describe("generatePasswordWithCharset", () => {
 
   it("correctly applies rejection sampling for custom charset", () => {
     const getCallCount = installCryptoMock([4294967295, 42]);
-    // Using a charset length of 3 so that 2^32 % 3 != 0 (remainder is 1)
-    // rejectThreshold will be 4294967295. val=4294967295 triggers resample.
     const pw = generatePasswordWithCharset(1, "012");
+
     expect(getCallCount()).toBe(2);
     expect(pw).toMatch(/^[012]$/);
   });
@@ -125,10 +124,8 @@ describe("generatePasswordWithSymbols", () => {
   it("contains characters from both alphanumeric and symbols sets", () => {
     for (let i = 0; i < 20; i++) {
       const pw = generatePasswordWithSymbols(50);
-      // Check that it doesn't just contain alphanumeric, but also symbols
       expect(pw).toMatch(/[!@#$%^&*()\-=_+[\]{}|;:,.<>?]/);
     }
-    // probability of 50 chars not having a symbol is very low if we use the full charset.
   });
 });
 
@@ -174,24 +171,28 @@ describe("rejection sampling", () => {
   });
 
   it("handles the exact REJECT_THRESHOLD boundary", () => {
-    const getCallCT = installCryptoMock([REJECT_THRESHOLD, 42]);
+    const getCallCount = installCryptoMock([REJECT_THRESHOLD, 42]);
     const pw = generatePassword(1);
-    expect(getCallCT()).toBe(2);
+
+    expect(pw).toHaveLength(1);
+    expect(getCallCount()).toBe(2);
     expect(pw).toMatch(/^[A-Za-z0-9]$/);
   });
 
   it("does not resample when val is just below REJECT_THRESHOLD", () => {
     const getCallCount = installCryptoMock([REJECT_THRESHOLD - 1]);
     const pw = generatePassword(1);
+
+    expect(pw).toHaveLength(1);
     expect(getCallCount()).toBe(1);
     expect(pw).toMatch(/^[A-Za-z0-9]$/);
   });
 
-  it("handles multi-byte characters (emojis) correctly", () => {
-    const emojiCharset = "😀😎"; 
+  it("handles multi-byte characters correctly", () => {
+    const emojiCharset = "😀😎";
     for (let i = 0; i < 20; i++) {
       const pw = generatePasswordWithCharset(5, emojiCharset);
-      expect([...pw]).toHaveLength(5); // Length in terms of code points
+      expect([...pw]).toHaveLength(5);
       for (const char of pw) {
         expect(emojiCharset).toContain(char);
       }

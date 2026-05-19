@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { generatePassword, generatePasswordWithCharset, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD } from "../src/password";
+import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD } from "../src/password";
 
 const originalCrypto = globalThis.crypto;
 
@@ -107,11 +107,25 @@ describe("generatePasswordWithCharset", () => {
 
   it("correctly applies rejection sampling for custom charset", () => {
     const getCallCount = installCryptoMock([4294967295, 42]);
-    // Using a charset length of 3 so that 2^32 % 3 != 0 (remainder is 1)
-    // rejectThreshold will be 4294967295. val=4294967295 triggers resample.
     const pw = generatePasswordWithCharset(1, "012");
+
     expect(getCallCount()).toBe(2);
     expect(pw).toMatch(/^[012]$/);
+  });
+});
+
+describe("generatePasswordWithSymbols", () => {
+  it("returns a string of the requested length", () => {
+    for (const len of [5, 10, 20]) {
+      expect(generatePasswordWithSymbols(len)).toHaveLength(len);
+    }
+  });
+
+  it("contains characters from both alphanumeric and symbols sets", () => {
+    for (let i = 0; i < 20; i++) {
+      const pw = generatePasswordWithSymbols(50);
+      expect(pw).toMatch(/[!@#$%^&*()\-=_+[\]{}|;:,.<>?]/);
+    }
   });
 });
 
@@ -157,9 +171,10 @@ describe("rejection sampling", () => {
   });
 
   it("handles the exact REJECT_THRESHOLD boundary", () => {
-    // When val is exactly REJECT_THRESHOLD, it should trigger resampling
     const getCallCount = installCryptoMock([REJECT_THRESHOLD, 42]);
     const pw = generatePassword(1);
+
+    expect(pw).toHaveLength(1);
     expect(getCallCount()).toBe(2);
     expect(pw).toMatch(/^[A-Za-z0-9]$/);
   });
@@ -167,7 +182,20 @@ describe("rejection sampling", () => {
   it("does not resample when val is just below REJECT_THRESHOLD", () => {
     const getCallCount = installCryptoMock([REJECT_THRESHOLD - 1]);
     const pw = generatePassword(1);
+
+    expect(pw).toHaveLength(1);
     expect(getCallCount()).toBe(1);
     expect(pw).toMatch(/^[A-Za-z0-9]$/);
+  });
+
+  it("handles multi-byte characters correctly", () => {
+    const emojiCharset = "😀😎";
+    for (let i = 0; i < 20; i++) {
+      const pw = generatePasswordWithCharset(5, emojiCharset);
+      expect([...pw]).toHaveLength(5);
+      for (const char of pw) {
+        expect(emojiCharset).toContain(char);
+      }
+    }
   });
 });

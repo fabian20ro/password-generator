@@ -1,6 +1,11 @@
 export const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+export const SYMBOLS = "!@#$%^&*()-_=+[]{}|;:,.<>?";
 export const CHARSET_LEN = CHARS.length;
 const UINT32_MODULUS = 0x1_0000_0000; // 2^32
+/**
+ * The largest multiple of charsetLen that is strictly less than UINT32_MODULUS.
+ * We reject values in the range [REJECT_THRESHOLD, UINT32_MODULUS) to prevent modulo bias.
+ */
 export const REJECT_THRESHOLD = UINT32_MODULUS - (UINT32_MODULUS % CHARSET_LEN); // 4294967292
 
 export const LENGTHS = [23, 24, 25, 26, 27, 28, 29, 30, 31, 32] as const;
@@ -20,6 +25,16 @@ export function generatePassword(length: number): string {
 }
 
 /**
+ * Generates a cryptographically secure random password including symbols.
+ * 
+ * @param length The desired length of the password.
+ * @returns The generated password string.
+ */
+export function generatePasswordWithSymbols(length: number): string {
+  return generatePasswordWithCharset(length, CHARS + SYMBOLS);
+}
+
+/**
  * Generates a cryptographically secure random password using a specific charset.
  * Uses rejection sampling to prevent modulo bias when mapping the 32-bit
  * random value to the character set.
@@ -30,7 +45,8 @@ export function generatePassword(length: number): string {
  */
 export function generatePasswordWithCharset(length: number, charset: string): string {
   if (!Number.isInteger(length) || length <= 0 || charset.length === 0) return "";
-  const charsetLen = charset.length;
+  const chars = Array.from(charset);
+  const charsetLen = chars.length;
   const rejectThreshold = UINT32_MODULUS - (UINT32_MODULUS % charsetLen);
   const buf = new Uint32Array(length);
   crypto.getRandomValues(buf);
@@ -41,7 +57,7 @@ export function generatePasswordWithCharset(length: number, charset: string): st
       crypto.getRandomValues(RE_SAMPLE_BUF);
       val = RE_SAMPLE_BUF[0];
     }
-    pw += charset[val % charsetLen];
+    pw += chars[val % charsetLen];
   }
   return pw;
 }

@@ -35,6 +35,16 @@ export function generatePasswordWithSymbols(length: number): string {
 }
 
 /**
+ * Generates a cryptographically secure random password using only letters.
+ * 
+ * @param length The desired length of the password.
+ * @returns The generated password string.
+ */
+export function generatePasswordWithLettersOnly(length: number): string {
+  return generatePasswordWithCharset(length, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+}
+
+/**
  * Generates a cryptographically secure random password using a specific charset.
  * Uses rejection sampling to prevent modulo bias when mapping the 32-bit
  * random value to the character set.

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD } from "../src/password";
+import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD, CHARS, SYMBOLS } from "../src/password";
 
 const originalCrypto = globalThis.crypto;
 
@@ -125,6 +125,16 @@ describe("generatePasswordWithSymbols", () => {
     for (let i = 0; i < 20; i++) {
       const pw = generatePasswordWithSymbols(50);
       expect(pw).toMatch(/[!@#$%^&*()\-=_+[\]{}|;:,.<>?]/);
+    }
+  });
+
+  it("only contains characters from the allowed alphanumeric and symbols sets", () => {
+    const charset = CHARS + SYMBOLS;
+    for (let i = 0; i < 20; i++) {
+      const pw = generatePasswordWithSymbols(50);
+      for (const char of pw) {
+        expect(charset).toContain(char);
+      }
     }
   });
 });

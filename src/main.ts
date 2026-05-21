@@ -13,8 +13,8 @@ const statusEl = document.getElementById("status") as HTMLParagraphElement;
 const srStatusEl = document.getElementById("sr-status") as HTMLDivElement;
 
 function announceStatus(message: string): void {
-  statusEl.textContent = message;
-  srStatusEl.textContent = message;
+  if (statusEl) statusEl.textContent = message;
+  if (srStatusEl) srStatusEl.textContent = message;
 }
 
 function resetButtonState(btn: HTMLButtonElement): void {

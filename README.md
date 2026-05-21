@@ -7,8 +7,13 @@
 Simple password generator that creates 10 cryptographically secure alphanumeric passwords (23–32 characters).
 
 Uses the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues) (`crypto.getRandomValues()`) — the browser's built-in CSPRNG, equivalent to Java's `SecureRandom`.
-Password characters are sampled with rejection sampling to avoid modulo bias.
-## Usage
+10|Password characters are sampled with rejection sampling to avoid modulo bias.
+11|
+12|## Security
+13|
+14|This generator uses the Web Crypto API (`crypto.getRandomValues()`) for cryptographically secure random number generation. To prevent **modulo bias** (where some characters appear more frequently than others when the charset length does not perfectly divide the 32-bit random integer range), it employs **rejection sampling**.
+15|
+16|## Usage
 
 ### Basic usage (alphanumeric)
 ```typescript

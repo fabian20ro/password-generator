@@ -89,11 +89,11 @@ describe("generatePasswordWithCharset", () => {
     expect(getCallCount()).toBe(0);
   });
 
-  it("only contains characters from the provided charset", () => {
-    const charset = "01";
+  it("handles whitespace and control characters in charset", () => {
+    const charset = " \n\t\r";
     for (let i = 0; i < 20; i++) {
-      const pw = generatePasswordWithCharset(20, charset);
-      expect(pw).toMatch(/^[01]+$/);
+      const pw = generatePasswordWithCharset(10, charset);
+      expect(pw).toMatch(/^[ \n\t\r]+$/);
     }
   });
 

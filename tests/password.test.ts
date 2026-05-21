@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD } from "../src/password";
+import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD, UNICODE_CHARSET } from "../src/password";
 
 const originalCrypto = globalThis.crypto;
 
@@ -196,6 +196,14 @@ describe("rejection sampling", () => {
       for (const char of pw) {
         expect(emojiCharset).toContain(char);
       }
+    }
+  });
+
+  it("handles the new UNICODE_CHARSET correctly", () => {
+    const pw = generatePasswordWithCharset(10, UNICODE_CHARSET);
+    expect([...pw]).toHaveLength(10);
+    for (const char of pw) {
+      expect(UNICODE_CHARSET).toContain(char);
     }
   });
 });

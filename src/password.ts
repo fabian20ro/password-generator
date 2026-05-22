@@ -37,7 +37,7 @@ export function generatePasswordWithSymbols(length: number): string {
 /**
  * Generates a cryptographically secure random password using a specific charset.
  * Uses rejection sampling to prevent modulo bias when mapping the 32-bit
- * random value to the character set.
+ * random value to the character set. This method is Unicode-safe (handles surrogate pairs).
  * 
  * @param length The desired length of the password.
  * @param charset The character set to use.

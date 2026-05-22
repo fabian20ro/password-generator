@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD } from "../src/password";
+import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD, isValidPassword } from "../src/password";
 
 const originalCrypto = globalThis.crypto;
 
@@ -197,5 +197,19 @@ describe("rejection sampling", () => {
         expect(emojiCharset).toContain(char);
       }
     }
+  });
+});
+
+describe("isValidPassword", () => {
+  it("returns true for valid passwords", () => {
+    expect(isValidPassword("abc", "abcd")).toBe(true);
+    expect(isValidPassword("123", "0123456789")).toBe(true);
+    expect(isValidPassword("😀😎", "😀😎ABC")).toBe(true);
+  });
+
+  it("returns false for invalid passwords", () => {
+    expect(isValidPassword("abcde", "abcd")).toBe(false);
+    expect(isValidPassword("12a", "123")).toBe(false);
+    expect(isValidPassword("😀", "abc")).toBe(false);
   });
 });

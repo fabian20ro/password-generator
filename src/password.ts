@@ -65,3 +65,14 @@ export function generatePasswordWithCharset(length: number, charset: string): st
 export function generateAll(): string[] {
   return LENGTHS.map((len) => generatePassword(len));
 }
+
+/**
+ * Checks if a password only contains characters from the provided charset.
+ * 
+ * @param pw The password to validate.
+ * @param charset The allowed character set.
+ * @returns True if all characters in pw are in charset, false otherwise.
+ */
+export function isValidPassword(pw: string, charset: string): boolean {
+  return [...pw].every((char) => charset.includes(char));
+}

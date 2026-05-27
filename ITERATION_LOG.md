@@ -229,3 +229,11 @@
 **Promoted to Lessons Learned:** No
 
 ---
+
+### [2026-05-27] Username generator section below password list
+
+**Context:** Add a new UI section that generates copyable usernames in `adjective_noun_number` format.
+**What happened:** Added a new `Usernames` section below the password list in `index.html`. Updated `src/main.ts` with hardcoded lists of 20 adjectives and 20 animal nouns, added a 4-digit lowercase username generator, reused existing row/copy UI for both passwords and usernames, and wired regenerate to refresh both lists.
+**Outcome:** Success. Username rows now render below passwords and support one-click copy behavior.
+**Insight:** Shared row rendering keeps password + username sections visually and behaviorally aligned with less UI duplication.
+**Promoted to Lessons Learned:** No

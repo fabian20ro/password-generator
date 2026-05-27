@@ -1,6 +1,7 @@
 import { generateAll } from "./password";
 import { copyTextToClipboard } from "./clipboard";
 import { scheduleButtonReset } from "./button-reset";
+import { generateUsernames } from "./username";
 
 const COPY_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M3.5 10.5h-1a1.5 1.5 0 0 1-1.5-1.5v-6a1.5 1.5 0 0 1 1.5-1.5h6a1.5 1.5 0 0 1 1.5 1.5v1"/></svg>`;
 const CHECK_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.5 3.5 6.5-8"/></svg>`;
@@ -9,19 +10,7 @@ const DEFAULT_COPY_LABEL = "Copy password";
 const COPIED_COPY_LABEL = "Password copied";
 const ERROR_COPY_LABEL = "Copy failed";
 
-const USERNAME_ADJECTIVES = [
-  "agile", "brave", "calm", "clever", "curious",
-  "eager", "fierce", "gentle", "happy", "jolly",
-  "kind", "lively", "mighty", "nimble", "playful",
-  "proud", "quick", "sly", "swift", "wild",
-] as const;
 
-const USERNAME_NOUNS = [
-  "antelope", "badger", "beaver", "buffalo", "cougar",
-  "dolphin", "eagle", "falcon", "fox", "jaguar",
-  "lemur", "lynx", "otter", "panther", "rabbit",
-  "raven", "tiger", "walrus", "wolf", "zebra",
-] as const;
 
 const USERNAME_COUNT = 10;
 
@@ -67,23 +56,7 @@ async function copyToClipboard(text: string, btn: HTMLButtonElement): Promise<vo
   });
 }
 
-function randomIndex(maxExclusive: number): number {
-  return Math.floor(Math.random() * maxExclusive);
-}
 
-function randomFourDigitNumber(): string {
-  return String(randomIndex(10000)).padStart(4, "0");
-}
-
-function generateUsername(): string {
-  const adjective = USERNAME_ADJECTIVES[randomIndex(USERNAME_ADJECTIVES.length)];
-  const noun = USERNAME_NOUNS[randomIndex(USERNAME_NOUNS.length)];
-  return `${adjective}_${noun}_${randomFourDigitNumber()}`;
-}
-
-function generateUsernames(count: number): string[] {
-  return Array.from({ length: count }, () => generateUsername());
-}
 
 function renderRows(container: HTMLDivElement, values: string[]): void {
   container.innerHTML = "";

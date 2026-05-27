@@ -44,7 +44,7 @@ export function generatePasswordWithSymbols(length: number): string {
  * @returns The generated password string.
  */
 export function generatePasswordWithCharset(length: number, charset: string): string {
-  if (!Number.isInteger(length) || length <= 0 || charset.length === 0) return "";
+  if (!Number.isInteger(length) || length <= 0 || !charset || charset.length === 0 || !/^[\x00-\x7F]+$/.test(charset)) return "";
   const chars = Array.from(charset);
   const charsetLen = chars.length;
   const rejectThreshold = UINT32_MODULUS - (UINT32_MODULUS % charsetLen);

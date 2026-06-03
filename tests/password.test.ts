@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD } from "../src/password";
+import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generatePasswordWithLettersOnly, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD } from "../src/password";
 
 const originalCrypto = globalThis.crypto;
+
 
 function installCryptoMock(sequence: number[] = []): () => number {
   const values = [...sequence];
@@ -125,6 +126,21 @@ describe("generatePasswordWithSymbols", () => {
     for (let i = 0; i < 20; i++) {
       const pw = generatePasswordWithSymbols(50);
       expect(pw).toMatch(/[!@#$%^&*()\-=_+[\]{}|;:,.<>?]/);
+    }
+  });
+});
+
+describe("generatePasswordWithLettersOnly", () => {
+  it("returns a string of the requested length", () => {
+    for (const len of [5, 10, 20]) {
+      expect(generatePasswordWithLettersOnly(len)).toHaveLength(len);
+    }
+  });
+
+  it("only contains letters", () => {
+    for (let i = 0; i < 20; i++) {
+      const pw = generatePasswordWithLettersOnly(27);
+      expect(pw).toMatch(/^[A-Za-z]+$/);
     }
   });
 });

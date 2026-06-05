@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generatePasswordWithLettersOnly, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD } from "../src/password";
+import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generatePasswordWithLettersOnly, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD, isValidPassword } from "../src/password";
 
 const originalCrypto = globalThis.crypto;
 
@@ -90,11 +90,11 @@ describe("generatePasswordWithCharset", () => {
     expect(getCallCount()).toBe(0);
   });
 
-  it("only contains characters from the provided charset", () => {
-    const charset = "01";
+  it("handles whitespace and control characters in charset", () => {
+    const charset = " \n\t\r";
     for (let i = 0; i < 20; i++) {
-      const pw = generatePasswordWithCharset(20, charset);
-      expect(pw).toMatch(/^[01]+$/);
+      const pw = generatePasswordWithCharset(10, charset);
+      expect(pw).toMatch(/^[ \n\t\r]+$/);
     }
   });
 
@@ -122,10 +122,11 @@ describe("generatePasswordWithSymbols", () => {
     }
   });
 
-  it("contains characters from both alphanumeric and symbols sets", () => {
+  it("contains only valid alphanumeric and symbol characters", () => {
+    const regex = new RegExp(`^[A-Za-z0-9!@#$%^&*()\\-_=+[\\]{}|;:,.<>?]+$`);
     for (let i = 0; i < 20; i++) {
       const pw = generatePasswordWithSymbols(50);
-      expect(pw).toMatch(/[!@#$%^&*()\-=_+[\]{}|;:,.<>?]/);
+      expect(pw).toMatch(regex);
     }
   });
 });
@@ -211,4 +212,18 @@ describe("rejection sampling", () => {
   });
 
 
+});
+
+describe("isValidPassword", () => {
+  it("returns true for valid passwords", () => {
+    expect(isValidPassword("abc", "abcd")).toBe(true);
+    expect(isValidPassword("123", "0123456789")).toBe(true);
+    expect(isValidPassword("😀😎", "😀😎ABC")).toBe(true);
+  });
+
+  it("returns false for invalid passwords", () => {
+    expect(isValidPassword("abcde", "abcd")).toBe(false);
+    expect(isValidPassword("12a", "123")).toBe(false);
+    expect(isValidPassword("😀", "abc")).toBe(false);
+  });
 });

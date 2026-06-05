@@ -122,10 +122,11 @@ describe("generatePasswordWithSymbols", () => {
     }
   });
 
-  it("contains characters from both alphanumeric and symbols sets", () => {
+  it("contains only valid alphanumeric and symbol characters", () => {
+    const regex = new RegExp(`^[A-Za-z0-9!@#$%^&*()\\-_=+[\\]{}|;:,.<>?]+$`);
     for (let i = 0; i < 20; i++) {
       const pw = generatePasswordWithSymbols(50);
-      expect(pw).toMatch(/[!@#$%^&*()\-=_+[\]{}|;:,.<>?]/);
+      expect(pw).toMatch(regex);
     }
   });
 });

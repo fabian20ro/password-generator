@@ -1,6 +1,7 @@
 import { generateAll } from "./password";
 import { copyTextToClipboard } from "./clipboard";
 import { scheduleButtonReset } from "./button-reset";
+import { generateUsernames } from "./username";
 
 const COPY_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M3.5 10.5h-1a1.5 1.5 0 0 1-1.5-1.5v-6a1.5 1.5 0 0 1 1.5-1.5h6a1.5 1.5 0 0 1 1.5 1.5v1"/></svg>`;
 const CHECK_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.5 3.5 6.5-8"/></svg>`;
@@ -9,12 +10,16 @@ const DEFAULT_COPY_LABEL = "Copy password";
 const COPIED_COPY_LABEL = "Password copied";
 const ERROR_COPY_LABEL = "Copy failed";
 
+
+
+const USERNAME_COUNT = 10;
+
 const statusEl = document.getElementById("status") as HTMLParagraphElement;
 const srStatusEl = document.getElementById("sr-status") as HTMLDivElement;
 
 function announceStatus(message: string): void {
-  statusEl.textContent = message;
-  srStatusEl.textContent = message;
+  if (statusEl) statusEl.textContent = message;
+  if (srStatusEl) srStatusEl.textContent = message;
 }
 
 function resetButtonState(btn: HTMLButtonElement): void {
@@ -32,7 +37,7 @@ async function copyToClipboard(text: string, btn: HTMLButtonElement): Promise<vo
     btn.classList.remove("error");
     btn.classList.add("copied");
     btn.setAttribute("aria-label", COPIED_COPY_LABEL);
-    announceStatus("Password copied to clipboard.");
+    announceStatus("Value copied to clipboard.");
 
     scheduleButtonReset(btn, 1500, () => {
       resetButtonState(btn);
@@ -51,14 +56,13 @@ async function copyToClipboard(text: string, btn: HTMLButtonElement): Promise<vo
   });
 }
 
-function generate(): void {
-  const container = document.getElementById("passwords") as HTMLDivElement;
-  container.innerHTML = "";
-  const passwords = generateAll();
-  announceStatus(`Generated ${passwords.length} new passwords.`);
 
-  passwords.forEach((pw) => {
-    const len = pw.length;
+
+function renderRows(container: HTMLDivElement, values: string[]): void {
+  container.innerHTML = "";
+
+  values.forEach((value) => {
+    const len = value.length;
 
     const row = document.createElement("div");
     row.className = "row";
@@ -68,20 +72,33 @@ function generate(): void {
     lenSpan.textContent = String(len);
 
     const code = document.createElement("code");
-    code.textContent = pw;
+    code.textContent = value;
 
     const btn = document.createElement("button");
     btn.className = "copy-btn";
     btn.type = "button";
     btn.innerHTML = COPY_ICON;
     btn.setAttribute("aria-label", `${DEFAULT_COPY_LABEL} (${len} characters)`);
-    btn.onclick = () => copyToClipboard(pw, btn);
+    btn.onclick = () => copyToClipboard(value, btn);
 
     row.appendChild(lenSpan);
     row.appendChild(code);
     row.appendChild(btn);
     container.appendChild(row);
   });
+}
+
+function generate(): void {
+  const passwordContainer = document.getElementById("passwords") as HTMLDivElement;
+  const usernameContainer = document.getElementById("usernames") as HTMLDivElement;
+
+  const passwords = generateAll();
+  const usernames = generateUsernames(USERNAME_COUNT);
+
+  renderRows(passwordContainer, passwords);
+  renderRows(usernameContainer, usernames);
+
+  announceStatus(`Generated ${passwords.length} new passwords and ${usernames.length} usernames.`);
 }
 
 document.getElementById("regenerate")?.addEventListener("click", generate);

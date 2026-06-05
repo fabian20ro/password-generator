@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD, isValidPassword } from "../src/password";
+import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generatePasswordWithLettersOnly, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD, isValidPassword } from "../src/password";
 
 const originalCrypto = globalThis.crypto;
+
 
 function installCryptoMock(sequence: number[] = []): () => number {
   const values = [...sequence];
@@ -129,6 +130,21 @@ describe("generatePasswordWithSymbols", () => {
   });
 });
 
+describe("generatePasswordWithLettersOnly", () => {
+  it("returns a string of the requested length", () => {
+    for (const len of [5, 10, 20]) {
+      expect(generatePasswordWithLettersOnly(len)).toHaveLength(len);
+    }
+  });
+
+  it("only contains letters", () => {
+    for (let i = 0; i < 20; i++) {
+      const pw = generatePasswordWithLettersOnly(27);
+      expect(pw).toMatch(/^[A-Za-z]+$/);
+    }
+  });
+});
+
 describe("generateAll", () => {
   it("returns exactly 10 passwords", () => {
     expect(generateAll()).toHaveLength(10);
@@ -188,16 +204,13 @@ describe("rejection sampling", () => {
     expect(pw).toMatch(/^[A-Za-z0-9]$/);
   });
 
-  it("handles multi-byte characters correctly", () => {
+  it("rejects multi-byte/unicode characters by returning an empty string", () => {
     const emojiCharset = "😀😎";
-    for (let i = 0; i < 20; i++) {
-      const pw = generatePasswordWithCharset(5, emojiCharset);
-      expect([...pw]).toHaveLength(5);
-      for (const char of pw) {
-        expect(emojiCharset).toContain(char);
-      }
-    }
+    const pw = generatePasswordWithCharset(5, emojiCharset);
+    expect(pw).toBe("");
   });
+
+
 });
 
 describe("isValidPassword", () => {

@@ -16,4 +16,20 @@ describe("username generation", () => {
       expect(username).toMatch(/^[a-z]+_[a-z]+_[0-9]{4}$/);
     });
   });
+
+  it("generates different usernames on successive calls", () => {
+    const usernames = new Set(Array.from({ length: 50 }, () => generateUsername()));
+    expect(usernames.size).toBeGreaterThan(1);
+  });
+
+  it("generates four-digit numbers in the range 1000–9999", () => {
+    for (let i = 0; i < 50; i++) {
+      const username = generateUsername();
+      const numPart = username.split("_")[2];
+      expect(numPart).toMatch(/^[0-9]{4}$/);
+      const num = Number(numPart);
+      expect(num).toBeGreaterThanOrEqual(1000);
+      expect(num).toBeLessThanOrEqual(9999);
+    }
+  });
 });

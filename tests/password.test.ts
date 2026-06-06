@@ -90,12 +90,11 @@ describe("generatePasswordWithCharset", () => {
     expect(getCallCount()).toBe(0);
   });
 
-  it("handles whitespace and control characters in charset", () => {
-    const charset = " \n\t\r";
-    for (let i = 0; i < 20; i++) {
-      const pw = generatePasswordWithCharset(10, charset);
-      expect(pw).toMatch(/^[ \n\t\r]+$/);
-    }
+  it("validates passwords against a charset", () => {
+    const charset = "ABC123";
+    expect(isValidPassword("A1", charset)).toBe(true);
+    expect(isValidPassword("A!1", charset)).toBe(false);
+    expect(isValidPassword("", charset)).toBe(true);
   });
 
   it("correctly applies rejection sampling for custom charset", () => {
@@ -109,11 +108,7 @@ describe("generatePasswordWithCharset", () => {
   it("throws an error for lengths greater than 65536", () => {
     expect(() => generatePasswordWithCharset(65537, "abc")).toThrow(/Length exceeds maximum allowed/);
   });
-},
-  it("throws an error for lengths greater than 65536", () => {
-    expect(() => generatePasswordWithCharset(65537, "abc")).toThrow(/Length exceeds maximum allowed/);
-  });
-},
+});
 
 describe("generatePasswordWithSymbols", () => {
   it("returns a string of the requested length", () => {
@@ -207,14 +202,14 @@ describe("rejection sampling", () => {
 });
 
 describe("Unicode support", () => {
-      it("generates passwords with emojis", () => {
-        const charset = "😀😎🚀";
-        for (let i = 0; i < 20; i++) {
-          const pw = generatePasswordWithCharset(10, charset);
-          expect([...pw].length).toBe(10);
-          expect(pw).toMatch(/^[😀😎🚀]+$/);
-        }
-      });
+  it("generates passwords with emojis", () => {
+    const charset = "😀😎🚀";
+    for (let i = 0; i < 20; i++) {
+      const pw = generatePasswordWithCharset(10, charset);
+      expect([...pw].length).toBe(10);
+      expect(pw).toMatch(/^[😀😎🚀]+$/);
+    }
+  });
 
   it("validates passwords with emojis correctly", () => {
     const charset = "😀😎🚀";

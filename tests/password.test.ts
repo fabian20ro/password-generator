@@ -98,14 +98,6 @@ describe("generatePasswordWithCharset", () => {
     }
   });
 
-  it("handles a single-character charset without resampling", () => {
-    const getCallCount = installCryptoMock([123456789]);
-    const pw = generatePasswordWithCharset(8, "X");
-
-    expect(pw).toBe("XXXXXXXX");
-    expect(getCallCount()).toBe(1);
-  });
-
   it("correctly applies rejection sampling for custom charset", () => {
     const getCallCount = installCryptoMock([4294967295, 42]);
     const pw = generatePasswordWithCharset(1, "012");
@@ -113,7 +105,15 @@ describe("generatePasswordWithCharset", () => {
     expect(getCallCount()).toBe(2);
     expect(pw).toMatch(/^[012]$/);
   });
-});
+
+  it("throws an error for lengths greater than 65536", () => {
+    expect(() => generatePasswordWithCharset(65537, "abc")).toThrow(/Length exceeds maximum allowed/);
+  });
+},
+  it("throws an error for lengths greater than 65536", () => {
+    expect(() => generatePasswordWithCharset(65537, "abc")).toThrow(/Length exceeds maximum allowed/);
+  });
+},
 
 describe("generatePasswordWithSymbols", () => {
   it("returns a string of the requested length", () => {

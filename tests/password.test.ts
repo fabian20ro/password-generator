@@ -61,6 +61,10 @@ describe("generatePassword", () => {
     const passwords = new Set(Array.from({ length: 20 }, () => generatePassword(25)));
     expect(passwords.size).toBeGreaterThan(1);
   });
+
+  it("throws error if length exceeds MAX_LENGTH", () => {
+    expect(() => generatePassword(70000)).toThrow("Length exceeds maximum allowed: 65536");
+  });
 });
 
 describe("generatePasswordWithCharset", () => {

@@ -204,14 +204,26 @@ describe("rejection sampling", () => {
     expect(getCallCount()).toBe(1);
     expect(pw).toMatch(/^[A-Za-z0-9]$/);
   });
+});
 
-  it("rejects multi-byte/unicode characters by returning an empty string", () => {
-    const emojiCharset = "😀😎";
-    const pw = generatePasswordWithCharset(5, emojiCharset);
-    expect(pw).toMatch(/^[😀😎]+$/);
+describe("Unicode support", () => {
+      it("generates passwords with emojis", () => {
+        const charset = "😀😎🚀";
+        for (let i = 0; i < 20; i++) {
+          const pw = generatePasswordWithCharset(10, charset);
+          expect([...pw].length).toBe(10);
+          expect(pw).toMatch(/^[😀😎🚀]+$/);
+        }
+      });
+
+  it("validates passwords with emojis correctly", () => {
+    const charset = "😀😎🚀";
+    expect(isValidPassword("😀😎🚀", charset)).toBe(true);
+    expect(isValidPassword("😀😎", charset)).toBe(true);
+    expect(isValidPassword("😀", charset)).toBe(true);
+    expect(isValidPassword("😎🚀", charset)).toBe(true);
+    expect(isValidPassword("😀😎🚀!", charset)).toBe(false);
   });
-
-
 });
 
 describe("isValidPassword", () => {

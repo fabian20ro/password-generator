@@ -54,7 +54,9 @@ export function generatePasswordWithLettersOnly(length: number): string {
  * @returns The generated password string.
  */
 export function generatePasswordWithCharset(length: number, charset: string): string {
-  if (!Number.isInteger(length) || length <= 0 || !charset || charset.length === 0 || !/^[\x00-\x7F]+$/.test(charset)) return "";
+  if (!Number.isInteger(length) || length <= 0 || !charset || charset.length === 0) return "";
+  const MAX_LENGTH = 65536;
+  if (length > MAX_LENGTH) throw new Error(`Length exceeds maximum allowed: ${MAX_LENGTH}`);
   const chars = Array.from(charset);
   const charsetLen = chars.length;
   const rejectThreshold = UINT32_MODULUS - (UINT32_MODULUS % charsetLen);
@@ -69,7 +71,7 @@ export function generatePasswordWithCharset(length: number, charset: string): st
     }
     pw += chars[val % charsetLen];
   }
-  return pw;
+  return pw
 }
 
 export function generateAll(): string[] {

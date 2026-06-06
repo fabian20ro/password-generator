@@ -1,3 +1,5 @@
+import { getSecureRandomInt } from "./crypto-utils";
+
 const USERNAME_ADJECTIVES = [
   "agile", "brave", "calm", "clever", "curious",
   "eager", "fierce", "gentle", "happy", "jolly",
@@ -12,40 +14,19 @@ const USERNAME_NOUNS = [
   "raven", "tiger", "walrus", "wolf", "zebra",
 ] as const;
 
-const UINT32_MODULUS = 0x1_0000_0000; // 2^32
-
-function randomIndex(length: number): number {
-  const rejectThreshold = UINT32_MODULUS - (UINT32_MODULUS % length);
-  const buf = new Uint32Array(1);
-  crypto.getRandomValues(buf);
-  let val = buf[0];
-  while (val >= rejectThreshold) {
-    crypto.getRandomValues(buf);
-    val = buf[0];
-  }
-  return val % length;
-}
-
 function randomFourDigitNumber(): string {
   const range = 9000;
-  const rejectThreshold = UINT32_MODULUS - (UINT32_MODULUS % range);
-  const buf = new Uint32Array(1);
-  crypto.getRandomValues(buf);
-  let val = buf[0];
-  while (val >= rejectThreshold) {
-    crypto.getRandomValues(buf);
-    val = buf[0];
-  }
-  const num = (val % range) + 1000;
+  const num = getSecureRandomInt(range) + 1000;
   return num.toString();
 }
 
 export function generateUsername(): string {
-  const adjective = USERNAME_ADJECTIVES[randomIndex(USERNAME_ADJECTIVES.length)];
-  const noun = USERNAME_NOUNS[randomIndex(USERNAME_NOUNS.length)];
+  const adjective = USERNAME_ADJECTIVES[getSecureRandomInt(USERNAME_ADJECTIVES.length)];
+  const noun = USERNAME_NOUNS[getSecureRandomInt(USERNAME_NOUNS.length)];
   return `${adjective}_${noun}_${randomFourDigitNumber()}`;
 }
 
 export function generateUsernames(count: number): string[] {
+  if (!Number.isInteger(count) || count <= 0) return [];
   return Array.from({ length: count }, () => generateUsername());
 }

@@ -47,5 +47,6 @@ export function generateUsername(): string {
 }
 
 export function generateUsernames(count: number): string[] {
+  if (!Number.isInteger(count) || count <= 0) return [];
   return Array.from({ length: count }, () => generateUsername());
 }

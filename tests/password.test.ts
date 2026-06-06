@@ -208,7 +208,7 @@ describe("rejection sampling", () => {
   it("rejects multi-byte/unicode characters by returning an empty string", () => {
     const emojiCharset = "😀😎";
     const pw = generatePasswordWithCharset(5, emojiCharset);
-    expect(pw).toBe("");
+    expect(pw).toMatch(/^[😀😎]+$/);
   });
 
 

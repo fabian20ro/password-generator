@@ -1,3 +1,5 @@
+import { getSecureRandomInt } from "./crypto-utils";
+
 export const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 export const SYMBOLS = "!@#$%^&*()-_=+[]{}|;:,.<>?";
 export const CHARSET_LEN = CHARS.length;
@@ -87,4 +89,43 @@ export function generateAll(): string[] {
  */
 export function isValidPassword(pw: string, charset: string): boolean {
   return [...pw].every((char) => charset.includes(char));
+}
+
+/**
+ * Generates a cryptographically secure random password that contains at least 
+ * one character from each provided category.
+ * 
+ * @param length The desired length of the password.
+ * @param categories An array of character sets (e.g., ['ABC', '123']).
+ * @returns The generated password string.
+ */
+export function generateComplexPassword(length: number, categories: string[][]): string {
+  if (!Number.isInteger(length) || length < categories.length || categories.length === 0 || categories.some(c => c.length === 0)) return "";
+  
+  const passwordChars = [];
+  const remainingLength = length - categories.length;
+  
+  // 1. Pick one from each category
+  for (const category of categories) {
+    const idx = getSecureRandomInt(category.length);
+    passwordChars.push(category[idx]);
+  }
+  
+  // 2. Fill the rest
+  const allChars = [...new Set(categories.flat())];
+  if (allChars.length === 0) return "";
+  
+  const extraChars = Array.from({ length: remainingLength }, () => {
+    const idx = getSecureRandomInt(allChars.length);
+    return allChars[idx];
+  });
+  
+  // 3. Shuffle the password
+  const finalChars = [...passwordChars, ...extraChars];
+  for (let i = finalChars.length - 1; i > 0; i--) {
+    const j = getSecureRandomInt(i + 1);
+    [finalChars[i], finalChars[j]] = [finalChars[j], finalChars[i]];
+  }
+  
+  return finalChars.join('');
 }

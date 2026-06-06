@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generatePasswordWithLettersOnly, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD, isValidPassword } from "../src/password";
+import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generatePasswordWithLettersOnly, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD, isValidPassword, generateComplexPassword } from "../src/password";
 
 const originalCrypto = globalThis.crypto;
 
@@ -236,5 +236,28 @@ describe("isValidPassword", () => {
     expect(isValidPassword("abcde", "abcd")).toBe(false);
     expect(isValidPassword("12a", "123")).toBe(false);
     expect(isValidPassword("😀", "abc")).toBe(false);
+  });
+});
+describe("generateComplexPassword", () => {
+  it("returns a string of the requested length", () => {
+    for (const len of [3, 10, 20]) {
+      expect(generateComplexPassword(len, [["A", "B"], ["1", "2"]])).toHaveLength(len);
+    }
+  });
+
+  it("ensures at least one character from each category is present", () => {
+    const categories = [["A", "B"], ["1", "2"], ["!", "?"]];
+    for (let i = 0; i < 20; i++) {
+      const pw = generateComplexPassword(10, categories);
+      expect(pw).toMatch(/[A-B]/);
+      expect(pw).toMatch(/[1-2]/);
+      expect(pw).toMatch(/[!?]/);
+    }
+  });
+
+  it("returns an empty string for invalid lengths or categories", () => {
+    expect(generateComplexPassword(2, [["A"], ["B"], ["C"]])).toBe("");
+    expect(generateComplexPassword(10, [])).toBe("");
+    expect(generateComplexPassword(10, [[]])).toBe("");
   });
 });

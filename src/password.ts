@@ -12,6 +12,8 @@ export const REJECT_THRESHOLD = UINT32_MODULUS - (UINT32_MODULUS % CHARSET_LEN);
 
 export const LENGTHS = [23, 24, 25, 26, 27, 28, 29, 30, 31, 32] as const;
 
+export const MAX_LENGTH = 65536;
+
 const RE_SAMPLE_BUF = new Uint32Array(1);
 
 /**
@@ -57,7 +59,6 @@ export function generatePasswordWithLettersOnly(length: number): string {
  */
 export function generatePasswordWithCharset(length: number, charset: string): string {
   if (!Number.isInteger(length) || length <= 0 || !charset || charset.length === 0) return "";
-  const MAX_LENGTH = 65536;
   if (length > MAX_LENGTH) throw new Error(`Length exceeds maximum allowed: ${MAX_LENGTH}`);
   const chars = Array.from(charset);
   const charsetLen = chars.length;
@@ -101,6 +102,7 @@ export function isValidPassword(pw: string, charset: string): boolean {
  */
 export function generateComplexPassword(length: number, categories: string[][]): string {
   if (!Number.isInteger(length) || length < categories.length || categories.length === 0 || categories.some(c => c.length === 0)) return "";
+  if (length > MAX_LENGTH) throw new Error(`Length exceeds maximum allowed: ${MAX_LENGTH}`);
   
   const passwordChars = [];
   const remainingLength = length - categories.length;

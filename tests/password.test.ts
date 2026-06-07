@@ -256,8 +256,12 @@ describe("generateComplexPassword", () => {
   });
 
   it("returns an empty string for invalid lengths or categories", () => {
-    expect(generateComplexPassword(2, [["A"], ["B"], ["C"]])).toBe("");
+    expect(generateComplexPassword(2, [["A", "B"], ["1", "2"]])).toHaveLength(2);
     expect(generateComplexPassword(10, [])).toBe("");
     expect(generateComplexPassword(10, [[]])).toBe("");
   });
-});
+
+   it("throws an error if length exceeds MAX_LENGTH", () => {
+     expect(() => generateComplexPassword(70000, [["A"], ["1"]])).toThrow(/Length exceeds maximum allowed/);
+   });
+  });

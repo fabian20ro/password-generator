@@ -273,6 +273,18 @@ describe("generateComplexPassword", () => {
     expect(generateComplexPassword(10, [[]])).toBe("");
   });
 
+   it("ensures characters are only from the provided categories", () => {
+     const categories = [["A", "B"], ["1", "2"], ["!", "?"]];
+     const length = 20;
+     for (let i = 0; i < 20; i++) {
+       const pw = generateComplexPassword(length, categories);
+       const allowedChars = [...new Set(categories.flat())];
+       for (const char of pw) {
+         expect(allowedChars).toContain(char);
+       }
+     }
+   });
+
    it("throws an error if length exceeds MAX_LENGTH", () => {
      expect(() => generateComplexPassword(70000, [["A"], ["1"]])).toThrow(/Length exceeds maximum allowed/);
    });

@@ -289,3 +289,12 @@ describe("generateComplexPassword", () => {
      expect(() => generateComplexPassword(70000, [["A"], ["1"]])).toThrow(/Length exceeds maximum allowed/);
    });
   });
+
+describe("emoji support", () => {
+  it("handles emojis in charset correctly", () => {
+    const charset = "🍎🍌🍒";
+    const pw = generatePasswordWithCharset(5, charset);
+    expect(pw).toMatch(/^[🍎🍌🍒]+$/);
+    expect(pw.length).toBe(10); // 5 emojis * 2 code units each
+  });
+});

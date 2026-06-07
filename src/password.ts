@@ -74,7 +74,7 @@ export function generatePasswordWithCharset(length: number, charset: string): st
     }
     pw += chars[val % charsetLen];
   }
-  return pw
+  return pw;
 }
 
 export function generateAll(): string[] {

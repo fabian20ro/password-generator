@@ -104,17 +104,20 @@ export function generateComplexPassword(length: number, categories: string[][]):
   if (!Number.isInteger(length) || length < categories.length || categories.length === 0 || categories.some(c => c.length === 0)) return "";
   if (length > MAX_LENGTH) throw new Error(`Length exceeds maximum allowed: ${MAX_LENGTH}`);
   
+  const charSets = categories.map(c => [...c.join('')]);
+  if (charSets.some(s => s.length === 0)) return "";
+
   const passwordChars = [];
   const remainingLength = length - categories.length;
   
   // 1. Pick one from each category
-  for (const category of categories) {
+  for (const category of charSets) {
     const idx = getSecureRandomInt(category.length);
     passwordChars.push(category[idx]);
   }
   
   // 2. Fill the rest
-  const allChars = [...new Set(categories.flat())];
+  const allChars = [...new Set(charSets.flat())];
   if (allChars.length === 0) return "";
   
   const extraChars = Array.from({ length: remainingLength }, () => {

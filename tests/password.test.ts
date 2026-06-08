@@ -57,7 +57,7 @@ describe("generatePassword", () => {
     }
   });
 
-  it("returns a password of the requested length and contains characters from all categories", () => {
+  it("returns a string of the requested length and contains characters from all categories", () => {
     const categories = [["abc"], ["123"], ["!@#"]];
     const length = 10;
     const pw = generateComplexPassword(length, categories);
@@ -66,6 +66,24 @@ describe("generatePassword", () => {
       const categoryChars = [...category.join('')];
       expect([...pw].some(char => categoryChars.includes(char))).toBe(true);
     }
+  });
+
+  it("returns a string of the requested length when length equals number of categories", () => {
+    const categories = [["abc"], ["123"], ["!@#"]];
+    const length = 3;
+    const pw = generateComplexPassword(length, categories);
+    expect(pw).toHaveLength(length);
+    const chars = [...pw];
+    const matched = new Array(categories.length).fill(false);
+    for (const char of chars) {
+      for (let i = 0; i < categories.length; i++) {
+        if (categories[i].join('').includes(char)) {
+          matched[i] = true;
+          break;
+        }
+      }
+    }
+    expect(matched).toEqual([true, true, true]);
   });
 
   it("returns an empty string if length is less than number of categories", () => {

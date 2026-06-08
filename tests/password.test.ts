@@ -146,6 +146,15 @@ describe("generatePasswordWithCharset", () => {
     expect(isValidPassword("A💩", charset)).toBe(false);
   });
 
+  it("handles duplicate characters in charset", () => {
+    const charset = "AAAB";
+    for (let i = 0; i < 50; i++) {
+      const pw = generatePasswordWithCharset(10, charset);
+      expect(pw).toHaveLength(10);
+      expect([...pw].every(char => ["A", "B"].includes(char))).toBe(true);
+    }
+  });
+
   it("correctly applies rejection sampling for custom charset", () => {
     const getCallCount = installCryptoMock([4294967295, 42]);
     const pw = generatePasswordWithCharset(1, "012");

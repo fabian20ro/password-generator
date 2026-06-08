@@ -68,6 +68,14 @@ describe("generatePassword", () => {
     }
   });
 
+  it("only contains characters from the provided categories", () => {
+    const categories = [["abc"], ["123"], ["!@#"]];
+    const length = 20;
+    const pw = generateComplexPassword(length, categories);
+    const allowedChars = new Set([...categories.flat().join('')]);
+    expect([...pw].every(char => allowedChars.has(char))).toBe(true);
+  });
+
   it("returns a string of the requested length when length equals number of categories", () => {
     const categories = [["abc"], ["123"], ["!@#"]];
     const length = 3;
@@ -129,6 +137,22 @@ describe("generatePasswordWithCharset", () => {
     expect(isValidPassword("A1", charset)).toBe(true);
     expect(isValidPassword("A!1", charset)).toBe(false);
     expect(isValidPassword("", charset)).toBe(true);
+  });
+
+  it("validates passwords against a unicode charset", () => {
+    const charset = "ABC😀😎";
+    expect(isValidPassword("A😀", charset)).toBe(true);
+    expect(isValidPassword("A😎", charset)).toBe(true);
+    expect(isValidPassword("A💩", charset)).toBe(false);
+  });
+
+  it("handles duplicate characters in charset", () => {
+    const charset = "AAAB";
+    for (let i = 0; i < 50; i++) {
+      const pw = generatePasswordWithCharset(10, charset);
+      expect(pw).toHaveLength(10);
+      expect([...pw].every(char => ["A", "B"].includes(char))).toBe(true);
+    }
   });
 
   it("correctly applies rejection sampling for custom charset", () => {

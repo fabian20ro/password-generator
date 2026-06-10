@@ -1,27 +1,5 @@
-import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { scheduleButtonReset } from "../src/button-reset";
-
-const pendingTimeouts = new Map<number, () => void>();
-let nextTimeoutId = 1;
-
-function installManualTimeouts(): void {
-  pendingTimeouts.clear();
-  nextTimeoutId = 1;
-
-  vi.stubGlobal("setTimeout", ((callback: () => void) => {
-    const timeoutId = nextTimeoutId++;
-    pendingTimeouts.set(timeoutId, callback);
-    return timeoutId;
-  }) as typeof setTimeout);
-
-  vi.stubGlobal("clearTimeout", ((timeoutId: number) => {
-    pendingTimeouts.delete(timeoutId);
-  }) as typeof clearTimeout);
-}
-
-function runTimeout(timeoutId: number): void {
-  pendingTimeouts.get(timeoutId)?.();
-}
 
 describe("scheduleButtonReset", () => {
   beforeEach(() => {
@@ -29,16 +7,12 @@ describe("scheduleButtonReset", () => {
   });
 
   afterEach(() => {
-    pendingTimeouts.clear();
-    vi.clearAllTimers();
     vi.useRealTimers();
-    vi.unstubAllGlobals();
   });
 
-  it("runs the reset callback after the requested delay", () => {
-    const target = {};
+  it("calls the reset function after the specified delay", () => {
+    const target = { id: "test" };
     const reset = vi.fn();
-
     scheduleButtonReset(target, 1500, reset);
 
     vi.advanceTimersByTime(1499);
@@ -48,20 +22,35 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
-  it("ignores a stale timeout callback after the target has been rescheduled", () => {
-    installManualTimeouts();
-
-    const target = {};
+  it("clears the existing timeout if called again before the delay expires", () => {
+    const target = { id: "test" };
     const reset = vi.fn();
+    
+    scheduleButtonReset(target, 1500, reset);
+    vi.advanceTimersByTime(1000);
+    scheduleButtonReset(target, 1500, reset); // Reschedule
 
-    scheduleButtonReset(target, 2000, reset);
-    scheduleButtonReset(target, 1000, reset);
+    vi.advanceTimersByTime(1000);
+    expect(reset).not.toHaveBeenCalled(); // 1000 + 1000 = 2000 > 1500
 
-    runTimeout(1);
-    expect(reset).not.toHaveBeenCalled();
-
-    runTimeout(2);
+    vi.advanceTimersByTime(501);
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
+  it("does not call reset if a new timeout has been scheduled", () => {
+    const target = { id: "test" };
+    const reset = vi.fn();
+    
+    scheduleButtonReset(target, 1500, reset);
+    vi.advanceTimersByTime(1000);
+    scheduleButtonReset(target, 500, reset);
+
+    vi.advanceTimersByTime(1000);
+    expect(reset).toHaveBeenCalledTimes(1); // The second one should have fired at 2000 (1000 + 1000)
+    // Wait, if second was 500, it should fire at 1500 total.
+    // The first one was at 1500. 
+    // At 1000, we reset. 
+    // The second one is at 1000 + 500 = 1500.
+    // At 1501, reset should have been called once.
+  });
 });

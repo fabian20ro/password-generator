@@ -145,8 +145,15 @@ describe("generatePassword", () => {
   it("handles edge cases for generatePasswordWithCharset", () => {
     expect(generatePasswordWithCharset(0, "abc")).toBe("");
     expect(generatePasswordWithCharset(-1, "abc")).toBe("");
+    expect(generatePasswordWithCharset(2.5, "abc")).toBe("");
     expect(generatePasswordWithCharset(10, "")).toBe("");
     expect(generatePasswordWithCharset(10, undefined as any)).toBe("");
+  });
+
+  it("handles emoji charsets", () => {
+    expect(generatePasswordWithCharset(5, "😀")).toBe("😀😀😀😀😀");
+    expect(isValidPassword("😀😀", "😀")).toBe(true);
+    expect(isValidPassword("😀! ", "😀! ")).toBe(true);
   });
 });
 

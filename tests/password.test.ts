@@ -94,6 +94,25 @@ describe("generatePassword", () => {
     expect(matched).toEqual([true, true, true]);
   });
 
+  it("handles overlapping categories in generateComplexPassword", () => {
+    const categories = [["abc"], ["bcd"], ["cde"]];
+    const length = 5;
+    const pw = generateComplexPassword(length, categories);
+    expect(pw).toHaveLength(length);
+    expect([...pw].every(char => "abcde".includes(char))).toBe(true);
+  });
+
+  it("returns an empty string if length is less than number of categories", () => {
+    const categories = [["a"], ["b"], ["c"]];
+    const length = 2;
+    const pw = generateComplexPassword(length, categories);
+    expect(pw).toBe("");
+  });
+
+  it("throws error if length exceeds MAX_LENGTH in generatePasswordWithLettersOnly", () => {
+    expect(() => generatePasswordWithLettersOnly(65537)).toThrow(`Length exceeds maximum allowed: 65536`);
+  });
+
   it("returns an empty string if length is zero or negative", () => {
     expect(generatePasswordWithCharset(0, "abc")).toBe("");
     expect(generatePasswordWithCharset(-1, "abc")).toBe("");

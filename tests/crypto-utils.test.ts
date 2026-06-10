@@ -22,4 +22,9 @@ describe("getSecureRandomInt", () => {
     expect(val).toBeGreaterThanOrEqual(0);
     expect(val).toBeLessThan(max);
   });
+
+  it("handles max=1 correctly", () => {
+    const val = getSecureRandomInt(1);
+    expect(val).toBe(0);
+  });
 });

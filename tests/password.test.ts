@@ -94,9 +94,29 @@ describe("generatePassword", () => {
     expect(matched).toEqual([true, true, true]);
   });
 
-  it("returns an empty string if length is less than number of categories", () => {
-    const categories = [["a"], ["b"], ["c"]];
-    expect(generateComplexPassword(2, categories)).toBe("");
+  it("returns an empty string if length is zero or negative", () => {
+    expect(generatePasswordWithCharset(0, "abc")).toBe("");
+    expect(generatePasswordWithCharset(-1, "abc")).toBe("");
+  });
+
+  it("returns a string with symbols", () => {
+    const pw = generatePasswordWithSymbols(20);
+    expect(pw).toHaveLength(20);
+    expect(pw).toMatch(/[!@#$%^&*()\-=_+[\]{}|;:,.<>?]/);
+  });
+
+  it("returns a string with letters only", () => {
+    const pw = generatePasswordWithLettersOnly(20);
+    expect(pw).toHaveLength(20);
+    expect(pw).toMatch(/^[A-Za-z]+$/);
+  });
+
+  it("generates all passwords of standard lengths", () => {
+    const passwords = generateAll();
+    expect(passwords).toHaveLength(LENGTHS.length);
+    for (const pw of passwords) {
+      expect(pw).toMatch(/^[A-Za-z0-9]+$/);
+    }
   });
 
   it("throws error if length exceeds MAX_LENGTH", () => {

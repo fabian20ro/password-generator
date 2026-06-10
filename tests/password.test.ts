@@ -98,6 +98,17 @@ describe("generatePassword", () => {
     const categories = [["a"], ["b"], ["c"]];
     expect(generateComplexPassword(2, categories)).toBe("");
   });
+
+  it("throws error if length exceeds MAX_LENGTH", () => {
+    expect(() => generatePassword(65537)).toThrow(`Length exceeds maximum allowed: 65536`);
+  });
+
+  it("handles edge cases for generatePasswordWithCharset", () => {
+    expect(generatePasswordWithCharset(0, "abc")).toBe("");
+    expect(generatePasswordWithCharset(-1, "abc")).toBe("");
+    expect(generatePasswordWithCharset(10, "")).toBe("");
+    expect(generatePasswordWithCharset(10, undefined as any)).toBe("");
+  });
 });
 
 describe("isValidPassword", () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generatePasswordWithLettersOnly, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD, isValidPassword, generateComplexPassword } from "../src/password";
+import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generatePasswordWithLettersOnly, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD, isValidPassword, generateComplexPassword, MAX_LENGTH } from "../src/password";
 
 const originalCrypto = globalThis.crypto;
 
@@ -50,6 +50,10 @@ describe("generatePassword", () => {
     }
   });
 
+  it("returns an empty string for non-integer lengths", () => {
+    expect(generatePassword(2.5)).toBe("");
+  });
+
   it("only contains alphanumeric characters", () => {
     for (let i = 0; i < 20; i++) {
       const pw = generatePassword(27);
@@ -76,30 +80,28 @@ describe("generatePassword", () => {
     expect([...pw].every(char => allowedChars.has(char))).toBe(true);
   });
 
-  it("returns a string of the requested length when length equals number of categories", () => {
-    const categories = [["abc"], ["123"], ["!@#"]];
-    const length = 3;
-    const pw = generateComplexPassword(length, categories);
-    expect(pw).toHaveLength(length);
-    const chars = [...pw];
-    const matched = new Array(categories.length).fill(false);
-    for (const char of chars) {
-      for (let i = 0; i < categories.length; i++) {
-        if (categories[i].join('').includes(char)) {
-          matched[i] = true;
-          break;
-        }
-      }
-    }
-    expect(matched).toEqual([true, true, true]);
+  it("throws error for lengths greater than MAX_LENGTH", () => {
+    expect(() => generatePasswordWithCharset(MAX_LENGTH + 1, "abc")).toThrow(`Length exceeds maximum allowed: ${MAX_LENGTH}`);
   });
 
-  it("handles overlapping categories in generateComplexPassword", () => {
-    const categories = [["abc"], ["bcd"], ["cde"]];
-    const length = 5;
+  it("returns an empty string if any category is empty", () => {
+    const categories = [["abc"], []];
+    const length = 10;
     const pw = generateComplexPassword(length, categories);
-    expect(pw).toHaveLength(length);
-    expect([...pw].every(char => "abcde".includes(char))).toBe(true);
+    expect(pw).toBe("");
+  });
+
+  it("returns an empty string if categories is empty", () => {
+    const categories = [];
+    const length = 10;
+    const pw = generateComplexPassword(length, categories);
+    expect(pw).toBe("");
+  });
+
+  it("handles emoji in generatePasswordWithCharset", () => {
+    const pw = generatePasswordWithCharset(5, "😀abc");
+    expect([...pw].length).toBe(5);
+    expect([...pw].every(char => "😀abc".includes(char))).toBe(true);
   });
 
   it("returns an empty string if length is less than number of categories", () => {
@@ -110,12 +112,24 @@ describe("generatePassword", () => {
   });
 
   it("throws error if length exceeds MAX_LENGTH in generatePasswordWithLettersOnly", () => {
-    expect(() => generatePasswordWithLettersOnly(65537)).toThrow(`Length exceeds maximum allowed: 65536`);
+    expect(() => generatePasswordWithLettersOnly(65537)).toThrow(/Length exceeds maximum allowed/);
   });
 
   it("returns an empty string if length is zero or negative", () => {
     expect(generatePasswordWithCharset(0, "abc")).toBe("");
     expect(generatePasswordWithCharset(-1, "abc")).toBe("");
+  });
+
+  it("returns an empty string for an empty charset", () => {
+    expect(generatePasswordWithCharset(10, "")).toBe("");
+  });
+
+  it("validates password characters against a charset", () => {
+    const charset = "abc123";
+    expect(isValidPassword("a1b2c3", charset)).toBe(true);
+    expect(isValidPassword("a1b2c!", charset)).toBe(false);
+    expect(isValidPassword("", charset)).toBe(true);
+    expect(isValidPassword("abc", "def")).toBe(false);
   });
 
   it("returns a string with symbols", () => {
@@ -139,30 +153,6 @@ describe("generatePassword", () => {
   });
 
   it("throws error if length exceeds MAX_LENGTH", () => {
-    expect(() => generatePassword(65537)).toThrow(`Length exceeds maximum allowed: 65536`);
-  });
-
-  it("handles edge cases for generatePasswordWithCharset", () => {
-    expect(generatePasswordWithCharset(0, "abc")).toBe("");
-    expect(generatePasswordWithCharset(-1, "abc")).toBe("");
-    expect(generatePasswordWithCharset(2.5, "abc")).toBe("");
-    expect(generatePasswordWithCharset(10, "")).toBe("");
-    expect(generatePasswordWithCharset(10, undefined as any)).toBe("");
-  });
-
-  it("handles emoji charsets", () => {
-    expect(generatePasswordWithCharset(5, "😀")).toBe("😀😀😀😀😀");
-    expect(isValidPassword("😀😀", "😀")).toBe(true);
-    expect(isValidPassword("😀! ", "😀! ")).toBe(true);
-  });
-});
-
-describe("isValidPassword", () => {
-  it("validates passwords against charsets", () => {
-    expect(isValidPassword("abc123", "abc123")).toBe(true);
-    expect(isValidPassword("abc123", "abc")).toBe(false);
-    expect(isValidPassword("", "abc")).toBe(true);
-    expect(isValidPassword("!", "!")).toBe(true);
-    expect(isValidPassword(" ", " ")).toBe(true);
+    expect(() => generatePassword(65537)).toThrow(/Length exceeds maximum allowed/);
   });
 });

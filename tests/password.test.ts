@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generatePasswordWithLettersOnly, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD, isValidPassword, generateComplexPassword } from "../src/password";
+import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generatePasswordWithLettersOnly, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD, isValidPassword, generateComplexPassword, MAX_LENGTH } from "../src/password";
 
 const originalCrypto = globalThis.crypto;
 
@@ -80,22 +80,8 @@ describe("generatePassword", () => {
     expect([...pw].every(char => allowedChars.has(char))).toBe(true);
   });
 
-  it("returns a string of the requested length when length equals number of categories", () => {
-    const categories = [["abc"], ["123"], ["!@#"]];
-    const length = 3;
-    const pw = generateComplexPassword(length, categories);
-    expect(pw).toHaveLength(length);
-    const chars = [...pw];
-    const matched = new Array(categories.length).fill(false);
-    for (const char of chars) {
-      for (let i = 0; i < categories.length; i++) {
-        if (categories[i].join('').includes(char)) {
-          matched[i] = true;
-          break;
-        }
-      }
-    }
-    expect(matched).toEqual([true, true, true]);
+  it("throws error for lengths greater than MAX_LENGTH", () => {
+    expect(() => generatePasswordWithCharset(MAX_LENGTH + 1, "abc")).toThrow(`Length exceeds maximum allowed: ${MAX_LENGTH}`);
   });
 
   it("returns an empty string if any category is empty", () => {

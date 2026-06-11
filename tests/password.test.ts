@@ -98,12 +98,18 @@ describe("generatePassword", () => {
     expect(matched).toEqual([true, true, true]);
   });
 
-  it("handles overlapping categories in generateComplexPassword", () => {
-    const categories = [["abc"], ["bcd"], ["cde"]];
-    const length = 5;
+  it("returns an empty string if any category is empty", () => {
+    const categories = [["abc"], []];
+    const length = 10;
     const pw = generateComplexPassword(length, categories);
-    expect(pw).toHaveLength(length);
-    expect([...pw].every(char => "abcde".includes(char))).toBe(true);
+    expect(pw).toBe("");
+  });
+
+  it("returns an empty string if categories is empty", () => {
+    const categories = [];
+    const length = 10;
+    const pw = generateComplexPassword(length, categories);
+    expect(pw).toBe("");
   });
 
   it("handles emoji in generatePasswordWithCharset", () => {

@@ -15,6 +15,12 @@ describe("username generation", () => {
     it("returns an empty array for non-integer counts", () => {
       expect(generateUsernames(2.5)).toEqual([]);
     });
+
+    it("returns an array of length 1 when count is 1", () => {
+      const usernames = generateUsernames(1);
+      expect(usernames).toHaveLength(1);
+      expect(usernames[0]).toMatch(/^[a-z]+_[a-z]+_[0-9]{4}$/);
+    });
   });
 
   it("matches the pattern [a-z]+_[a-z]+_[0-9]+", () => {

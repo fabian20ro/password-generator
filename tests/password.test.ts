@@ -50,6 +50,10 @@ describe("generatePassword", () => {
     }
   });
 
+  it("returns an empty string for non-integer lengths", () => {
+    expect(generatePassword(2.5)).toBe("");
+  });
+
   it("only contains alphanumeric characters", () => {
     for (let i = 0; i < 20; i++) {
       const pw = generatePassword(27);
@@ -122,6 +126,10 @@ describe("generatePassword", () => {
   it("returns an empty string if length is zero or negative", () => {
     expect(generatePasswordWithCharset(0, "abc")).toBe("");
     expect(generatePasswordWithCharset(-1, "abc")).toBe("");
+  });
+
+  it("returns an empty string for an empty charset", () => {
+    expect(generatePasswordWithCharset(10, "")).toBe("");
   });
 
   it("validates password characters against a charset", () => {

@@ -124,6 +124,14 @@ describe("generatePassword", () => {
     expect(generatePasswordWithCharset(-1, "abc")).toBe("");
   });
 
+  it("validates password characters against a charset", () => {
+    const charset = "abc123";
+    expect(isValidPassword("a1b2c3", charset)).toBe(true);
+    expect(isValidPassword("a1b2c!", charset)).toBe(false);
+    expect(isValidPassword("", charset)).toBe(true);
+    expect(isValidPassword("abc", "def")).toBe(false);
+  });
+
   it("returns a string with symbols", () => {
     const pw = generatePasswordWithSymbols(20);
     expect(pw).toHaveLength(20);

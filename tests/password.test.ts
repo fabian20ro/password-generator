@@ -54,6 +54,11 @@ describe("generatePassword", () => {
     expect(generatePassword(2.5)).toBe("");
   });
 
+  it("returns an empty string for non-positive integer lengths", () => {
+    expect(generatePassword(0)).toBe("");
+    expect(generatePassword(-1)).toBe("");
+  });
+
   it("only contains alphanumeric characters", () => {
     for (let i = 0; i < 20; i++) {
       const pw = generatePassword(27);
@@ -91,9 +96,9 @@ describe("generatePassword", () => {
     expect(pw).toBe("");
   });
 
-  it("returns an empty string if categories is empty", () => {
-    const categories = [];
-    const length = 10;
+  it("returns an empty string if length is less than number of categories", () => {
+    const categories = [["abc"], ["123"], ["!@#"]];
+    const length = 2;
     const pw = generateComplexPassword(length, categories);
     expect(pw).toBe("");
   });

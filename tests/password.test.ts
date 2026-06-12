@@ -54,6 +54,11 @@ describe("generatePassword", () => {
     expect(generatePassword(2.5)).toBe("");
   });
 
+  it("returns an empty string for non-positive integer lengths", () => {
+    expect(generatePassword(0)).toBe("");
+    expect(generatePassword(-1)).toBe("");
+  });
+
   it("only contains alphanumeric characters", () => {
     for (let i = 0; i < 20; i++) {
       const pw = generatePassword(27);
@@ -64,6 +69,17 @@ describe("generatePassword", () => {
   it("returns a string of the requested length and contains characters from all categories", () => {
     const categories = [["abc"], ["123"], ["!@#"]];
     const length = 10;
+    const pw = generateComplexPassword(length, categories);
+    expect(pw).toHaveLength(length);
+    for (const category of categories) {
+      const categoryChars = [...category.join('')];
+      expect([...pw].some(char => categoryChars.includes(char))).toBe(true);
+    }
+  });
+
+  it("works when length is exactly the number of categories", () => {
+    const categories = [["abc"], ["123"], ["!@#"]];
+    const length = categories.length;
     const pw = generateComplexPassword(length, categories);
     expect(pw).toHaveLength(length);
     for (const category of categories) {
@@ -91,9 +107,9 @@ describe("generatePassword", () => {
     expect(pw).toBe("");
   });
 
-  it("returns an empty string if categories is empty", () => {
-    const categories = [];
-    const length = 10;
+  it("returns an empty string if length is less than number of categories", () => {
+    const categories = [["abc"], ["123"], ["!@#"]];
+    const length = 2;
     const pw = generateComplexPassword(length, categories);
     expect(pw).toBe("");
   });
@@ -104,11 +120,15 @@ describe("generatePassword", () => {
     expect([...pw].every(char => "😀abc".includes(char))).toBe(true);
   });
 
-  it("returns an empty string if length is less than number of categories", () => {
-    const categories = [["a"], ["b"], ["c"]];
-    const length = 2;
+  it("handles large number of categories", () => {
+    const categories = Array.from({ length: 10 }, (_, i) => [`a${i}`, `b${i}`, `c${i}`]);
+    const length = 20;
     const pw = generateComplexPassword(length, categories);
-    expect(pw).toBe("");
+    expect(pw).toHaveLength(length);
+    for (const category of categories) {
+      const categoryChars = [...category.join('')];
+      expect([...pw].some(char => categoryChars.includes(char))).toBe(true);
+    }
   });
 
   it("throws error if length exceeds MAX_LENGTH in generatePasswordWithLettersOnly", () => {

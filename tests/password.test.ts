@@ -77,6 +77,17 @@ describe("generatePassword", () => {
     }
   });
 
+  it("works when length is exactly the number of categories", () => {
+    const categories = [["abc"], ["123"], ["!@#"]];
+    const length = categories.length;
+    const pw = generateComplexPassword(length, categories);
+    expect(pw).toHaveLength(length);
+    for (const category of categories) {
+      const categoryChars = [...category.join('')];
+      expect([...pw].some(char => categoryChars.includes(char))).toBe(true);
+    }
+  });
+
   it("only contains characters from the provided categories", () => {
     const categories = [["abc"], ["123"], ["!@#"]];
     const length = 20;

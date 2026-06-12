@@ -158,6 +158,8 @@ describe("generatePassword", () => {
     expect(isValidPassword("a1b2c!", charset)).toBe(false);
     expect(isValidPassword("", charset)).toBe(true);
     expect(isValidPassword("abc", "def")).toBe(false);
+    expect(isValidPassword("😀", "😀")).toBe(true);
+    expect(isValidPassword("😀", "a")).toBe(false);
   });
 
   it("returns a string with symbols", () => {

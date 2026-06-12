@@ -89,7 +89,11 @@ export function generateAll(): string[] {
  * @returns True if all characters in pw are in charset, false otherwise.
  */
 export function isValidPassword(pw: string, charset: string): boolean {
-  return [...pw].every((char) => charset.includes(char));
+  const charSet = new Set(charset);
+  for (const char of pw) {
+    if (!charSet.has(char)) return false;
+  }
+  return true;
 }
 
 /**

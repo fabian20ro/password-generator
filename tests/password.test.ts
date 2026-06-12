@@ -197,6 +197,13 @@ describe("getSecureRandomInt", () => {
     }
   });
 
+  it("returns 0 when max is 1", () => {
+    for (let i = 0; i < 100; i++) {
+      const val = getSecureRandomInt(1);
+      expect(val).toBe(0);
+    }
+  });
+
   it("throws error for non-positive max", () => {
     expect(() => getSecureRandomInt(0)).toThrow("Max must be positive");
     expect(() => getSecureRandomInt(-1)).toThrow("Max must be positive");

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generatePasswordWithLettersOnly, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD, isValidPassword, generateComplexPassword, MAX_LENGTH } from "../src/password";
+import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generatePasswordWithLettersOnly, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD, isValidPassword, generateComplexPassword, MAX_LENGTH, CHARS, SYMBOLS } from "../src/password";
 
 const originalCrypto = globalThis.crypto;
 
@@ -88,11 +88,18 @@ describe("generatePassword", () => {
     }
   });
 
-  it("only contains characters from the provided categories", () => {
-    const categories = [["abc"], ["123"], ["!@#"]];
+  it("only contains letters when using generatePasswordWithLettersOnly", () => {
     const length = 20;
-    const pw = generateComplexPassword(length, categories);
-    const allowedChars = new Set([...categories.flat().join('')]);
+    const pw = generatePasswordWithLettersOnly(length);
+    expect(pw).toHaveLength(length);
+    expect(pw).toMatch(/^[A-Za-z]+$/);
+  });
+
+  it("only contains the specified symbols when using generatePasswordWithSymbols", () => {
+    const length = 20;
+    const pw = generatePasswordWithSymbols(length);
+    const allowedChars = new Set([...CHARS, ...SYMBOLS]);
+    expect(pw).toHaveLength(length);
     expect([...pw].every(char => allowedChars.has(char))).toBe(true);
   });
 

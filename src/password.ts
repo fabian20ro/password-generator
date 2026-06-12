@@ -65,16 +65,16 @@ export function generatePasswordWithCharset(length: number, charset: string): st
   const rejectThreshold = UINT32_MODULUS - (UINT32_MODULUS % charsetLen);
   const buf = new Uint32Array(length);
   crypto.getRandomValues(buf);
-  let pw = "";
+  const pwChars = new Array(length);
   for (let i = 0; i < length; i++) {
     let val = buf[i];
     while (val >= rejectThreshold) {
       crypto.getRandomValues(RE_SAMPLE_BUF);
       val = RE_SAMPLE_BUF[0];
     }
-    pw += chars[val % charsetLen];
+    pwChars[i] = chars[val % charsetLen];
   }
-  return pw;
+  return pwChars.join('');
 }
 
 export function generateAll(): string[] {

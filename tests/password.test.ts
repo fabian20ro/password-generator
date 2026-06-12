@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generatePasswordWithLettersOnly, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD, isValidPassword, generateComplexPassword, MAX_LENGTH, CHARS, SYMBOLS } from "../src/password";
+import { getSecureRandomInt } from "../src/crypto-utils";
 
 const originalCrypto = globalThis.crypto;
 
@@ -181,5 +182,21 @@ describe("generatePassword", () => {
 
   it("throws error if length exceeds MAX_LENGTH", () => {
     expect(() => generatePassword(65537)).toThrow(/Length exceeds maximum allowed/);
+  });
+});
+
+describe("getSecureRandomInt", () => {
+  it("returns a number in the range [0, max)", () => {
+    const max = 10;
+    for (let i = 0; i < 100; i++) {
+      const val = getSecureRandomInt(max);
+      expect(val).toBeGreaterThanOrEqual(0);
+      expect(val).toBeLessThan(max);
+    }
+  });
+
+  it("throws error for non-positive max", () => {
+    expect(() => getSecureRandomInt(0)).toThrow("Max must be positive");
+    expect(() => getSecureRandomInt(-1)).toThrow("Max must be positive");
   });
 });

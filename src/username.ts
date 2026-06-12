@@ -7,6 +7,7 @@ const USERNAME_ADJECTIVES = [
   "proud", "quick", "sly", "swift", "wild",
   "ancient", "awesome", "bright", "bouncy", "chill",
   "mystic", "radiant", "silent", "vibrant", "zen", "astral", "cosmic", "lunar", "solar", "stellar",
+  "legendary", "epic", "zenith",
 ] as const;
 
 const USERNAME_NOUNS = [
@@ -16,6 +17,7 @@ const USERNAME_NOUNS = [
   "raven", "tiger", "walrus", "wolf", "zebra",
   "arctic", "atlas", "blaze", "breeze", "chaos",
   "nebula", "quasar", "pulsar", "comet", "meteor", "galaxy", "asteroid", "supernova", "planet", "star",
+  "dragon", "phoenix", "kraken",
 ] as const;
 
 function randomFourDigitNumber(): string {

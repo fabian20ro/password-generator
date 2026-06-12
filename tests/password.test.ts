@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generatePasswordWithLettersOnly, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD, isValidPassword, generateComplexPassword, MAX_LENGTH } from "../src/password";
+import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generatePasswordWithLettersOnly, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD, isValidPassword, generateComplexPassword, MAX_LENGTH, CHARS, SYMBOLS } from "../src/password";
+import { getSecureRandomInt } from "../src/crypto-utils";
 
 const originalCrypto = globalThis.crypto;
 
@@ -88,11 +89,18 @@ describe("generatePassword", () => {
     }
   });
 
-  it("only contains characters from the provided categories", () => {
-    const categories = [["abc"], ["123"], ["!@#"]];
+  it("only contains letters when using generatePasswordWithLettersOnly", () => {
     const length = 20;
-    const pw = generateComplexPassword(length, categories);
-    const allowedChars = new Set([...categories.flat().join('')]);
+    const pw = generatePasswordWithLettersOnly(length);
+    expect(pw).toHaveLength(length);
+    expect(pw).toMatch(/^[A-Za-z]+$/);
+  });
+
+  it("only contains the specified symbols when using generatePasswordWithSymbols", () => {
+    const length = 20;
+    const pw = generatePasswordWithSymbols(length);
+    const allowedChars = new Set([...CHARS, ...SYMBOLS]);
+    expect(pw).toHaveLength(length);
     expect([...pw].every(char => allowedChars.has(char))).toBe(true);
   });
 
@@ -150,6 +158,8 @@ describe("generatePassword", () => {
     expect(isValidPassword("a1b2c!", charset)).toBe(false);
     expect(isValidPassword("", charset)).toBe(true);
     expect(isValidPassword("abc", "def")).toBe(false);
+    expect(isValidPassword("😀", "😀")).toBe(true);
+    expect(isValidPassword("😀", "a")).toBe(false);
   });
 
   it("returns a string with symbols", () => {
@@ -174,5 +184,21 @@ describe("generatePassword", () => {
 
   it("throws error if length exceeds MAX_LENGTH", () => {
     expect(() => generatePassword(65537)).toThrow(/Length exceeds maximum allowed/);
+  });
+});
+
+describe("getSecureRandomInt", () => {
+  it("returns a number in the range [0, max)", () => {
+    const max = 10;
+    for (let i = 0; i < 100; i++) {
+      const val = getSecureRandomInt(max);
+      expect(val).toBeGreaterThanOrEqual(0);
+      expect(val).toBeLessThan(max);
+    }
+  });
+
+  it("throws error for non-positive max", () => {
+    expect(() => getSecureRandomInt(0)).toThrow("Max must be positive");
+    expect(() => getSecureRandomInt(-1)).toThrow("Max must be positive");
   });
 });

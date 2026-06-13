@@ -46,7 +46,7 @@ afterEach(() => {
 
 describe("generatePassword", () => {
   it("returns a string of the requested length", () => {
-    for (const len of [0, 1, 10, 23, 25, 27, 50, 70000]) {
+    for (const len of [0, 1, 10, 23, 25, 26, 27, 28, 29, 30, 31, 32, 65536, 70000]) {
       if (len > MAX_LENGTH) {
         expect(() => generatePassword(len)).toThrow();
       } else {

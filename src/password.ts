@@ -28,6 +28,9 @@ export function generatePassword(length: number): string {
   return generatePasswordWithCharset(length, CHARS);
 }
 
+const ALL_CHARSET = CHARS + SYMBOLS;
+const LETTERS_ONLY_CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
 /**
  * Generates a cryptographically secure random password including symbols.
  * 
@@ -35,7 +38,7 @@ export function generatePassword(length: number): string {
  * @returns The generated password string.
  */
 export function generatePasswordWithSymbols(length: number): string {
-  return generatePasswordWithCharset(length, CHARS + SYMBOLS);
+  return generatePasswordWithCharset(length, ALL_CHARSET);
 }
 
 /**
@@ -45,7 +48,7 @@ export function generatePasswordWithSymbols(length: number): string {
  * @returns The generated password string.
  */
 export function generatePasswordWithLettersOnly(length: number): string {
-  return generatePasswordWithCharset(length, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+  return generatePasswordWithCharset(length, LETTERS_ONLY_CHARSET);
 }
 
 /**

@@ -104,6 +104,19 @@ describe("generatePassword", () => {
     expect(pw).toBe("aaaaaaaaaa");
   });
 
+  it("handles length up to MAX_LENGTH", () => {
+    const length = 65536;
+    const pw = generatePasswordWithCharset(length, "abc");
+    expect(pw).toHaveLength(length);
+  });
+
+  it("works for very large max", () => {
+    const max = 2**31;
+    const val = getSecureRandomInt(max);
+    expect(val).toBeGreaterThanOrEqual(0);
+    expect(val).toBeLessThan(max);
+  });
+
   it("handles charsets with duplicate characters", () => {
     const length = 10;
     const pw = generatePasswordWithCharset(length, "aabb");

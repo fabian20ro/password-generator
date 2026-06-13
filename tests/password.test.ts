@@ -64,6 +64,10 @@ describe("generatePassword", () => {
     expect(generatePassword(-1)).toBe("");
   });
 
+  it("returns an empty string for non-integer lengths in generatePasswordWithCharset", () => {
+    expect(generatePasswordWithCharset(2.5, "abc")).toBe("");
+  });
+
   it("only contains alphanumeric characters", () => {
     for (let i = 0; i < 20; i++) {
       const pw = generatePassword(27);

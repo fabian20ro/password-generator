@@ -93,6 +93,33 @@ describe("generatePassword", () => {
     }
   });
 
+  it("handles charsets with a single character", () => {
+    const length = 10;
+    const pw = generatePasswordWithCharset(length, "a");
+    expect(pw).toHaveLength(length);
+    expect(pw).toBe("aaaaaaaaaa");
+  });
+
+  it("handles charsets with duplicate characters", () => {
+    const length = 10;
+    const pw = generatePasswordWithCharset(length, "aabb");
+    expect(pw).toHaveLength(length);
+    expect(pw).toMatch(/^[ab]+$/);
+  });
+
+  it("handles unicode characters in charset", () => {
+    const length = 10;
+    const pw = generatePasswordWithCharset(length, "🚀✨");
+    expect([...pw].length).toBe(length);
+    expect(pw).toMatch(/^[🚀✨]+$/);
+  });
+
+  it("handles empty categories in generateComplexPassword by returning empty string", () => {
+    const categories = [['A', 'B'], []];
+    const pw = generateComplexPassword(10, categories);
+    expect(pw).toBe("");
+  });
+
   it("only contains letters when using generatePasswordWithLettersOnly", () => {
     const length = 20;
     const pw = generatePasswordWithLettersOnly(length);

@@ -200,3 +200,7 @@ describe("generatePassword", () => {
     expect(isValidPassword("abc", "")).toBe(false);
   });
 });
+
+  it("returns an empty string for length 0 in generateComplexPassword", () => {
+    expect(generateComplexPassword(0, [["a"]])).toBe("");
+  });

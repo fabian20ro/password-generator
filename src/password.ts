@@ -60,7 +60,7 @@ export function generatePasswordWithLettersOnly(length: number): string {
  * @returns The generated password string.
  */
 export function generatePasswordWithCharset(length: number, charset: string): string {
-  if (!Number.isInteger(length) || length <= 0 || !charset || charset.length === 0) return "";
+  if (!Number.isInteger(length) || length <= 0 || !charset) return "";
   if (length > MAX_LENGTH) throw new Error(`Length exceeds maximum allowed: ${MAX_LENGTH}`);
   const chars = Array.from(charset);
   const charsetLen = chars.length;

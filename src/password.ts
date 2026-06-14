@@ -29,7 +29,7 @@ export function generatePassword(length: number): string {
 }
 
 const ALL_CHARSET = CHARS + SYMBOLS;
-const LETTERS_ONLY_CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+const LETTERS_ONLY_CHARSET = CHARS.substring(0, 52);
 
 /**
  * Generates a cryptographically secure random password including symbols.

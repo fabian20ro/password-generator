@@ -141,6 +141,14 @@ describe("generatePassword", () => {
     expect(pw).toMatch(/^[🚀✨]+$/);
   });
 
+  it("handles categories with duplicate characters", () => {
+    const categories = [["aa"], ["bb"]];
+    const length = 4;
+    const pw = generateComplexPassword(length, categories);
+    expect(pw).toHaveLength(length);
+    expect([...pw].every(char => char === 'a' || char === 'b')).toBe(true);
+  });
+
   it("handles empty categories in generateComplexPassword by returning empty string", () => {
     const categories = [['a', 'b'], []];
     const length = 10;

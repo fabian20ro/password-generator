@@ -185,4 +185,28 @@ describe("generatePassword", () => {
       expect([...pw].some(char => categoryChars.includes(char))).toBe(true);
     }
   });
+
+  it("handles overlapping categories in generateComplexPassword", () => {
+    const categories = [["a", "b"], ["b", "c"]];
+    const length = 5;
+    const pw = generateComplexPassword(length, categories);
+    expect(pw).toHaveLength(length);
+    expect([...pw].every(char => ["a", "b", "c"].includes(char))).toBe(true);
+  });
+
+  it("handles identical categories in generateComplexPassword", () => {
+    const categories = [["a", "b"], ["a", "b"]];
+    const length = 5;
+    const pw = generateComplexPassword(length, categories);
+    expect(pw).toHaveLength(length);
+    expect([...pw].every(char => ["a", "b"].includes(char))).toBe(true);
+  });
+
+  it("handles single-character categories in generateComplexPassword", () => {
+    const categories = [["a"], ["b"], ["c"]];
+    const length = 5;
+    const pw = generateComplexPassword(length, categories);
+    expect(pw).toHaveLength(length);
+    expect(pw).toMatch(/^[abc]+$/);
+  });
 });

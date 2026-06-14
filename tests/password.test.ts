@@ -204,7 +204,7 @@ describe("generatePassword", () => {
   it("verifies isValidPassword with various inputs", () => {
     expect(isValidPassword("abc123", "abc123")).toBe(true);
     expect(isValidPassword("abc123", "abc")).toBe(false);
-    expect(isValidPassword("", "abc")).toBe(true);
+    expect(isValidPassword("", "abc")).toBe(false);
     expect(isValidPassword("abc", "")).toBe(false);
   });
 });

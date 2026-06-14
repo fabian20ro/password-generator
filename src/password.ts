@@ -30,6 +30,7 @@ export function generatePassword(length: number): string {
 
 const ALL_CHARSET = CHARS + SYMBOLS;
 const LETTERS_ONLY_CHARSET = CHARS.substring(0, 52);
+const NUMBERS_ONLY_CHARSET = CHARS.substring(52);
 
 /**
  * Generates a cryptographically secure random password including symbols.
@@ -49,6 +50,16 @@ export function generatePasswordWithSymbols(length: number): string {
  */
 export function generatePasswordWithLettersOnly(length: number): string {
   return generatePasswordWithCharset(length, LETTERS_ONLY_CHARSET);
+}
+
+/**
+ * Generates a cryptographically unique random password using only numbers.
+ * 
+ * @param length The desired length of the password.
+ * @returns The generated password string.
+ */
+export function generatePasswordWithNumbersOnly(length: number): string {
+  return generatePasswordWithCharset(length, NUMBERS_ONLY_CHARSET);
 }
 
 /**

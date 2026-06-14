@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generatePasswordWithLettersOnly, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD, isValidPassword, generateComplexPassword, MAX_LENGTH, CHARS, SYMBOLS } from "../src/password";
+import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generatePasswordWithLettersOnly, generatePasswordWithNumbersOnly, generateAll, LENGTHS, CHARSET_LEN, REJECT_THRESHOLD, isValidPassword, generateComplexPassword, MAX_LENGTH, CHARS, SYMBOLS } from "../src/password";
 import { getSecureRandomInt } from "../src/crypto-utils";
 
 const originalCrypto = globalThis.crypto;
@@ -225,4 +225,13 @@ describe("generatePassword", () => {
     expect(pw).toHaveLength(length);
     const allAllowed = "a1!";
     expect([...pw].every(c => allAllowed.includes(c))).toBe(true);
+  });
+
+  it("returns an empty string for non-positive lengths in generatePasswordWithNumbersOnly", () => {
+    expect(generatePasswordWithNumbersOnly(0)).toBe("");
+    expect(generatePasswordWithNumbersOnly(-1)).toBe("");
+  });
+
+  it("returns an empty string for non-integer lengths in generatePasswordWithNumbersOnly", () => {
+    expect(generatePasswordWithNumbersOnly(2.5)).toBe("");
   });

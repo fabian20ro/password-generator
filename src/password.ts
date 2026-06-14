@@ -1,3 +1,4 @@
+// Licensed under the MIT License.
 import { getSecureRandomInt, UINT32_MODULUS } from "./crypto-utils";
 
 export const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

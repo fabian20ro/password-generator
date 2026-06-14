@@ -110,6 +110,16 @@ describe("generatePassword", () => {
     expect(pw).toHaveLength(length);
   });
 
+  it("handles getSecureRandomInt with max=1", () => {
+    const val = getSecureRandomInt(1);
+    expect(val).toBe(0);
+  });
+
+  it("throws error for non-positive max in getSecureRandomInt", () => {
+    expect(() => getSecureRandomInt(0)).toThrow("Max must be positive");
+    expect(() => getSecureRandomInt(-1)).toThrow("Max must be positive");
+  });
+
   it("handles very large max for getSecureRandomInt", () => {
     const max = 2**31;
     const val = getSecureRandomInt(max);

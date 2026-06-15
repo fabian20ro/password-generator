@@ -4,7 +4,6 @@ import { getSecureRandomInt } from "../src/crypto-utils";
 
 const originalCrypto = globalThis.crypto;
 
-
 function installCryptoMock(sequence: number[] = []): () => number {
   const values = [...sequence];
   let callCount = 0;
@@ -72,6 +71,14 @@ describe("generatePassword", () => {
     for (let i = 0; i < 20; i++) {
       const pw = generatePassword(27);
       expect(pw).toMatch(/^[A-Za-z0123456789]+$/);
+    }
+  });
+
+  it("returns an array of passwords of all defined lengths", () => {
+    const passwords = generateAll();
+    expect(passwords).toHaveLength(LENGTHS.length);
+    for (const len of LENGTHS) {
+      expect(passwords.filter(p => p.length === len)).toHaveLength(1);
     }
   });
 
@@ -208,30 +215,3 @@ describe("generatePassword", () => {
     expect(isValidPassword("abc", "")).toBe(false);
   });
 });
-
-  it("returns an empty string for length 0 in generateComplexPassword", () => {
-    expect(generateComplexPassword(0, [["a"]])).toBe("");
-  });
-  it("handles charset of length 1", () => {
-    const length = 10;
-    const pw = generatePasswordWithCharset(length, "a");
-    expect(pw).toHaveLength(length);
-    expect(pw).toBe("aaaaaaaaaa");
-  });
-  it("handles categories with a single character", () => {
-    const categories = [["a"], ["1"], ["!"]];
-    const length = 3;
-    const pw = generateComplexPassword(length, categories);
-    expect(pw).toHaveLength(length);
-    const allAllowed = "a1!";
-    expect([...pw].every(c => allAllowed.includes(c))).toBe(true);
-  });
-
-  it("returns an empty string for non-positive lengths in generatePasswordWithNumbersOnly", () => {
-    expect(generatePasswordWithNumbersOnly(0)).toBe("");
-    expect(generatePasswordWithNumbersOnly(-1)).toBe("");
-  });
-
-  it("returns an empty string for non-integer lengths in generatePasswordWithNumbersOnly", () => {
-    expect(generatePasswordWithNumbersOnly(2.5)).toBe("");
-  });

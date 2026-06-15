@@ -118,8 +118,12 @@ describe("generatePassword", () => {
   });
 
   it("handles getSecureRandomInt with max=1", () => {
-    const val = getSecureRandomInt(1);
-    expect(val).toBe(0);
+    const values = [0, 1];
+    const callCount = installCryptoMock(values);
+    const result = getSecureRandomInt(1);
+    expect(result).toBe(0);
+    expect(callCount()).toBe(1);
+    restoreCryptoMock();
   });
 
   it("throws error for non-positive max in getSecureRandomInt", () => {
@@ -148,7 +152,7 @@ describe("generatePassword", () => {
     expect(pw).toMatch(/^[🚀✨]+$/);
   });
 
-  it("handles categories with duplicate characters", () => {
+  it("handles duplicate characters in categories", () => {
     const categories = [["aa"], ["bb"]];
     const length = 4;
     const pw = generateComplexPassword(length, categories);
@@ -163,7 +167,7 @@ describe("generatePassword", () => {
     expect(pw).toBe("");
   });
 
-  it("handles categories with an empty string by returning empty string", () => {
+  it("handles empty categories in generateComplexPassword by returning empty string", () => {
     const categories = [["a"], [""]];
     const length = 10;
     const pw = generateComplexPassword(length, categories);

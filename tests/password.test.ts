@@ -198,7 +198,7 @@ describe("generatePassword", () => {
   it("handles edge case length: MAX_LENGTH for generateComplexPassword", () => {
     const categories = [["a"], ["1"], ["!"]];
     const length = MAX_LENGTH;
-    const pw = generatePasswordWithCharset(length, categories);
+    const pw = generateComplexPassword(length, categories);
     expect(pw).toHaveLength(length);
   });
 

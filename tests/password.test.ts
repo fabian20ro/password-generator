@@ -163,6 +163,13 @@ describe("generatePassword", () => {
     expect(pw).toBe("");
   });
 
+  it("handles categories with an empty string by returning empty string", () => {
+    const categories = [["a"], [""]];
+    const length = 10;
+    const pw = generateComplexPassword(length, categories);
+    expect(pw).toBe("");
+  });
+
   it("only contains letters when using generatePasswordWithLettersOnly", () => {
     const length = 20;
     const pw = generatePasswordWithLettersOnly(length);

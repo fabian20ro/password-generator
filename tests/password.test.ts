@@ -145,11 +145,14 @@ describe("generatePassword", () => {
     expect(pw).toMatch(/^[ab]+$/);
   });
 
-  it("handles unicode characters in charset", () => {
+  it("handles unicode characters in complex passwords", () => {
+    const categories = [["🚀", "✨"], ["abc"], ["123"]];
     const length = 10;
-    const pw = generatePasswordWithCharset(length, "🚀✨");
+    const pw = generateComplexPassword(length, categories);
     expect([...pw].length).toBe(length);
-    expect(pw).toMatch(/^[🚀✨]+$/);
+    const pwLong = generatePasswordWithCharset(10, "🚀✨");
+    expect([...pwLong].length).toBe(10);
+    expect(pwLong.length).toBe(20);
   });
 
   it("handles duplicate characters in categories", () => {

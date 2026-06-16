@@ -1,9 +1,9 @@
-import { getSecureRandomInt } from "./crypto-utils";
+// Licensed under the MIT License.
+import { getSecureRandomInt, UINT32_MODULUS } from "./crypto-utils";
 
 export const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 export const SYMBOLS = "!@#$%^&*()-_=+[]{}|;:,.<>?";
 export const CHARSET_LEN = CHARS.length;
-const UINT32_MODULUS = 0x1_0000_0000; // 2^32
 /**
  * The largest multiple of charsetLen that is strictly less than UINT32_MODULUS.
  * We reject values in the range [REJECT_THRESHOLD, UINT32_MODULUS) to prevent modulo bias.
@@ -28,6 +28,10 @@ export function generatePassword(length: number): string {
   return generatePasswordWithCharset(length, CHARS);
 }
 
+const ALL_CHARSET = CHARS + SYMBOLS;
+const LETTERS_ONLY_CHARSET = CHARS.substring(0, 52);
+const NUMBERS_ONLY_CHARSET = CHARS.substring(52);
+
 /**
  * Generates a cryptographically secure random password including symbols.
  * 
@@ -35,7 +39,7 @@ export function generatePassword(length: number): string {
  * @returns The generated password string.
  */
 export function generatePasswordWithSymbols(length: number): string {
-  return generatePasswordWithCharset(length, CHARS + SYMBOLS);
+  return generatePasswordWithCharset(length, ALL_CHARSET);
 }
 
 /**
@@ -45,7 +49,17 @@ export function generatePasswordWithSymbols(length: number): string {
  * @returns The generated password string.
  */
 export function generatePasswordWithLettersOnly(length: number): string {
-  return generatePasswordWithCharset(length, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+  return generatePasswordWithCharset(length, LETTERS_ONLY_CHARSET);
+}
+
+/**
+ * Generates a cryptographically unique random password using only numbers.
+ * 
+ * @param length The desired length of the password.
+ * @returns The generated password string.
+ */
+export function generatePasswordWithNumbersOnly(length: number): string {
+  return generatePasswordWithCharset(length, NUMBERS_ONLY_CHARSET);
 }
 
 /**
@@ -58,23 +72,23 @@ export function generatePasswordWithLettersOnly(length: number): string {
  * @returns The generated password string.
  */
 export function generatePasswordWithCharset(length: number, charset: string): string {
-  if (!Number.isInteger(length) || length <= 0 || !charset || charset.length === 0) return "";
+  if (!Number.isInteger(length) || length <= 0 || !charset) return "";
   if (length > MAX_LENGTH) throw new Error(`Length exceeds maximum allowed: ${MAX_LENGTH}`);
   const chars = Array.from(charset);
   const charsetLen = chars.length;
   const rejectThreshold = UINT32_MODULUS - (UINT32_MODULUS % charsetLen);
   const buf = new Uint32Array(length);
   crypto.getRandomValues(buf);
-  let pw = "";
+  const pwChars = new Array(length);
   for (let i = 0; i < length; i++) {
     let val = buf[i];
     while (val >= rejectThreshold) {
       crypto.getRandomValues(RE_SAMPLE_BUF);
       val = RE_SAMPLE_BUF[0];
     }
-    pw += chars[val % charsetLen];
+    pwChars[i] = chars[val % charsetLen];
   }
-  return pw;
+  return pwChars.join('');
 }
 
 export function generateAll(): string[] {
@@ -89,7 +103,12 @@ export function generateAll(): string[] {
  * @returns True if all characters in pw are in charset, false otherwise.
  */
 export function isValidPassword(pw: string, charset: string): boolean {
-  return [...pw].every((char) => charset.includes(char));
+  if (pw.length === 0) return false;
+  const charSet = new Set(charset);
+  for (const char of pw) {
+    if (!charSet.has(char)) return false;
+  }
+  return true;
 }
 
 /**

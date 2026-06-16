@@ -150,9 +150,13 @@ describe("generatePassword", () => {
     const length = 10;
     const pw = generateComplexPassword(length, categories);
     expect([...pw].length).toBe(length);
+    const values = new Array(10).fill(0);
+    const callCount = installCryptoMock(values);
     const pwLong = generatePasswordWithCharset(10, "🚀✨");
     expect([...pwLong].length).toBe(10);
     expect(pwLong.length).toBe(20);
+    expect(callCount()).toBeGreaterThan(0);
+    restoreCryptoMock();
   });
 
   it("handles duplicate characters in categories", () => {

@@ -189,6 +189,13 @@ describe("generatePassword", () => {
     expect([...pw].every(char => allowedChars.has(char))).toBe(true);
   });
 
+  it("only contains numbers when using generatePasswordWithNumbersOnly", () => {
+    const length = 20;
+    const pw = generatePasswordWithNumbersOnly(length);
+    expect(pw).toHaveLength(length);
+    expect(pw).toMatch(/^[0-9]+$/);
+  });
+
   it("throws error for lengths greater than MAX_LENGTH", () => {
     expect(() => generatePasswordWithCharset(MAX_LENGTH + 1, "abc")).toThrow(`Length exceeds maximum allowed: ${MAX_LENGTH}`);
     expect(() => generatePasswordWithLettersOnly(MAX_LENGTH + 1)).toThrow(/Length exceeds maximum allowed/);

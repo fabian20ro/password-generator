@@ -121,12 +121,13 @@ export function isValidPassword(pw: string, charset: string): boolean {
  * @returns The generated password string.
  */
 export function generateComplexPassword(length: number, categories: string[][]): string {
-  if (!Number.isInteger(length) || length < categories.length || categories.length === 0 || categories.some(c => c.length === 0)) return "";
+  if (!Number.isInteger(length) || length < categories.length || categories.length === 0 || categories.some(c => c.join('').length === 0)) return "";
   if (length > MAX_LENGTH) throw new Error(`Length exceeds maximum allowed: ${MAX_LENGTH}`);
   
   const charSets = categories.map(c => [...c.join('')]);
-  if (charSets.some(s => s.length === 0)) return "";
-
+  const allChars = [...new Set(charSets.flat())];
+  if (allChars.length === 0) return "";
+  
   const passwordChars = [];
   const remainingLength = length - categories.length;
   
@@ -137,9 +138,6 @@ export function generateComplexPassword(length: number, categories: string[][]):
   }
   
   // 2. Fill the rest
-  const allChars = [...new Set(charSets.flat())];
-  if (allChars.length === 0) return "";
-  
   const extraChars = Array.from({ length: remainingLength }, () => {
     const idx = getSecureRandomInt(allChars.length);
     return allChars[idx];

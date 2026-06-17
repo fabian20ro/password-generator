@@ -1,14 +1,9 @@
 // Licensed under the MIT License.
-import { getSecureRandomInt, UINT32_MODULUS } from "./crypto-utils";
+import { getSecureRandomInt } from "./crypto-utils";
 
 export const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 export const SYMBOLS = "!@#$%^&*()-_=+[]{}|;:,.<>?";
 export const CHARSET_LEN = CHARS.length;
-/**
- * The largest multiple of charsetLen that is strictly less than UINT32_MODULUS.
- * We reject values in the range [REJECT_THRESHOLD, UINT32_MODULUS) to prevent modulo bias.
- */
-export const REJECT_THRESHOLD = UINT32_MODULUS - (UINT32_MODULUS % CHARSET_LEN); // 4294967292
 
 export const LENGTHS = [23, 24, 25, 26, 27, 28, 29, 30, 31, 32] as const;
 

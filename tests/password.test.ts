@@ -238,5 +238,7 @@ describe("generatePassword", () => {
     expect(isValidPassword("abc123", "abc")).toBe(false);
     expect(isValidPassword("", "abc")).toBe(false);
     expect(isValidPassword("abc", "")).toBe(false);
+    expect(isValidPassword("🚀", "🚀")).toBe(true);
+    expect(isValidPassword("🚀", "a")).toBe(false);
   });
 });

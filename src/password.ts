@@ -76,6 +76,7 @@ export function generatePasswordWithCharset(length: number, charset: string): st
   if (length > MAX_LENGTH) throw new Error(`Length exceeds maximum allowed: ${MAX_LENGTH}`);
   const chars = Array.from(charset);
   const charsetLen = chars.length;
+  // Rejection sampling to prevent modulo bias
   const rejectThreshold = UINT32_MODULUS - (UINT32_MODULUS % charsetLen);
   const buf = new Uint32Array(length);
   crypto.getRandomValues(buf);

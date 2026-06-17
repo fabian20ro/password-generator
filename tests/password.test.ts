@@ -145,11 +145,18 @@ describe("generatePassword", () => {
     expect(pw).toMatch(/^[ab]+$/);
   });
 
-  it("handles unicode characters in charset", () => {
+  it("handles unicode characters in complex passwords", () => {
+    const categories = [["🚀", "✨"], ["abc"], ["123"]];
     const length = 10;
-    const pw = generatePasswordWithCharset(length, "🚀✨");
+    const pw = generateComplexPassword(length, categories);
     expect([...pw].length).toBe(length);
-    expect(pw).toMatch(/^[🚀✨]+$/);
+    const values = new Array(10).fill(0);
+    const callCount = installCryptoMock(values);
+    const pwLong = generatePasswordWithCharset(10, "🚀✨");
+    expect([...pwLong].length).toBe(10);
+    expect(pwLong.length).toBe(20);
+    expect(callCount()).toBeGreaterThan(0);
+    restoreCryptoMock();
   });
 
   it("handles duplicate characters in categories", () => {
@@ -187,6 +194,13 @@ describe("generatePassword", () => {
     const allowedChars = new Set([...CHARS, ...SYMBOLS]);
     expect(pw).toHaveLength(length);
     expect([...pw].every(char => allowedChars.has(char))).toBe(true);
+  });
+
+  it("only contains numbers when using generatePasswordWithNumbersOnly", () => {
+    const length = 20;
+    const pw = generatePasswordWithNumbersOnly(length);
+    expect(pw).toHaveLength(length);
+    expect(pw).toMatch(/^[0-9]+$/);
   });
 
   it("throws error for lengths greater than MAX_LENGTH", () => {

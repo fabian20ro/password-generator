@@ -43,4 +43,9 @@ describe("generateComplexPassword", () => {
     const categories = [['A', 'B'], ['1', '2']];
     expect(generateComplexPassword(0, categories)).toBe("");
   });
+
+  it("should throw error if length exceeds MAX_LENGTH", () => {
+    const categories = [['A', 'B'], ['1', '2']];
+    expect(() => generateComplexPassword(70000, categories)).toThrow(/Length exceeds maximum allowed/);
+  });
 });

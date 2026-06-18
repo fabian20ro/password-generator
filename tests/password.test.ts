@@ -184,14 +184,14 @@ describe("generatePasswordWithNumbersOnly", () => {
 });
 
 describe("generateComplexPassword", () => {
-  it("handles empty categories in generateComplexPassword by returning empty string", () => {
-    const categories = [['a', 'b'], []];
+  it("returns a password when all categories are non-empty", () => {
+    const categories = [["abc"], ["123"], ["!@#"]];
     const length = 10;
     const pw = generateComplexPassword(length, categories);
-    expect(pw).toBe("");
+    expect(pw).toHaveLength(length);
   });
 
-  it("handles empty categories in generateComplexPassword by returning empty string", () => {
+  it("returns an empty string if any category is empty", () => {
     const categories = [["a"], [""]];
     const length = 10;
     const pw = generateComplexPassword(length, categories);

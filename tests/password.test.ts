@@ -16,7 +16,7 @@ function installCryptoMock(sequence: number[] = []): () => number {
         callCount++;
         if (array instanceof Uint32Array) {
           for (let i = 0; i < array.length; i++) {
-            array[i] = values.length > 0 ? (values.shift() as number) : Math.floor(Math.random() * 4294967296);
+            array[i] = values.length > 0 ? (values.shift() as number) : Math.floor(Math.random() * 42967296);
           }
         }
         return array;
@@ -62,6 +62,10 @@ describe("generatePassword", () => {
   it("returns an empty string for non-integer lengths in generatePasswordWithCharset", () => {
     expect(generatePasswordWithCharset(2.5, "abc")).toBe("");
     expect(generatePasswordWithCharset(10, "")).toBe("");
+  });
+
+  it("returns an empty string for non-integer lengths in generateComplexPassword", () => {
+    expect(generateComplexPassword(2.5, [["abc"]])).toBe("");
   });
 
   it("only contains alphanumeric characters", () => {
@@ -112,6 +116,14 @@ describe("generatePassword", () => {
     const length = 65536;
     const pw = generatePasswordWithCharset(length, "abc");
     expect(pw).toHaveLength(length);
+  });
+
+  it("handles length up to MAX_LENGTH in generateComplexPassword", () => {
+    const categories = [["abc"], ["123"], ["!@#"]];
+    const length = 65536;
+    const pw = generateComplexPassword(length, categories);
+    expect(pw).toHaveLength(length);
+    expect(isValidPassword(pw, CHARS + SYMBOLS)).toBe(true);
   });
 
   it("throws error for lengths greater than MAX_LENGTH", () => {

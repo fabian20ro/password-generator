@@ -16,10 +16,13 @@ describe("generateComplexPassword", () => {
     expect(pw).toMatch(/[1]/);
   });
 
-  it("should handle short lengths where length < categories.length", () => {
+  it("should handle length exactly equal to categories.length", () => {
     const categories = [['A', 'B'], ['1', '2'], ['!']];
-    const pw = generateComplexPassword(2, categories);
-    expect(pw).toBe("");
+    const pw = generateComplexPassword(3, categories);
+    expect(pw.length).toBe(3);
+    expect(pw).toMatch(/[AB]/);
+    expect(pw).toMatch(/[12]/);
+    expect(pw).toMatch(/[!]/);
   });
 
   it("should handle categories containing an empty string", () => {

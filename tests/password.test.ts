@@ -199,6 +199,13 @@ describe("generateComplexPassword", () => {
     expect(pw).toBe("");
   });
 
+  it("returns an empty string if length is less than categories.length", () => {
+    const categories = [["abc"], ["123"], ["!@#"]];
+    const length = categories.length - 1;
+    const pw = generateComplexPassword(length, categories);
+    expect(pw).toBe("");
+  });
+
   it("verifies complex passwords for character set compliance", () => {
     const categories = [["abc"], ["123"], ["!@#"]];
     const length = 20;

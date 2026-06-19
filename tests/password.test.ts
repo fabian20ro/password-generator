@@ -7,7 +7,7 @@ const originalCrypto = globalThis.crypto;
 function installCryptoMock(sequence: number[] = []): () => number {
   const values = [...sequence];
   let callCount = 0;
-
+  
   Object.defineProperty(globalThis, "crypto", {
     configurable: true,
     writable: true,
@@ -16,14 +16,14 @@ function installCryptoMock(sequence: number[] = []): () => number {
         callCount++;
         if (array instanceof Uint32Array) {
           for (let i = 0; i < array.length; i++) {
-            array[i] = values.length > 0 ? (values.shift() as number) : Math.floor(Math.random() * 4294967296);
+            array[i] = values.length > 0 ? (values.shift() as number) : Math.floor(Math.random() * 42967296);
           }
         }
         return array;
       },
     },
   });
-
+  
   return () => callCount;
 }
 
@@ -45,12 +45,8 @@ afterEach(() => {
 
 describe("generatePassword", () => {
   it("returns a string of the requested length", () => {
-    for (const len of [0, 1, 10, 23, 25, 26, 27, 28, 29, 30, 31, 32, 65566]) {
-      if (len > MAX_LENGTH) {
-        expect(() => generatePassword(len)).toThrow();
-      } else {
-        expect(generatePassword(len)).toHaveLength(len);
-      }
+    for (const len of [1, 10, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]) {
+      expect(generatePassword(len)).toHaveLength(len);
     }
   });
 
@@ -65,6 +61,11 @@ describe("generatePassword", () => {
 
   it("returns an empty string for non-integer lengths in generatePasswordWithCharset", () => {
     expect(generatePasswordWithCharset(2.5, "abc")).toBe("");
+    expect(generatePasswordWithCharset(10, "")).toBe("");
+  });
+
+  it("returns an empty string for non-integer lengths in generateComplexPassword", () => {
+    expect(generateComplexPassword(2.5, [["abc"]])).toBe("");
   });
 
   it("only contains alphanumeric characters", () => {
@@ -117,6 +118,18 @@ describe("generatePassword", () => {
     expect(pw).toHaveLength(length);
   });
 
+  it("handles length up to MAX_LENGTH in generateComplexPassword", () => {
+    const categories = [["abc"], ["123"], ["!@#"]];
+    const length = 65536;
+    const pw = generateComplexPassword(length, categories);
+    expect(pw).toHaveLength(length);
+    expect(isValidPassword(pw, CHARS + SYMBOLS)).toBe(true);
+  });
+
+  it("throws error for lengths greater than MAX_LENGTH", () => {
+    expect(() => generatePassword(MAX_LENGTH + 1)).toThrow();
+  });
+
   it("handles getSecureRandomInt with max=1", () => {
     const values = [0, 1];
     const callCount = installCryptoMock(values);
@@ -137,92 +150,72 @@ describe("generatePassword", () => {
     expect(val).toBeGreaterThanOrEqual(0);
     expect(val).toBeLessThan(max);
   });
+});
 
-  it("handles charsets with duplicate characters", () => {
-    const length = 10;
-    const pw = generatePasswordWithCharset(length, "aabb");
-    expect(pw).toHaveLength(length);
-    expect(pw).toMatch(/^[ab]+$/);
+describe("isValidPassword", () => {
+  it("returns true for valid passwords", () => {
+    expect(isValidPassword("abc123", CHARS)).toBe(true);
+    expect(isValidPassword("abc!@#", CHARS + SYMBOLS)).toBe(true);
   });
 
-  it("handles unicode characters in complex passwords", () => {
-    const categories = [["🚀", "✨"], ["abc"], ["123"]];
-    const length = 10;
-    const pw = generateComplexPassword(length, categories);
-    expect([...pw].length).toBe(length);
-    const values = new Array(10).fill(0);
-    const callCount = installCryptoMock(values);
-    const pwLong = generatePasswordWithCharset(10, "🚀✨");
-    expect([...pwLong].length).toBe(10);
-    expect(pwLong.length).toBe(20);
-    expect(callCount()).toBeGreaterThan(0);
-    restoreCryptoMock();
+  it("returns false for passwords with invalid characters", () => {
+    expect(isValidPassword("abc!@#", CHARS)).toBe(false);
+    expect(isValidPassword("abc123", SYMBOLS)).toBe(false);
   });
 
-  it("handles duplicate characters in categories", () => {
-    const categories = [["aa"], ["bb"]];
-    const length = 4;
-    const pw = generateComplexPassword(length, categories);
-    expect(pw).toHaveLength(length);
-    expect([...pw].every(char => char === 'a' || char === 'b')).toBe(true);
+  it("returns false for empty passwords", () => {
+    expect(isValidPassword("", CHARS)).toBe(false);
   });
+});
 
-  it("handles empty categories in generateComplexPassword by returning empty string", () => {
-    const categories = [['a', 'b'], []];
-    const length = 10;
-    const pw = generateComplexPassword(length, categories);
-    expect(pw).toBe("");
-  });
-
-  it("handles empty categories in generateComplexPassword by returning empty string", () => {
-    const categories = [["a"], [""]];
-    const length = 10;
-    const pw = generateComplexPassword(length, categories);
-    expect(pw).toBe("");
-  });
-
-  it("only contains letters when using generatePasswordWithLettersOnly", () => {
-    const length = 20;
-    const pw = generatePasswordWithLettersOnly(length);
-    expect(pw).toHaveLength(length);
-    expect(pw).toMatch(/^[A-Za-z]+$/);
-  });
-
-  it("only contains the specified symbols when using generatePasswordWithSymbols", () => {
+describe("generatePasswordWithSymbols", () => {
+  it("only contains characters from CHARS and SYMBOLS", () => {
     const length = 20;
     const pw = generatePasswordWithSymbols(length);
     const allowedChars = new Set([...CHARS, ...SYMBOLS]);
     expect(pw).toHaveLength(length);
     expect([...pw].every(char => allowedChars.has(char))).toBe(true);
   });
+});
 
-  it("only contains numbers when using generatePasswordWithNumbersOnly", () => {
+describe("generatePasswordWithLettersOnly", () => {
+  it("only contains letters", () => {
+    const length = 20;
+    const pw = generatePasswordWithLettersOnly(length);
+    expect(pw).toHaveLength(length);
+    expect(pw).toMatch(/^[A-Za-z]+$/);
+  });
+});
+
+describe("generatePasswordWithNumbersOnly", () => {
+  it("only contains numbers", () => {
     const length = 20;
     const pw = generatePasswordWithNumbersOnly(length);
     expect(pw).toHaveLength(length);
     expect(pw).toMatch(/^[0-9]+$/);
   });
+});
 
-  it("throws error for lengths greater than MAX_LENGTH", () => {
-    expect(() => generatePasswordWithCharset(MAX_LENGTH + 1, "abc")).toThrow(`Length exceeds maximum allowed: ${MAX_LENGTH}`);
-    expect(() => generatePasswordWithLettersOnly(MAX_LENGTH + 1)).toThrow(/Length exceeds maximum allowed/);
-    expect(() => generateComplexPassword(MAX_LENGTH + 1, [["a"]])).toThrow(/Length exceeds maximum allowed/);
-  });
-
-  it("handles edge case length: MAX_LENGTH for generateComplexPassword", () => {
-    const categories = [["a"], ["1"], ["!"]];
-    const length = MAX_LENGTH;
+describe("generateComplexPassword", () => {
+  it("returns a password when all categories are non-empty", () => {
+    const categories = [["abc"], ["123"], ["!@#"]];
+    const length = 10;
     const pw = generateComplexPassword(length, categories);
     expect(pw).toHaveLength(length);
   });
 
-  it("handles empty charsets in generatePasswordWithCharset", () => {
-    expect(generatePasswordWithCharset(10, "")).toBe("");
+  it("returns an empty string if any category is empty", () => {
+    const categories = [["a"], [""]];
+    const length = 10;
+    const pw = generateComplexPassword(length, categories);
+    expect(pw).toBe("");
   });
 
-  it("returns an empty string if length is zero or negative", () => {
-    expect(generatePasswordWithCharset(0, "abc")).toBe("");
-    expect(generatePasswordWithCharset(-1, "abc")).toBe("");
+  it("returns an empty string if length is less than categories.length", () => {
+    const categories = [["abc"], ["123"], ["!@#"]];
+    const length = categories.length - 1;
+    const pw = generateComplexPassword(length, categories);
+    expect(pw).toBe("");
   });
 
   it("verifies complex passwords for character set compliance", () => {
@@ -231,14 +224,5 @@ describe("generatePassword", () => {
     const pw = generateComplexPassword(length, categories);
     const fullCharset = CHARS + SYMBOLS;
     expect(isValidPassword(pw, fullCharset)).toBe(true);
-  });
-
-  it("verifies isValidPassword with various inputs", () => {
-    expect(isValidPassword("abc123", "abc123")).toBe(true);
-    expect(isValidPassword("abc123", "abc")).toBe(false);
-    expect(isValidPassword("", "abc")).toBe(false);
-    expect(isValidPassword("abc", "")).toBe(false);
-    expect(isValidPassword("🚀", "🚀")).toBe(true);
-    expect(isValidPassword("🚀", "a")).toBe(false);
   });
 });

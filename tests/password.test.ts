@@ -140,8 +140,8 @@ describe("generatePassword", () => {
   });
 
   it("throws error for non-positive max in getSecureRandomInt", () => {
-    expect(() => getSecureRandomInt(0)).toThrow("Max must be positive");
-    expect(() => getSecureRandomInt(-1)).toThrow("Max must be positive");
+    expect(() => getSecureRandomInt(0)).toThrow("Max must be between 1 and UINT32_MODULUS");
+    expect(() => getSecureRandomInt(-1)).toThrow("Max must be between 1 and UINT32_MODULUS");
   });
 
   it("handles very large max for getSecureRandomInt", () => {

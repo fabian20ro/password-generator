@@ -3,8 +3,8 @@ import { getSecureRandomInt } from "../src/crypto-utils";
 
 describe("getSecureRandomInt", () => {
   it("throws error if max is <= 0", () => {
-    expect(() => getSecureRandomInt(0)).toThrow("Max must be positive");
-    expect(() => getSecureRandomInt(-1)).toThrow("Max must be positive");
+    expect(() => getSecureRandomInt(0)).toThrow("Max must be between 1 and UINT32_MODULUS");
+    expect(() => getSecureRandomInt(-1)).toThrow("Max must be between 1 and UINT32_MODULUS");
   });
 
   it("returns a value in [0, max)", () => {

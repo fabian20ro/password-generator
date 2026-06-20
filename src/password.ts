@@ -71,7 +71,11 @@ export function generatePasswordWithCharset(length: number, charset: string): st
   if (length > MAX_LENGTH) throw new Error(`Length exceeds maximum allowed: ${MAX_LENGTH}`);
   const chars = Array.from(charset);
   const charsetLen = chars.length;
-  return Array.from({ length }, () => chars[getSecureRandomInt(charsetLen)]).join('');
+  const passwordArray = new Array(length);
+  for (let i = 0; i < length; i++) {
+    passwordArray[i] = chars[getSecureRandomInt(charsetLen)];
+  }
+  return passwordArray.join('');
 }
 
 export function generateAll(): string[] {

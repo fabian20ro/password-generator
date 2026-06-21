@@ -101,4 +101,17 @@ describe("copyTextToClipboard", () => {
 
     await expect(copyTextToClipboard(clipboard, undefined as any)).resolves.toBe(false);
   });
+
+  it("returns true when text contains emojis", async () => {
+    const writes: string[] = [];
+    const clipboard = {
+      async writeText(text: string): Promise<void> {
+        writes.push(text);
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+    const emojiText = "🚀🔥";
+
+    await expect(copyTextToClipboard(clipboard, emojiText)).resolves.toBe(true);
+    expect(writes).toEqual([emojiText]);
+  });
 });

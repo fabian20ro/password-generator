@@ -67,6 +67,15 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
+  it("handles NaN delay as 0", () => {
+    const target = { id: "test" };
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, NaN, reset);
+    vi.advanceTimersByTime(0);
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
+
   it("works with multiple targets independently", () => {
     const target1 = { id: "target1" };
     const target2 = { id: "target2" };

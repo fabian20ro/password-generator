@@ -3,12 +3,12 @@ import { getSecureRandomInt } from "./crypto-utils";
 
 export const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 export const SYMBOLS = "!@#$%^&*()-_=+[]{}|;:,.<>?";
+export const DEFAULT_LENGTH = 24;
 export const CHARSET_LEN = CHARS.length;
 
 export const LENGTHS = [23, 24, 25, 26, 27, 28, 29, 30, 31, 32] as const;
 
 export const MAX_LENGTH = 65536;
-
 
 
 /**
@@ -19,7 +19,7 @@ export const MAX_LENGTH = 65536;
  * @param length The desired length of the password.
  * @returns The generated password string.
  */
-export function generatePassword(length: number): string {
+export function generatePassword(length: number = 24): string {
   return generatePasswordWithCharset(length, CHARS);
 }
 
@@ -50,7 +50,7 @@ export function generatePasswordWithLettersOnly(length: number): string {
 /**
  * Generates a cryptographically unique random password using only numbers.
  * 
- * @param length The desired length of the password.
+ * @param length: The desired length of the password.
  * @returns The generated password string.
  */
 export function generatePasswordWithNumbersOnly(length: number): string {
@@ -62,8 +62,8 @@ export function generatePasswordWithNumbersOnly(length: number): string {
  * Uses rejection sampling to prevent modulo bias when mapping the 32-bit
  * random value to the character set.
  * 
- * @param length The desired length of the password.
- * @param charset The character set to use.
+ * @param length: The desired length of the password.
+ * @param charset: The character set to use.
  * @returns The generated password string.
  */
 export function generatePasswordWithCharset(length: number, charset: string): string {
@@ -71,7 +71,11 @@ export function generatePasswordWithCharset(length: number, charset: string): st
   if (length > MAX_LENGTH) throw new Error(`Length exceeds maximum allowed: ${MAX_LENGTH}`);
   const chars = Array.from(charset);
   const charsetLen = chars.length;
-  return Array.from({ length }, () => chars[getSecureRandomInt(charsetLen)]).join('');
+  const passwordArray = new Array(length);
+  for (let i = 0; i < length; i++) {
+    passwordArray[i] = chars[getSecureRandomInt(charsetLen)];
+  }
+  return passwordArray.join('');
 }
 
 export function generateAll(): string[] {
@@ -81,8 +85,8 @@ export function generateAll(): string[] {
 /**
  * Checks if a password only contains characters from the provided charset.
  * 
- * @param pw The password to validate.
- * @param charset The allowed character set.
+ * @param pw: The password to validate.
+ * @param charset: The allowed character set.
  * @returns True if all characters in pw are in charset, false otherwise.
  */
 export function isValidPassword(pw: string, charset: string): boolean {
@@ -98,8 +102,8 @@ export function isValidPassword(pw: string, charset: string): boolean {
  * Generates a cryptographically secure random password that contains at least 
  * one character from each provided category.
  * 
- * @param length The desired length of the password.
- * @param categories An array of character sets (e.g., ['ABC', '123']).
+ * @param length: The desired length of the password.
+ * @param categories: An array of character sets (e.g., ['ABC', '123']).
  * @returns The generated password string.
  */
 export function generateComplexPassword(length: number, categories: string[][]): string {

@@ -58,6 +58,15 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
+  it("handles negative delay as 0", () => {
+    const target = { id: "test" };
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, -100, reset);
+    vi.advanceTimersByTime(0);
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
+
   it("works with multiple targets independently", () => {
     const target1 = { id: "target1" };
     const target2 = { id: "target2" };

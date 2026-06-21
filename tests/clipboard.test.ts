@@ -6,6 +6,10 @@ describe("copyTextToClipboard", () => {
     await expect(copyTextToClipboard(undefined, "secret")).resolves.toBe(false);
   });
 
+  it("returns false when clipboard is null", async () => {
+    await expect(copyTextToClipboard(null as any, "secret")).resolves.toBe(false);
+  });
+
   it("returns false when writeText is missing", async () => {
     const clipboard = {} as Pick<Clipboard, "writeText">;
 

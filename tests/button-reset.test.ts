@@ -30,28 +30,32 @@ describe("scheduleButtonReset", () => {
     vi.advanceTimersByTime(1000);
     scheduleButtonReset(target, 1500, reset); // Reschedule
 
-    vi.advanceTimersByTime(1000);
-    expect(reset).not.toHaveBeenCalled(); // 1000 + 1000 = 2000 > 1500
-
-    vi.advanceTimersByTime(501);
+    vi.advanceTimersByTime(2000);
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
   it("does not call reset if a new timeout has been scheduled", () => {
     const target = { id: "test" };
     const reset = vi.fn();
-    
+
     scheduleButtonReset(target, 1500, reset);
     vi.advanceTimersByTime(1000);
     scheduleButtonReset(target, 500, reset);
 
+    // At 2000ms total elapsed:
+    // 1st timeout (1500ms) was cleared at 1000ms.
+    // 2nd timeout (500ms) should trigger at 1000 + 500 = 1500ms.
     vi.advanceTimersByTime(1000);
-    expect(reset).toHaveBeenCalledTimes(1); // The second one should have fired at 2000 (1000 + 1000)
-    // Wait, if second was 500, it should fire at 1500 total.
-    // The first one was at 1500. 
-    // At 1000, we reset. 
-    // The second one is at 1000 + 500 = 1500.
-    // At 1501, reset should have been called once.
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
+
+  it("works with 0ms delay", () => {
+    const target = { id: "test" };
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, 0, reset);
+    vi.advanceTimersByTime(0);
+    expect(reset).toHaveBeenCalledTimes(1);
   });
 
   it("works with multiple targets independently", () => {

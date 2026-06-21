@@ -55,4 +55,14 @@ describe("copyTextToClipboard", () => {
 
     await expect(copyTextToClipboard(clipboard, "secret")).resolves.toBe(false);
   });
+
+  it("returns false when text is not a string", async () => {
+    const clipboard = {
+      async writeText(text: any): Promise<void> {
+        if (typeof text !== "string") throw new TypeError("Expected string");
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+
+    await expect(copyTextToClipboard(clipboard, null as any)).resolves.toBe(false);
+  });
 });

@@ -91,4 +91,14 @@ describe("copyTextToClipboard", () => {
     await expect(copyTextToClipboard(clipboard, largeText)).resolves.toBe(true);
     expect(writes).toEqual([largeText]);
   });
+
+  it("returns false when text is not a string (edge case)", async () => {
+    const clipboard = {
+      async writeText(text: string): Promise<void> {
+        if (typeof text !== "string") throw new Error("Not a string");
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+
+    await expect(copyTextToClipboard(clipboard, undefined as any)).resolves.toBe(false);
+  });
 });

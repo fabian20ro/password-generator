@@ -30,6 +30,18 @@ describe("copyTextToClipboard", () => {
     expect(writes).toEqual(["secret"]);
   });
 
+  it("returns true when an empty string is written successfully", async () => {
+    const writes: string[] = [];
+    const clipboard = {
+      async writeText(text: string): Promise<void> {
+        writes.push(text);
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+
+    await expect(copyTextToClipboard(clipboard, "")).resolves.toBe(true);
+    expect(writes).toEqual([""]);
+  });
+
   it("returns false when writing to clipboard fails", async () => {
     const clipboard = {
       async writeText(): Promise<void> {

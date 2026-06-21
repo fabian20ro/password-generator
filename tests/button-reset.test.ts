@@ -53,4 +53,21 @@ describe("scheduleButtonReset", () => {
     // The second one is at 1000 + 500 = 1500.
     // At 1501, reset should have been called once.
   });
+
+  it("works with multiple targets independently", () => {
+    const target1 = { id: "target1" };
+    const target2 = { id: "target2" };
+    const reset1 = vi.fn();
+    const reset2 = vi.fn();
+
+    scheduleButtonReset(target1, 1000, reset1);
+    scheduleButtonReset(target2, 500, reset2);
+
+    vi.advanceTimersByTime(600);
+    expect(reset2).toHaveBeenCalledTimes(1);
+    expect(reset1).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(500);
+    expect(reset1).toHaveBeenCalledTimes(1);
+  });
 });

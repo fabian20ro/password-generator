@@ -46,6 +46,19 @@ describe("copyTextToClipboard", () => {
     expect(writes).toEqual([""]);
   });
 
+  it("returns true when writeText is a synchronous function", async () => {
+    let called = false;
+    const clipboard = {
+      writeText(text: string) {
+        called = true;
+      },
+    } as unknown as Pick<Clipboard, "writeText">;
+
+    const result = await copyTextToClipboard(clipboard, "secret");
+    expect(result).toBe(true);
+    expect(called).toBe(true);
+  });
+
   it("returns false when writing to clipboard fails", async () => {
     const clipboard = {
       async writeText(): Promise<void> {

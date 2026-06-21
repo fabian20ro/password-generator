@@ -69,13 +69,26 @@ describe("copyTextToClipboard", () => {
     await expect(copyTextToClipboard(clipboard, "secret")).resolves.toBe(false);
   });
 
-  it("returns false when text is not a string", async () => {
+  it("returns false when writeText throws a non-Error", async () => {
     const clipboard = {
-      async writeText(text: any): Promise<void> {
-        if (typeof text !== "string") throw new TypeError("Expected string");
+      async writeText(): Promise<void> {
+        throw "not an error";
       },
     } satisfies Pick<Clipboard, "writeText">;
 
-    await expect(copyTextToClipboard(clipboard, null as any)).resolves.toBe(false);
+    await expect(copyTextToClipboard(clipboard, "secret")).resolves.toBe(false);
+  });
+
+  it("returns true when writing a very large string", async () => {
+    const writes: string[] = [];
+    const clipboard = {
+      async writeText(text: string): Promise<void> {
+        writes.push(text);
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+    const largeText = "a".repeat(10000);
+
+    await expect(copyTextToClipboard(clipboard, largeText)).resolves.toBe(true);
+    expect(writes).toEqual([largeText]);
   });
 });

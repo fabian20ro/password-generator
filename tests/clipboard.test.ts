@@ -112,6 +112,26 @@ describe("copyTextToClipboard", () => {
     await expect(copyTextToClipboard(clipboard, textObj as any)).resolves.toBe(false);
   });
 
+  it("returns false when text is a Number", async () => {
+    const clipboard = {
+      async writeText(text: string): Promise<void> {
+        // ignore
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+    const textNum = 123;
+    await expect(copyTextToClipboard(clipboard, textNum as any)).resolves.toBe(false);
+  });
+
+  it("returns false when text is a Symbol", async () => {
+    const clipboard = {
+      async writeText(text: string): Promise<void> {
+        // ignore
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+    const textSym = Symbol("test");
+    await expect(copyTextToClipboard(clipboard, textSym as any)).resolves.toBe(false);
+  });
+
   it("returns true when text contains emojis", async () => {
     const writes: string[] = [];
     const clipboard = {

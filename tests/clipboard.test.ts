@@ -170,4 +170,17 @@ describe("copyTextToClipboard", () => {
     await expect(copyTextToClipboard(clipboard, multiLineText)).resolves.toBe(true);
     expect(writes).toEqual([multiLineText]);
   });
+
+  it("returns true when writing a string with various whitespace characters", async () => {
+    const writes: string[] = [];
+    const clipboard = {
+      async writeText(text: string): Promise<void> {
+        writes.push(text);
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+    const whitespaceText = " \t\n\r\v\f";
+
+    await expect(copyTextToClipboard(clipboard, whitespaceText)).resolves.toBe(true);
+    expect(writes).toEqual([whitespaceText]);
+  });
 });

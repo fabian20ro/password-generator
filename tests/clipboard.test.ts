@@ -102,6 +102,16 @@ describe("copyTextToClipboard", () => {
     await expect(copyTextToClipboard(clipboard, null as any)).resolves.toBe(false);
   });
 
+  it("returns false when text is a String object (not a primitive)", async () => {
+    const clipboard = {
+      async writeText(text: string): Promise<void> {
+        // ignore
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+    const textObj = new String("test");
+    await expect(copyTextToClipboard(clipboard, textObj as any)).resolves.toBe(false);
+  });
+
   it("returns true when text contains emojis", async () => {
     const writes: string[] = [];
     const clipboard = {

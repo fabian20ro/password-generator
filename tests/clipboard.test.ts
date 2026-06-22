@@ -124,4 +124,17 @@ describe("copyTextToClipboard", () => {
     await expect(copyTextToClipboard(clipboard, emojiText)).resolves.toBe(true);
     expect(writes).toEqual([emojiText]);
   });
+
+  it("returns true when a multi-line string is written successfully", async () => {
+    const writes: string[] = [];
+    const clipboard = {
+      async writeText(text: string): Promise<void> {
+        writes.push(text);
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+    const multiLineText = "line1\nline2\nline3";
+
+    await expect(copyTextToClipboard(clipboard, multiLineText)).resolves.toBe(true);
+    expect(writes).toEqual([multiLineText]);
+  });
 });

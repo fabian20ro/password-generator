@@ -58,13 +58,31 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
+  it("handles negative delay as 0", () => {
+    const target = { id: "test" };
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, -100, reset);
+    vi.advanceTimersByTime(0);
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
+
+  it("handles NaN delay as 0", () => {
+    const target = { id: "test" };
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, NaN, reset);
+    vi.advanceTimersByTime(0);
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
+
   it("works with multiple targets independently", () => {
-    const target1 = { id: "target1" };
-    const target2 = { id: "target2" };
+    const target = { id: "test" };
+    const target2 = { id: "test2" };
     const reset1 = vi.fn();
     const reset2 = vi.fn();
 
-    scheduleButtonReset(target1, 1000, reset1);
+    scheduleButtonReset(target, 1000, reset1);
     scheduleButtonReset(target2, 500, reset2);
 
     vi.advanceTimersByTime(600);
@@ -73,5 +91,18 @@ describe("scheduleButtonReset", () => {
 
     vi.advanceTimersByTime(500);
     expect(reset1).toHaveBeenCalledTimes(1);
+  });
+
+  it("works correctly if scheduled again after a reset has occurred", () => {
+    const target = { id: "test" };
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, 100, reset);
+    vi.advanceTimersByTime(150);
+    expect(reset).toHaveBeenCalledTimes(1);
+
+    scheduleButtonReset(target, 100, reset);
+    vi.advanceTimersByTime(150);
+    expect(reset).toHaveBeenCalledTimes(2);
   });
 });

@@ -46,6 +46,19 @@ describe("copyTextToClipboard", () => {
     expect(writes).toEqual([""]);
   });
 
+  it("returns true when writeText is a synchronous function", async () => {
+    let called = false;
+    const clipboard = {
+      writeText(text: string) {
+        called = true;
+      },
+    } as unknown as Pick<Clipboard, "writeText">;
+
+    const result = await copyTextToClipboard(clipboard, "secret");
+    expect(result).toBe(true);
+    expect(called).toBe(true);
+  });
+
   it("returns false when writing to clipboard fails", async () => {
     const clipboard = {
       async writeText(): Promise<void> {
@@ -56,13 +69,102 @@ describe("copyTextToClipboard", () => {
     await expect(copyTextToClipboard(clipboard, "secret")).resolves.toBe(false);
   });
 
+  it("returns false when writeText throws a non-Error", async () => {
+    const clipboard = {
+      async writeText(): Promise<void> {
+        throw "not an error";
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+
+    await expect(copyTextToClipboard(clipboard, "secret")).resolves.toBe(false);
+  });
+
+  it("returns true when writing a very large string", async () => {
+    const writes: string[] = [];
+    const clipboard = {
+      async writeText(text: string): Promise<void> {
+        writes.push(text);
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+    const largeText = "a".repeat(10000);
+
+    await expect(copyTextToClipboard(clipboard, largeText)).resolves.toBe(true);
+    expect(writes).toEqual([largeText]);
+  });
+
   it("returns false when text is not a string", async () => {
     const clipboard = {
-      async writeText(text: any): Promise<void> {
-        if (typeof text !== "string") throw new TypeError("Expected string");
+      async writeText(text: string): Promise<void> {
+        // No throw, just accept it
       },
     } satisfies Pick<Clipboard, "writeText">;
 
     await expect(copyTextToClipboard(clipboard, null as any)).resolves.toBe(false);
+  });
+
+  it("returns false when text is a String object (not a primitive)", async () => {
+    const clipboard = {
+      async writeText(text: string): Promise<void> {
+        // ignore
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+    const textObj = new String("test");
+    await expect(copyTextToClipboard(clipboard, textObj as any)).resolves.toBe(false);
+  });
+
+  it("returns false when text is a Number", async () => {
+    const clipboard = {
+      async writeText(text: string): Promise<void> {
+        // ignore
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+    const textNum = 123;
+    await expect(copyTextToClipboard(clipboard, textNum as any)).resolves.toBe(false);
+  });
+
+  it("returns false when text is a Symbol", async () => {
+    const clipboard = {
+      async writeText(text: string): Promise<void> {
+        // ignore
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+    const textSym = Symbol("test");
+    await expect(copyTextToClipboard(clipboard, textSym as any)).resolves.toBe(false);
+  });
+
+  it("returns true when text contains emojis", async () => {
+    const writes: string[] = [];
+    const clipboard = {
+      async writeText(text: string): Promise<void> {
+        writes.push(text);
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+    const emojiText = "🚀🔥";
+
+    await expect(copyTextToClipboard(clipboard, emojiText)).resolves.toBe(true);
+    expect(writes).toEqual([emojiText]);
+  });
+
+  it("returns true even if writeText resolves to false", async () => {
+    const clipboard = {
+      async writeText(text: string): Promise<void> {
+        return Promise.resolve(false);
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+
+    await expect(copyTextToClipboard(clipboard, "secret")).resolves.toBe(true);
+  });
+
+  it("returns true when writing a string with null bytes", async () => {
+    const writes: string[] = [];
+    const clipboard = {
+      async writeText(text: string): Promise<void> {
+        writes.push(text);
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+    const textWithNull = "hello\0world";
+
+    await expect(copyTextToClipboard(clipboard, textWithNull)).resolves.toBe(true);
+    expect(writes).toEqual([textWithNull]);
   });
 });

@@ -145,42 +145,26 @@ describe("copyTextToClipboard", () => {
     expect(writes).toEqual([emojiText]);
   });
 
-  it("returns true when writing only newline characters", async () => {
-    const writes: string[] = [];
+  it("returns true even if writeText resolves to false", async () => {
     const clipboard = {
       async writeText(text: string): Promise<void> {
-        writes.push(text);
+        return Promise.resolve(false);
       },
     } satisfies Pick<Clipboard, "writeText">;
-    const newlineText = "\n\n";
 
-    await expect(copyTextToClipboard(clipboard, newlineText)).resolves.toBe(true);
-    expect(writes).toEqual([newlineText]);
+    await expect(copyTextToClipboard(clipboard, "secret")).resolves.toBe(true);
   });
 
-  it("returns true when writing a multi-line string", async () => {
+  it("returns true when writing a string with null bytes", async () => {
     const writes: string[] = [];
     const clipboard = {
       async writeText(text: string): Promise<void> {
         writes.push(text);
       },
     } satisfies Pick<Clipboard, "writeText">;
-    const multiLineText = "line1\nline2\nline3";
+    const textWithNull = "hello\0world";
 
-    await expect(copyTextToClipboard(clipboard, multiLineText)).resolves.toBe(true);
-    expect(writes).toEqual([multiLineText]);
-  });
-
-  it("returns true when writing a string with various whitespace characters", async () => {
-    const writes: string[] = [];
-    const clipboard = {
-      async writeText(text: string): Promise<void> {
-        writes.push(text);
-      },
-    } satisfies Pick<Clipboard, "writeText">;
-    const whitespaceText = " \t\n\r\v\f";
-
-    await expect(copyTextToClipboard(clipboard, whitespaceText)).resolves.toBe(true);
-    expect(writes).toEqual([whitespaceText]);
+    await expect(copyTextToClipboard(clipboard, textWithNull)).resolves.toBe(true);
+    expect(writes).toEqual([textWithNull]);
   });
 });

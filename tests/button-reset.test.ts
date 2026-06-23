@@ -54,6 +54,16 @@ describe("scheduleButtonReset", () => {
     const reset = vi.fn();
 
     scheduleButtonReset(target, 0, reset);
+    expect(reset).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(0);
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
+
+  it("triggers reset in the next tick even with 0ms delay", () => {
+    const target = { id: "test" };
+    const reset = vi.fn();
+    scheduleButtonReset(target, 0, reset);
+    expect(reset).not.toHaveBeenCalled();
     vi.advanceTimersByTime(0);
     expect(reset).toHaveBeenCalledTimes(1);
   });

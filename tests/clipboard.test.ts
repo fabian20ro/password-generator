@@ -180,4 +180,44 @@ describe("copyTextToClipboard", () => {
     await expect(copyTextToClipboard(clipboard, multiLineText)).resolves.toBe(true);
     expect(writes).toEqual([multiLineText]);
   });
+
+  it("returns false when text is undefined", async () => {
+    const clipboard = {
+      async writeText(text: string) {}
+    } satisfies Pick<Clipboard, "writeText">;
+
+    await expect(copyTextToClipboard(clipboard, undefined as any)).resolves.toBe(false);
+  });
+
+  it("returns false when clipboard is 0", async () => {
+    await expect(copyTextToClipboard(0 as any, "secret")).resolves.toBe(false);
+  });
+
+  it("returns false when text is an object", async () => {
+    const clipboard = {
+      async writeText(text: string) {}
+    } satisfies Pick<Clipboard, "writeText">;
+
+    await expect(copyTextToClipboard(clipboard, {} as any)).resolves.toBe(false);
+  });
+
+  it("returns false when text is a boolean", async () => {
+    const clipboard = {
+      async writeText(text: string): Promise<void> {
+        // ignore
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+    const textBool = true;
+    await expect(copyTextToClipboard(clipboard, textBool as any)).resolves.toBe(false);
+  });
+
+  it("returns false when text is a bigint", async () => {
+    const clipboard = {
+      async writeText(text: string): Promise<void> {
+        // ignore
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+    const textBigInt = 123n;
+    await expect(copyTextToClipboard(clipboard, textBigInt as any)).resolves.toBe(false);
+  });
 });

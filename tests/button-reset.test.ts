@@ -115,4 +115,9 @@ describe("scheduleButtonReset", () => {
     vi.advanceTimersByTime(150);
     expect(reset).toHaveBeenCalledTimes(2);
   });
+
+  it("throws error when target is null", () => {
+    const reset = vi.fn();
+    expect(() => scheduleButtonReset(null as any, 100, reset)).toThrow();
+  });
 });

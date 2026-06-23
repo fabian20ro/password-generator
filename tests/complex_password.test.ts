@@ -31,13 +31,7 @@ describe("generateComplexPassword", () => {
     expect(pw).toBe("");
   });
 
-  it("should handle length being a non-integer", () => {
-    const categories = [['A', 'B'], ['1', '2']];
-    const pw = (generateComplexPassword(5.5, categories) as any);
-    expect(pw).toBe("");
-  });
-
-  it("should handle non-integer lengths by returning empty string", () => {
+  it("should handle non-integer lengths by returning an empty string", () => {
     const categories = [['A', 'B'], ['1', '2']];
     expect(generateComplexPassword(2.5, categories)).toBe("");
   });
@@ -49,6 +43,25 @@ describe("generateComplexPassword", () => {
 
   it("should throw error if length exceeds MAX_LENGTH", () => {
     const categories = [['A', 'B'], ['1', '2']];
-    expect(() => generateComplexPassword(70000, categories)).toThrow(/Length exceeds maximum allowed/);
+    expect(() => generateComplexPassword(70000, categories)).toThrow(/Length exceeds maximum allowed: 65536/);
+  });
+
+  it("should only contain characters from the provided categories", () => {
+    const categories = [['ABC'], ['123'], ['!@#']];
+    const pw = generateComplexPassword(20, categories);
+    const allowedChars = new Set(categories.flat().join(''));
+    for (const char of pw) {
+      expect(allowedChars.has(char)).toBe(true);
+    }
+  });
+
+  it("should handle a large number of categories", () => {
+    const categories = Array.from({ length: 10 }, (_, i) => [`${i}_${i+1}`]);
+    const pw = generateComplexPassword(15, categories);
+    expect(pw.length).toBe(15);
+    categories.forEach(cat => {
+      const allowed = cat.join('');
+      expect([...pw].some(c => allowed.includes(c))).toBe(true);
+    });
   });
 });

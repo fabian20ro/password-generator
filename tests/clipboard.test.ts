@@ -181,6 +181,26 @@ describe("copyTextToClipboard", () => {
     expect(writes).toEqual([multiLineText]);
   });
 
+  it("returns false when text is undefined", async () => {
+    const clipboard = {
+      async writeText(text: string) {}
+    } satisfies Pick<Clipboard, "writeText">;
+
+    await expect(copyTextToClipboard(clipboard, undefined as any)).resolves.toBe(false);
+  });
+
+  it("returns false when clipboard is 0", async () => {
+    await expect(copyTextToClipboard(0 as any, "secret")).resolves.toBe(false);
+  });
+
+  it("returns false when text is an object", async () => {
+    const clipboard = {
+      async writeText(text: string) {}
+    } satisfies Pick<Clipboard, "writeText">;
+
+    await expect(copyTextToClipboard(clipboard, {} as any)).resolves.toBe(false);
+  });
+
   it("returns false when text is a boolean", async () => {
     const clipboard = {
       async writeText(text: string): Promise<void> {

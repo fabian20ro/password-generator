@@ -168,6 +168,13 @@ describe("copyTextToClipboard", () => {
     expect(writes).toEqual([textWithNull]);
   });
 
+  it("returns true when writeText is on the prototype", async () => {
+    const proto = { async writeText(text: string) {} };
+    const clipboard = Object.create(proto);
+    const result = await copyTextToClipboard(clipboard, "secret");
+    expect(result).toBe(true);
+  });
+
   it("returns true when writing a multi-line string", async () => {
     const writes: string[] = [];
     const clipboard = {

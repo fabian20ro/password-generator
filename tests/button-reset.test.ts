@@ -86,6 +86,16 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
+  it("handles multiple 0ms delays correctly", () => {
+    const target = { id: "test" };
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, 0, reset);
+    scheduleButtonReset(target, 0, reset);
+    vi.advanceTimersByTime(0);
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
+
   it("works with multiple targets independently", () => {
     const target = { id: "test" };
     const target2 = { id: "test2" };

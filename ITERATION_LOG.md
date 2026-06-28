@@ -242,7 +242,7 @@
 ### [2026-06-24] Dashboard auth CLI
 
 **Context:** Generate local Hermes dashboard basic-auth credentials without adding runtime dependencies.
-**What happened:** Added `npm run dashboard-auth`, a small Node CLI that emits username, password, and session secret YAML suitable for Hermes dashboard config.
+**What happened:** Added `npm run dashboard-auth`, a small Node CLI that writes username, password, and session-secret YAML or JSON to a required create-exclusive `--output` file with mode `0600`; secrets are never printed to the terminal.
 **Outcome:** Success. CLI output, lint, tests, and build pass after refreshing missing npm optional native dependencies.
 **Insight:** Utility CLIs can live beside the app when they are dependency-free and covered by tests, without changing the browser runtime surface.
 **Promoted to Lessons Learned:** No

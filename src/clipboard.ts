@@ -9,8 +9,7 @@ export async function copyTextToClipboard(
   try {
     await clipboard.writeText(text);
     return true;
-  } catch (error) {
-    console.error("Failed to copy text to clipboard:", error);
+  } catch {
     return false;
   }
 }

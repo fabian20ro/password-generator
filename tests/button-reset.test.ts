@@ -86,6 +86,17 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
+  it("handles very long delay", () => {
+    const target = { id: "test" };
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, 1000000, reset);
+    vi.advanceTimersByTime(999999);
+    expect(reset).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
+
   it("handles multiple 0ms delays correctly", () => {
     const target = { id: "test" };
     const reset = vi.fn();

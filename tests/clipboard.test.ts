@@ -34,7 +34,7 @@ describe("copyTextToClipboard", () => {
     expect(writes).toEqual(["secret"]);
   });
 
-  it("returns true when an empty string is written successfully", async () => {
+  it("returns false when an empty string is provided", async () => {
     const writes: string[] = [];
     const clipboard = {
       async writeText(text: string): Promise<void> {
@@ -42,8 +42,20 @@ describe("copyTextToClipboard", () => {
       },
     } satisfies Pick<Clipboard, "writeText">;
 
-    await expect(copyTextToClipboard(clipboard, "")).resolves.toBe(true);
-    expect(writes).toEqual([""]);
+    await expect(copyTextToClipboard(clipboard, "")).resolves.toBe(false);
+    expect(writes).toEqual([]);
+  });
+
+  it("returns false when text is a string with only whitespace", async () => {
+    const writes: string[] = [];
+    const clipboard = {
+      async writeText(text: string): Promise<void> {
+        writes.push(text);
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+
+    await expect(copyTextToClipboard(clipboard, "   ")).resolves.toBe(false);
+    expect(writes).toEqual([]);
   });
 
   it("returns true when writeText is a synchronous function", async () => {

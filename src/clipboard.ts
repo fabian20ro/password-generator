@@ -2,7 +2,7 @@ export async function copyTextToClipboard(
   clipboard: Pick<Clipboard, "writeText"> | undefined,
   text: string,
 ): Promise<boolean> {
-  if (typeof clipboard?.writeText !== "function" || typeof text !== "string") {
+  if (typeof clipboard?.writeText !== "function" || typeof text !== "string" || text.trim().length === 0) {
     return false;
   }
 
@@ -11,9 +11,9 @@ export async function copyTextToClipboard(
     return true;
   } catch (err) {
     if (err instanceof Error) {
-      console.warn("Failed to copy text to clipboard:", err.message);
+      console.warn(`Failed to copy text to clipboard: ${err.message}`);
     } else {
-      console.warn("Failed to copy text to clipboard:", String(err));
+      console.warn(`Failed to copy text to clipboard: ${String(err)}`);
     }
     return false;
   }

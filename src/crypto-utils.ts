@@ -8,7 +8,7 @@ export const UINT32_MODULUS = 0x1_0000_0000;
  * @returns A random integer.
  */
 export function getSecureRandomInt(max: number): number {
-  if (max <= 0 || max > UINT32_MODULUS) {
+  if (max <= 0 || max > UINT32_MODULUS || !Number.isInteger(max)) {
     throw new Error("Max must be between 1 and UINT32_MODULUS");
   }
   

@@ -141,4 +141,24 @@ describe("scheduleButtonReset", () => {
     const reset = vi.fn();
     expect(() => scheduleButtonReset(null as any, 100, reset)).toThrow();
   });
+
+  it("ensures cleanup occurs even if the reset function throws", () => {
+    const target = { id: "test" };
+    const reset = vi.fn(() => {
+      throw new Error("reset error");
+    });
+
+    scheduleButtonReset(target, 100, reset);
+
+    try {
+      vi.advanceTimersByTime(100);
+    } catch (e) {
+      // expected
+    }
+
+    const reset2 = vi.fn();
+    scheduleButtonReset(target, 100, reset2);
+    vi.advanceTimersByTime(100);
+    expect(reset2).toHaveBeenCalled();
+  });
 });

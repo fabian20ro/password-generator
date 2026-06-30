@@ -9,12 +9,8 @@ export async function copyTextToClipboard(
   try {
     await clipboard.writeText(text);
     return true;
-  } catch (err) {
-    if (err instanceof Error) {
-      console.warn(`Failed to copy text to clipboard: ${err.message}`);
-    } else {
-      console.warn(`Failed to copy text to clipboard: ${String(err)}`);
-    }
+  } catch {
     return false;
   }
+
 }

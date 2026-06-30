@@ -12,5 +12,4 @@ export async function copyTextToClipboard(
   } catch {
     return false;
   }
-
 }

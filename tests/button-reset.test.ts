@@ -142,6 +142,11 @@ describe("scheduleButtonReset", () => {
     expect(() => scheduleButtonReset(null as any, 100, reset)).toThrow();
   });
 
+  it("throws error when target is a primitive", () => {
+    const reset = vi.fn();
+    expect(() => scheduleButtonReset("string" as any, 100, reset)).toThrow();
+  });
+
   it("ensures cleanup occurs even if the reset function throws", () => {
     const target = { id: "test" };
     const reset = vi.fn(() => {

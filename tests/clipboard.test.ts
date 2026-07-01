@@ -274,4 +274,60 @@ describe("copyTextToClipboard", () => {
     vi.unstubAllGlobals();
     await expect(copyTextToClipboard(undefined, "secret")).resolves.toBe(false);
   });
+
+  it("returns false when clipboard API fails and execCommand also returns false", async () => {
+    const mockTextarea = {
+      value: "",
+      setAttribute: vi.fn(),
+      style: { position: "", left: "" },
+      select: vi.fn(),
+      setSelectionRange: vi.fn((_start: number, _end: number) => {}),
+    };
+
+    let execCommandCallCount = 0;
+    vi.stubGlobal("document", {
+      createElement: () => mockTextarea as unknown as HTMLTextAreaElement,
+      execCommand: (_cmd: string) => {
+        execCommandCallCount++;
+        return false; // explicit failure — should not be retried or ignored away
+      },
+      body: { appendChild: vi.fn(), removeChild: vi.fn() },
+    });
+
+    const clipboard = {
+      async writeText(): Promise<void> {
+        throw new Error("denied");
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+
+    await expect(copyTextToClipboard(clipboard, "secret")).resolves.toBe(false);
+    expect(execCommandCallCount).toBe(1); // fallback attempted exactly once
+  });
+
+  it("does not invoke fallback when modern clipboard API succeeds", async () => {
+    const appendChildSpy = vi.fn();
+    vi.stubGlobal("document", {
+      createElement: () => ({
+        value: "",
+        setAttribute: vi.fn(),
+        style: { position: "", left: "" },
+        select: vi.fn(),
+        setSelectionRange: vi.fn(),
+      }),
+      execCommand: vi.fn(() => false), // should never be reached
+      body: { appendChild: appendChildSpy, removeChild: vi.fn() },
+    });
+
+    const writes: string[] = [];
+    const clipboard = {
+      async writeText(text: string): Promise<void> {
+        writes.push(text);
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+
+    await expect(copyTextToClipboard(clipboard, "secret")).resolves.toBe(true);
+    expect(writes).toEqual(["secret"]);
+    expect(document.execCommand).not.toHaveBeenCalled(); // modern path short-circuits
+    vi.unstubAllGlobals();
+  });
 });

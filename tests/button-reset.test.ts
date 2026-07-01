@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { scheduleButtonReset } from "../src/button-reset";
+import { scheduleButtonReset, resetTimeouts } from "../src/button-reset";
 
 describe("scheduleButtonReset", () => {
   beforeEach(() => {
@@ -190,6 +190,23 @@ describe("scheduleButtonReset", () => {
     scheduleButtonReset(target, 100, reset);
     expect(() => {}).not.toThrow();
     vi.advanceTimersByTime(100);
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
+
+  it ("does not fire a stale callback when the timeout is rescheduled before expiry", () => {
+    const target = { id: "test" };
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, 100, reset);
+    const firstTimeoutId = resetTimeouts.get(target);
+    expect(firstTimeoutId).toBeDefined();
+
+    // Advance to the original delay — but before firing, reschedule.
+    vi.advanceTimersByTime(50);
+    scheduleButtonReset(target, 50, reset);
+
+    // The second timeout fires at t=100; verify it runs exactly once.
+    vi.advanceTimersByTime(60);
     expect(reset).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,5 +1,6 @@
 const resetTimeouts = new WeakMap<object, ReturnType<typeof setTimeout>>();
 
+export { resetTimeouts };
 export function scheduleButtonReset(target: object, delayMs: number, reset: () => void): void {
   clearTimeout(resetTimeouts.get(target));
 

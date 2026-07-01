@@ -137,6 +137,20 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(2);
   });
 
+  it("rapid rescheduling results in only the final callback firing at its correct time", () => {
+    const target = { id: "test" };
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, 1000, reset); // fires at t=1000
+    scheduleButtonReset(target, 800, reset);  // fires at t=800 (overrides)
+    scheduleButtonReset(target, 500, reset);  // fires at t=500 (overrides)
+
+    vi.advanceTimersByTime(499);
+    expect(reset).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
+
   it("throws error when target is null", () => {
     const reset = vi.fn();
     expect(() => scheduleButtonReset(null as any, 100, reset)).toThrow();

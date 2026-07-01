@@ -291,4 +291,24 @@ describe("cancelButtonReset", () => {
     cancelButtonReset(target);
     expect(resetTimeouts.has(target)).toBe(false);
   });
+
+  it ("throws error when target is null", () => {
+    const reset = vi.fn();
+    scheduleButtonReset({ id: "pre" }, 100, reset); // populate WeakMap first
+    expect(() => cancelButtonReset(null as any)).toThrow();
+  });
+
+  it ("throws error when target is a primitive string", () => {
+    const reset = vi.fn();
+    scheduleButtonReset({ id: "pre2" }, 100, reset); // populate WeakMap first
+    expect(() => cancelButtonReset("string-key" as any)).toThrow();
+  });
+
+  it ("is safe to call repeatedly on the same target", () => {
+    const target = { id: "double-cancel" };
+    scheduleButtonReset(target, 100, vi.fn());
+
+    cancelButtonReset(target);
+    expect(() => cancelButtonReset(target)).not.toThrow();
+  });
 });

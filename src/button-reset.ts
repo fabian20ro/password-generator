@@ -4,6 +4,7 @@ export { resetTimeouts };
 
 /** Cancel any pending reset for the given target. No-op if nothing is scheduled. */
 export function cancelButtonReset(target: object): void {
+  if (!(target instanceof Object)) throw new TypeError("cancelButtonReset requires an object target");
   const timeoutId = resetTimeouts.get(target);
   if (timeoutId !== undefined) {
     clearTimeout(timeoutId);

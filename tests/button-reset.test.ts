@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { scheduleButtonReset, resetTimeouts } from "../src/button-reset";
+import { scheduleButtonReset, cancelButtonReset, resetTimeouts } from "../src/button-reset";
 
 describe("scheduleButtonReset", () => {
   beforeEach(() => {
@@ -220,5 +220,57 @@ describe("scheduleButtonReset", () => {
     vi.advanceTimersByTime(100);
     expect(reset).toHaveBeenCalledTimes(1);
     expect(resetTimeouts.has(target)).toBe(false);
+  });
+});
+
+describe("cancelButtonReset", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it ("does nothing when no timeout is scheduled", () => {
+    const target = { id: "empty" };
+    expect(() => cancelButtonReset(target)).not.toThrow();
+  });
+
+  it ("clears the pending reset so the callback never fires", () => {
+    const target = { id: "test" };
+    const reset = vi.fn();
+    scheduleButtonReset(target, 100, reset);
+
+    cancelButtonReset(target);
+    expect(resetTimeouts.has(target)).toBe(false);
+
+    vi.advanceTimersByTime(200);
+    expect(reset).not.toHaveBeenCalled();
+  });
+
+  it ("allows a fresh schedule to work after cancel", () => {
+    const target = { id: "test" };
+    const reset = vi.fn();
+    scheduleButtonReset(target, 100, reset);
+    cancelButtonReset(target);
+
+    scheduleButtonReset(target, 100, reset);
+    vi.advanceTimersByTime(150);
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
+
+  it ("does not affect a different target's timeout", () => {
+    const t1 = { id: "a" };
+    const t2 = { id: "b" };
+    const r1 = vi.fn();
+    const r2 = vi.fn();
+    scheduleButtonReset(t1, 100, r1);
+    scheduleButtonReset(t2, 50, r2);
+
+    cancelButtonReset(t1);
+    vi.advanceTimersByTime(60);
+    expect(r1).not.toHaveBeenCalled();
+    expect(r2).toHaveBeenCalledTimes(1);
   });
 });

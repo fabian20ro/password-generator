@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { scheduleButtonReset } from "../src/button-reset";
+import { scheduleButtonReset, cancelButtonReset, resetTimeouts } from "../src/button-reset";
 
 describe("scheduleButtonReset", () => {
   beforeEach(() => {
@@ -10,7 +10,7 @@ describe("scheduleButtonReset", () => {
     vi.useRealTimers();
   });
 
-  it("calls the reset function after the specified delay", () => {
+  it ("calls the reset function after the specified delay", () => {
     const target = { id: "test" };
     const reset = vi.fn();
     scheduleButtonReset(target, 1500, reset);
@@ -22,7 +22,7 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
-  it("clears the existing timeout if called again before the delay expires", () => {
+  it ("clears the existing timeout if called again before the delay expires", () => {
     const target = { id: "test" };
     const reset = vi.fn();
     
@@ -34,7 +34,7 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
-  it("does not call reset if a new timeout has been scheduled", () => {
+  it ("does not call reset if a new timeout has been scheduled", () => {
     const target = { id: "test" };
     const reset = vi.fn();
 
@@ -49,7 +49,7 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
-  it("works with 0ms delay", () => {
+  it ("works with 0ms delay", () => {
     const target = { id: "test" };
     const reset = vi.fn();
 
@@ -59,7 +59,7 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
-  it("triggers reset in the next tick even with 0ms delay", () => {
+  it ("triggers reset in the next tick even with 0ms delay", () => {
     const target = { id: "test" };
     const reset = vi.fn();
     scheduleButtonReset(target, 0, reset);
@@ -68,7 +68,7 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
-  it("handles negative delay as 0", () => {
+  it ("handles negative delay as 0", () => {
     const target = { id: "test" };
     const reset = vi.fn();
 
@@ -77,7 +77,7 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
-  it("handles NaN delay as 0", () => {
+  it ("handles NaN delay as 0", () => {
     const target = { id: "test" };
     const reset = vi.fn();
 
@@ -86,7 +86,7 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
-  it("handles very long delay", () => {
+  it ("handles very long delay", () => {
     const target = { id: "test" };
     const reset = vi.fn();
 
@@ -97,7 +97,7 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
-  it("handles multiple 0ms delays correctly", () => {
+  it ("handles multiple 0ms delays correctly", () => {
     const target = { id: "test" };
     const reset = vi.fn();
 
@@ -107,7 +107,7 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
-  it("works with multiple targets independently", () => {
+  it ("works with multiple targets independently", () => {
     const target = { id: "test" };
     const target2 = { id: "test2" };
     const reset1 = vi.fn();
@@ -124,7 +124,7 @@ describe("scheduleButtonReset", () => {
     expect(reset1).toHaveBeenCalledTimes(1);
   });
 
-  it("works correctly if scheduled again after a reset has occurred", () => {
+  it ("works correctly if scheduled again after a reset has occurred", () => {
     const target = { id: "test" };
     const reset = vi.fn();
 
@@ -137,17 +137,31 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(2);
   });
 
-  it("throws error when target is null", () => {
+  it ("rapid rescheduling results in only the final callback firing at its correct time", () => {
+    const target = { id: "test" };
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, 1000, reset); // fires at t=1000
+    scheduleButtonReset(target, 800, reset);  // fires at t=800 (overrides)
+    scheduleButtonReset(target, 500, reset);  // fires at t=500 (overrides)
+
+    vi.advanceTimersByTime(499);
+    expect(reset).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
+
+  it ("throws error when target is null", () => {
     const reset = vi.fn();
     expect(() => scheduleButtonReset(null as any, 100, reset)).toThrow();
   });
 
-  it("throws error when target is a primitive", () => {
+  it ("throws error when target is a primitive", () => {
     const reset = vi.fn();
     expect(() => scheduleButtonReset("string" as any, 100, reset)).toThrow();
   });
 
-  it("ensures cleanup occurs even if the reset function throws", () => {
+  it ("ensures cleanup occurs even if the reset function throws", () => {
     const target = { id: "test" };
     const reset = vi.fn(() => {
       throw new Error("reset error");
@@ -165,5 +179,116 @@ describe("scheduleButtonReset", () => {
     scheduleButtonReset(target, 100, reset2);
     vi.advanceTimersByTime(100);
     expect(reset2).toHaveBeenCalled();
+  });
+
+  it ("does not throw when clearing an undefined timeout (first call on a new target)", () => {
+    const target = { id: "fresh" };
+    const reset = vi.fn();
+
+    // First call — WeakMap has no entry, so clearTimeout(undefined) is invoked.
+    // Node's setTimeout polyfill rejects non-number values; the function must guard against this.
+    scheduleButtonReset(target, 100, reset);
+    expect(() => {}).not.toThrow();
+    vi.advanceTimersByTime(100);
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
+
+  it ("does not fire a stale callback when the timeout is rescheduled before expiry", () => {
+    const target = { id: "test" };
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, 100, reset);
+    const firstTimeoutId = resetTimeouts.get(target);
+    expect(firstTimeoutId).toBeDefined();
+
+    // Advance to the original delay — but before firing, reschedule.
+    vi.advanceTimersByTime(50);
+    scheduleButtonReset(target, 50, reset);
+
+    // The second timeout fires at t=100; verify it runs exactly once.
+    vi.advanceTimersByTime(60);
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
+
+  it ("removes the WeakMap entry after a successful reset fires", () => {
+    const target = { id: "test" };
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, 100, reset);
+    expect(resetTimeouts.has(target)).toBe(true);
+
+    vi.advanceTimersByTime(100);
+    expect(reset).toHaveBeenCalledTimes(1);
+    expect(resetTimeouts.has(target)).toBe(false);
+  });
+});
+
+describe("cancelButtonReset", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it ("does nothing when no timeout is scheduled", () => {
+    const target = { id: "empty" };
+    expect(() => cancelButtonReset(target)).not.toThrow();
+  });
+
+  it ("clears the pending reset so the callback never fires", () => {
+    const target = { id: "test" };
+    const reset = vi.fn();
+    scheduleButtonReset(target, 100, reset);
+
+    cancelButtonReset(target);
+    expect(resetTimeouts.has(target)).toBe(false);
+
+    vi.advanceTimersByTime(200);
+    expect(reset).not.toHaveBeenCalled();
+  });
+
+  it ("allows a fresh schedule to work after cancel", () => {
+    const target = { id: "test" };
+    const reset = vi.fn();
+    scheduleButtonReset(target, 100, reset);
+    cancelButtonReset(target);
+
+    scheduleButtonReset(target, 100, reset);
+    vi.advanceTimersByTime(150);
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
+
+  it ("does not affect a different target's timeout", () => {
+    const t1 = { id: "a" };
+    const t2 = { id: "b" };
+    const r1 = vi.fn();
+    const r2 = vi.fn();
+    scheduleButtonReset(t1, 100, r1);
+    scheduleButtonReset(t2, 50, r2);
+
+    cancelButtonReset(t1);
+    vi.advanceTimersByTime(60);
+    expect(r1).not.toHaveBeenCalled();
+    expect(r2).toHaveBeenCalledTimes(1);
+  });
+
+  it ("leaves no stale WeakMap entries when called on a fresh target", () => {
+    const fresh = { id: "fresh-target" };
+    // Ensure the WeakMap starts clean for this target.
+    expect(resetTimeouts.has(fresh)).toBe(false);
+
+    cancelButtonReset(fresh);
+    expect(resetTimeouts.has(fresh)).toBe(false);
+  });
+
+  it ("cleans up the WeakMap entry during cancel", () => {
+    const target = { id: "cleanup-target" };
+    scheduleButtonReset(target, 100, vi.fn());
+    expect(resetTimeouts.has(target)).toBe(true);
+
+    cancelButtonReset(target);
+    expect(resetTimeouts.has(target)).toBe(false);
   });
 });

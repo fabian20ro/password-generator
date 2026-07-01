@@ -29,10 +29,6 @@ function fallbackCopy(text: string): boolean {
   return Boolean(success);
 }
 
-function isActualError(err: unknown): err is Error {
-  return typeof err === "object" && err !== null && "name" in err && "message" in err;
-}
-
 export async function copyTextToClipboard(
   clipboard: Pick<Clipboard, "writeText"> | undefined,
   text: string,
@@ -46,13 +42,9 @@ export async function copyTextToClipboard(
       await clipboard.writeText(text);
       return true;
     } catch (err) {
-      // Only fall back to legacy path for genuine Error instances.
-      // Non-Error throws (strings, numbers, etc.) are treated as fatal —
-      // the caller's API contract was violated and falling back could leak data.
-      if (!isActualError(err)) {
-        console.error("Clipboard copy failed: non-Error throw");
-        return false;
-      }
+      // Fall back to legacy execCommand regardless of error type.
+      // We already possess the text — falling back cannot leak additional data,
+      // and writeText may throw non-Error values in edge cases (e.g., polyfills).
       console.error("Clipboard copy failed:", err);
     }
   }

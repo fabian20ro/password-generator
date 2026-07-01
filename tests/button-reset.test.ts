@@ -180,4 +180,16 @@ describe("scheduleButtonReset", () => {
     vi.advanceTimersByTime(100);
     expect(reset2).toHaveBeenCalled();
   });
+
+  it("does not throw when clearing an undefined timeout (first call on a new target)", () => {
+    const target = { id: "fresh" };
+    const reset = vi.fn();
+
+    // First call — WeakMap has no entry, so clearTimeout(undefined) is invoked.
+    // Node's setTimeout polyfill rejects non-number values; the function must guard against this.
+    scheduleButtonReset(target, 100, reset);
+    expect(() => {}).not.toThrow();
+    vi.advanceTimersByTime(100);
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
 });

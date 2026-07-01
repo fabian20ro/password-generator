@@ -17,7 +17,7 @@ describe("getSecureRandomInt", () => {
   });
 
   it("handles large max values correctly", () => {
-    const max = 0x1_000_0000;
+    const max = 0x1_000_000_00;
     const val = getSecureRandomInt(max);
     expect(val).toBeGreaterThanOrEqual(0);
     expect(val).toBeLessThan(max);
@@ -27,4 +27,5 @@ describe("getSecureRandomInt", () => {
     const val = getSecureRandomInt(1);
     expect(val).toBe(0);
   });
+
 });

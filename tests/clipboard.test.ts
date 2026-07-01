@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { vi } from "vitest";
 import { copyTextToClipboard } from "../src/clipboard";
 
 describe("copyTextToClipboard", () => {
@@ -238,5 +239,39 @@ describe("copyTextToClipboard", () => {
     } satisfies Pick<Clipboard, "writeText">;
     const textBigInt = 123n;
     await expect(copyTextToClipboard(clipboard, textBigInt as any)).resolves.toBe(false);
+  });
+
+  it("falls back to execCommand when clipboard.writeText throws", async () => {
+    // Stub global document for fallback path in Node.js vitest (no jsdom)
+    const mockTextarea = {
+      value: "",
+      setAttribute: vi.fn(),
+      style: {
+        position: "",
+        left: "",
+      },
+      select: vi.fn(),
+      setSelectionRange: vi.fn((_start: number, _end: number) => {}),
+    };
+
+    vi.stubGlobal("document", {
+      createElement: () => mockTextarea as unknown as HTMLTextAreaElement,
+      execCommand: (_cmd: string) => true,
+      body: { appendChild: vi.fn(), removeChild: vi.fn() },
+    });
+
+    const clipboard = {
+      async writeText(): Promise<void> {
+        throw new Error("denied");
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+
+    await expect(copyTextToClipboard(clipboard, "fallback")).resolves.toBe(true);
+  });
+
+  it("returns false when neither clipboard API nor document available", async () => {
+    // Unstub any leftover global mocks to simulate a real Node.js env with no DOM
+    vi.unstubAllGlobals();
+    await expect(copyTextToClipboard(undefined, "secret")).resolves.toBe(false);
   });
 });

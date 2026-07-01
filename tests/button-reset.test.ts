@@ -10,7 +10,7 @@ describe("scheduleButtonReset", () => {
     vi.useRealTimers();
   });
 
-  it("calls the reset function after the specified delay", () => {
+  it ("calls the reset function after the specified delay", () => {
     const target = { id: "test" };
     const reset = vi.fn();
     scheduleButtonReset(target, 1500, reset);
@@ -22,7 +22,7 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
-  it("clears the existing timeout if called again before the delay expires", () => {
+  it ("clears the existing timeout if called again before the delay expires", () => {
     const target = { id: "test" };
     const reset = vi.fn();
     
@@ -34,7 +34,7 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
-  it("does not call reset if a new timeout has been scheduled", () => {
+  it ("does not call reset if a new timeout has been scheduled", () => {
     const target = { id: "test" };
     const reset = vi.fn();
 
@@ -49,7 +49,7 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
-  it("works with 0ms delay", () => {
+  it ("works with 0ms delay", () => {
     const target = { id: "test" };
     const reset = vi.fn();
 
@@ -59,7 +59,7 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
-  it("triggers reset in the next tick even with 0ms delay", () => {
+  it ("triggers reset in the next tick even with 0ms delay", () => {
     const target = { id: "test" };
     const reset = vi.fn();
     scheduleButtonReset(target, 0, reset);
@@ -68,7 +68,7 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
-  it("handles negative delay as 0", () => {
+  it ("handles negative delay as 0", () => {
     const target = { id: "test" };
     const reset = vi.fn();
 
@@ -77,7 +77,7 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
-  it("handles NaN delay as 0", () => {
+  it ("handles NaN delay as 0", () => {
     const target = { id: "test" };
     const reset = vi.fn();
 
@@ -86,7 +86,7 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
-  it("handles very long delay", () => {
+  it ("handles very long delay", () => {
     const target = { id: "test" };
     const reset = vi.fn();
 
@@ -97,7 +97,7 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
-  it("handles multiple 0ms delays correctly", () => {
+  it ("handles multiple 0ms delays correctly", () => {
     const target = { id: "test" };
     const reset = vi.fn();
 
@@ -107,7 +107,7 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
-  it("works with multiple targets independently", () => {
+  it ("works with multiple targets independently", () => {
     const target = { id: "test" };
     const target2 = { id: "test2" };
     const reset1 = vi.fn();
@@ -124,7 +124,7 @@ describe("scheduleButtonReset", () => {
     expect(reset1).toHaveBeenCalledTimes(1);
   });
 
-  it("works correctly if scheduled again after a reset has occurred", () => {
+  it ("works correctly if scheduled again after a reset has occurred", () => {
     const target = { id: "test" };
     const reset = vi.fn();
 
@@ -137,7 +137,7 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(2);
   });
 
-  it("rapid rescheduling results in only the final callback firing at its correct time", () => {
+  it ("rapid rescheduling results in only the final callback firing at its correct time", () => {
     const target = { id: "test" };
     const reset = vi.fn();
 
@@ -151,17 +151,17 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
-  it("throws error when target is null", () => {
+  it ("throws error when target is null", () => {
     const reset = vi.fn();
     expect(() => scheduleButtonReset(null as any, 100, reset)).toThrow();
   });
 
-  it("throws error when target is a primitive", () => {
+  it ("throws error when target is a primitive", () => {
     const reset = vi.fn();
     expect(() => scheduleButtonReset("string" as any, 100, reset)).toThrow();
   });
 
-  it("ensures cleanup occurs even if the reset function throws", () => {
+  it ("ensures cleanup occurs even if the reset function throws", () => {
     const target = { id: "test" };
     const reset = vi.fn(() => {
       throw new Error("reset error");
@@ -181,7 +181,7 @@ describe("scheduleButtonReset", () => {
     expect(reset2).toHaveBeenCalled();
   });
 
-  it("does not throw when clearing an undefined timeout (first call on a new target)", () => {
+  it ("does not throw when clearing an undefined timeout (first call on a new target)", () => {
     const target = { id: "fresh" };
     const reset = vi.fn();
 
@@ -208,5 +208,17 @@ describe("scheduleButtonReset", () => {
     // The second timeout fires at t=100; verify it runs exactly once.
     vi.advanceTimersByTime(60);
     expect(reset).toHaveBeenCalledTimes(1);
+  });
+
+  it ("removes the WeakMap entry after a successful reset fires", () => {
+    const target = { id: "test" };
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, 100, reset);
+    expect(resetTimeouts.has(target)).toBe(true);
+
+    vi.advanceTimersByTime(100);
+    expect(reset).toHaveBeenCalledTimes(1);
+    expect(resetTimeouts.has(target)).toBe(false);
   });
 });

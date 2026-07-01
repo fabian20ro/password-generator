@@ -273,4 +273,22 @@ describe("cancelButtonReset", () => {
     expect(r1).not.toHaveBeenCalled();
     expect(r2).toHaveBeenCalledTimes(1);
   });
+
+  it ("leaves no stale WeakMap entries when called on a fresh target", () => {
+    const fresh = { id: "fresh-target" };
+    // Ensure the WeakMap starts clean for this target.
+    expect(resetTimeouts.has(fresh)).toBe(false);
+
+    cancelButtonReset(fresh);
+    expect(resetTimeouts.has(fresh)).toBe(false);
+  });
+
+  it ("cleans up the WeakMap entry during cancel", () => {
+    const target = { id: "cleanup-target" };
+    scheduleButtonReset(target, 100, vi.fn());
+    expect(resetTimeouts.has(target)).toBe(true);
+
+    cancelButtonReset(target);
+    expect(resetTimeouts.has(target)).toBe(false);
+  });
 });

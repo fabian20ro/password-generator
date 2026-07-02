@@ -229,6 +229,21 @@ describe("scheduleButtonReset", () => {
     expect(() => scheduleButtonReset("string" as any, 100, reset)).toThrow();
   });
 
+  it ("does not leak WeakMap state when thrown on null target", () => {
+    // Defensive guard must throw before any WeakMap mutation.
+    const sentinel = { id: "null-sentinel" };
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+    expect(() => scheduleButtonReset(null as any, 100, vi.fn())).toThrow();
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+  });
+
+  it ("does not leak WeakMap state when thrown on primitive target", () => {
+    const sentinel = { id: "primitive-sentinel" };
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+    expect(() => scheduleButtonReset("string-key-xyz" as any, 100, vi.fn())).toThrow();
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+  });
+
   it ("ensures cleanup occurs even if the reset function throws", () => {
     const target = { id: "test" };
     const reset = vi.fn(() => {

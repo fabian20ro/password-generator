@@ -269,6 +269,32 @@ describe("copyTextToClipboard", () => {
     await expect(copyTextToClipboard(clipboard, "fallback")).resolves.toBe(true);
   });
 
+  it("sets tabindex=-1 on fallback textarea for programmatic focusability", async () => {
+    let capturedEl: unknown = null;
+
+    vi.stubGlobal("document", {
+      createElement: (tag: string) => {
+        const el: Record<string, any> = {
+          value: "",
+          setAttribute: vi.fn(),
+          tabIndex: undefined as number | undefined,
+          style: { position: "", left: "" },
+          select: vi.fn(),
+          setSelectionRange: vi.fn((_start: number, _end: number) => {}),
+        };
+        capturedEl = el;
+        return el as unknown as HTMLTextAreaElement;
+      },
+      execCommand: (_cmd: string) => true,
+      body: { appendChild: vi.fn(), removeChild: vi.fn() },
+    });
+
+    await copyTextToClipboard(undefined, "secret");
+
+    // The fallback should set tabIndex = -1 so unfocused elements can be selected on mobile
+    expect((capturedEl as any).tabIndex).toBe(-1);
+  });
+
   it("returns false when neither clipboard API nor document available", async () => {
     // Unstub any leftover global mocks to simulate a real Node.js env with no DOM
     vi.unstubAllGlobals();
@@ -302,6 +328,34 @@ describe("copyTextToClipboard", () => {
 
     await expect(copyTextToClipboard(clipboard, "secret")).resolves.toBe(false);
     expect(execCommandCallCount).toBe(1); // fallback attempted exactly once
+  });
+
+  it("cleans up textarea when execCommand throws during fallback", async () => {
+    const removeChildSpy = vi.fn();
+    const mockTextarea = {
+      value: "secret",
+      setAttribute: vi.fn(),
+      style: { position: "", left: "" },
+      select: vi.fn(),
+      setSelectionRange: vi.fn((_start: number, _end: number) => {}),
+    };
+
+    vi.stubGlobal("document", {
+      createElement: () => mockTextarea as unknown as HTMLTextAreaElement,
+      execCommand: (_cmd: string) => {
+        throw new Error("execCommand not supported");
+      },
+      body: { appendChild: vi.fn(), removeChild: removeChildSpy },
+    });
+
+    const clipboard = {
+      async writeText(): Promise<void> {
+        throw new Error("denied");
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+
+    await expect(copyTextToClipboard(clipboard, "secret")).resolves.toBe(false);
+    expect(removeChildSpy).toHaveBeenCalled(); // finally-block ensures cleanup even on throw
   });
 
   it("does not invoke fallback when modern clipboard API succeeds", async () => {

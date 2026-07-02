@@ -11,6 +11,7 @@ function fallbackCopy(text: string): boolean {
   const textarea = document.createElement("textarea");
   textarea.value = text;
   textarea.setAttribute("readonly", "");
+  textarea.tabIndex = -1; // ensures programmatic focus on mobile browsers where unfocused elements can't be selected
   textarea.style.position = "absolute";
   textarea.style.left = "-9999px";
   document.body.appendChild(textarea);

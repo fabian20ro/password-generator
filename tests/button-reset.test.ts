@@ -151,6 +151,23 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
+  it ("suppresses stale callbacks when rescheduled with different closures", () => {
+    const target = { id: "stale-test" };
+    const r1 = vi.fn(); // 500ms — would fire at t=500
+    const r2 = vi.fn(); // 400ms — rescheduled at t=200, fires at t=600
+
+    scheduleButtonReset(target, 500, r1);
+    vi.advanceTimersByTime(200);
+    scheduleButtonReset(target, 400, r2); // overrides r1's timeout
+
+    vi.advanceTimersByTime(399);
+    expect(r1).not.toHaveBeenCalled(); // not yet due for r2
+    expect(r2).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(r2).toHaveBeenCalledTimes(1);
+    expect(r1).not.toHaveBeenCalled(); // stale closure suppressed by identity check
+  });
+
   it ("throws error when target is null", () => {
     const reset = vi.fn();
     expect(() => scheduleButtonReset(null as any, 100, reset)).toThrow();

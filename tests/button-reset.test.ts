@@ -379,4 +379,25 @@ describe("cancelButtonReset", () => {
     cancelButtonReset(target);
     expect(() => cancelButtonReset(target)).not.toThrow();
   });
+
+  it ("does not throw when called after the reset has fired naturally", () => {
+    const target = { id: "post-fire-cancel" };
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, 100, reset);
+    expect(resetTimeouts.has(target)).toBe(true);
+
+    vi.advanceTimersByTime(100);
+    expect(reset).toHaveBeenCalledTimes(1);
+    expect(resetTimeouts.has(target)).toBe(false);
+
+    // Cancel must be a no-op after natural expiry — not throw.
+    expect(() => cancelButtonReset(target)).not.toThrow();
+
+    // Reschedule after cancel must work cleanly.
+    const reset2 = vi.fn();
+    scheduleButtonReset(target, 100, reset2);
+    vi.advanceTimersByTime(150);
+    expect(reset2).toHaveBeenCalledTimes(1);
+  });
 });

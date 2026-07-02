@@ -67,4 +67,34 @@ describe("dashboard auth CLI", () => {
       rmSync(directory, { recursive: true, force: true });
     }
   });
+
+  it("rejects invalid usernames with exit code 2", () => {
+    const directory = mkdtempSync(join(tmpdir(), "dashboard-auth-"));
+    const target = join(directory, "credentials.yaml");
+    try {
+      let err: NodeJS.ErrnoException | undefined;
+      try {
+        execFileSync(process.execPath, [
+          cli,
+          "--output",
+          target,
+          "--username",
+          "bad user!@#",
+          "--password-length",
+          "32",
+          "--secret-length",
+          "32",
+        ], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+      } catch (caught) {
+        err = caught as NodeJS.ErrnoException;
+      }
+
+      expect(err).toBeDefined();
+      expect((err as NodeJS.ErrnoException).status).toBe(2);
+      const combinedOutput = [String(err!.stdout ?? ""), String(err!.stderr ?? "")].join("\n");
+      expect(combinedOutput).toContain("Username must match");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
 });

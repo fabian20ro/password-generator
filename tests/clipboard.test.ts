@@ -304,6 +304,34 @@ describe("copyTextToClipboard", () => {
     expect(execCommandCallCount).toBe(1); // fallback attempted exactly once
   });
 
+  it("cleans up textarea when execCommand throws during fallback", async () => {
+    const removeChildSpy = vi.fn();
+    const mockTextarea = {
+      value: "secret",
+      setAttribute: vi.fn(),
+      style: { position: "", left: "" },
+      select: vi.fn(),
+      setSelectionRange: vi.fn((_start: number, _end: number) => {}),
+    };
+
+    vi.stubGlobal("document", {
+      createElement: () => mockTextarea as unknown as HTMLTextAreaElement,
+      execCommand: (_cmd: string) => {
+        throw new Error("execCommand not supported");
+      },
+      body: { appendChild: vi.fn(), removeChild: removeChildSpy },
+    });
+
+    const clipboard = {
+      async writeText(): Promise<void> {
+        throw new Error("denied");
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+
+    await expect(copyTextToClipboard(clipboard, "secret")).resolves.toBe(false);
+    expect(removeChildSpy).toHaveBeenCalled(); // finally-block ensures cleanup even on throw
+  });
+
   it("does not invoke fallback when modern clipboard API succeeds", async () => {
     const appendChildSpy = vi.fn();
     vi.stubGlobal("document", {

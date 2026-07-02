@@ -387,6 +387,14 @@ describe("cancelButtonReset", () => {
     expect(() => cancelButtonReset("string-key" as any)).toThrow();
   });
 
+  it ("does not mutate any WeakMap entry when thrown on primitive target", () => {
+    const sentinel = { id: "primitive-cancel-sentinel" };
+    scheduleButtonReset({ id: "pre3" }, 100, vi.fn()); // ensure WeakMap has entries
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+    expect(() => cancelButtonReset("bad-key-abc" as any)).toThrow();
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+  });
+
   it ("is safe to call repeatedly on the same target", () => {
     const target = { id: "double-cancel" };
     scheduleButtonReset(target, 100, vi.fn());

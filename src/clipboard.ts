@@ -42,11 +42,12 @@ export async function copyTextToClipboard(
     try {
       await clipboard.writeText(text);
       return true;
-    } catch (err) {
-      // Fall back to legacy execCommand regardless of error type.
-      // We already possess the text — falling back cannot leak additional data,
+    } catch {
+      // writeText threw — fall back to legacy execCommand regardless of error type.
+      // We already possess the text; falling back cannot leak additional data,
       // and writeText may throw non-Error values in edge cases (e.g., polyfills).
-      console.error("Clipboard copy failed:", err);
+      // Do not log here: a planned fallback is expected behavior, and a single
+      // diagnostic at the end-of-failure path below covers real failures.
     }
   }
 

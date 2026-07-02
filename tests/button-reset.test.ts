@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { scheduleButtonReset, cancelButtonReset, resetTimeouts } from "../src/button-reset";
+import { scheduleButtonReset, cancelButtonReset, isResetScheduled, resetTimeouts } from "../src/button-reset";
 
 describe("scheduleButtonReset", () => {
   beforeEach(() => {
@@ -8,6 +8,57 @@ describe("scheduleButtonReset", () => {
 
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  describe("isResetScheduled", () => {
+    it ("returns false before any schedule call", () => {
+      const target = { id: "query-pre" };
+      expect(isResetScheduled(target)).toBe(false);
+    });
+
+    it ("returns true after scheduling", () => {
+      const target = { id: "query-post" };
+      const reset = vi.fn();
+      scheduleButtonReset(target, 100, reset);
+      expect(isResetScheduled(target)).toBe(true);
+    });
+
+    it ("returns false after cancellation", () => {
+      const target = { id: "query-cancelled" };
+      const reset = vi.fn();
+      scheduleButtonReset(target, 100, reset);
+      cancelButtonReset(target);
+      expect(isResetScheduled(target)).toBe(false);
+    });
+
+    it ("returns false after the scheduled timer fires", () => {
+      const target = { id: "query-fired" };
+      const reset = vi.fn();
+      scheduleButtonReset(target, 100, reset);
+      expect(isResetScheduled(target)).toBe(true);
+      vi.advanceTimersByTime(100);
+      expect(reset).toHaveBeenCalledTimes(1);
+      expect(isResetScheduled(target)).toBe(false);
+    });
+
+    it ("returns false for null target", () => {
+      expect(isResetScheduled(null as any)).toBe(false);
+    });
+
+    it ("returns false for primitive targets", () => {
+      expect(isResetScheduled("string" as any)).toBe(false);
+      expect(isResetScheduled(42 as any)).toBe(false);
+    });
+
+    it ("does not schedule when called on a new target", () => {
+      const fresh = { id: "query-fresh" };
+      // Ensure the WeakMap is clean for this target.
+      expect(resetTimeouts.has(fresh)).toBe(false);
+      expect(isResetScheduled(fresh)).toBe(false);
+
+      scheduleButtonReset(fresh, 100, vi.fn());
+      expect(isResetScheduled(fresh)).toBe(true);
+    });
   });
 
   it ("calls the reset function after the specified delay", () => {

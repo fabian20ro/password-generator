@@ -12,6 +12,11 @@ export function cancelButtonReset(target: object): void {
   }
 }
 
+/** Returns true if a reset has been scheduled for the target and not yet cancelled or fired. */
+export function isResetScheduled(target: object): boolean {
+  return target instanceof Object && resetTimeouts.has(target);
+}
+
 export function scheduleButtonReset(target: object, delayMs: number, reset: () => void): void {
   cancelButtonReset(target);
 

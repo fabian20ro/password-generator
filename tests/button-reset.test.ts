@@ -52,7 +52,6 @@ describe("scheduleButtonReset", () => {
 
     it ("does not schedule when called on a new target", () => {
       const fresh = { id: "query-fresh" };
-      // Ensure the WeakMap is clean for this target.
       expect(resetTimeouts.has(fresh)).toBe(false);
       expect(isResetScheduled(fresh)).toBe(false);
 
@@ -219,6 +218,31 @@ describe("scheduleButtonReset", () => {
     expect(r1).not.toHaveBeenCalled(); // stale closure suppressed by identity check
   });
 
+  it ("works with array targets since they pass instanceof Object", () => {
+    const target: number[] = [1, 2, 3];
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, 100, reset);
+    expect(isResetScheduled(target)).toBe(true);
+    expect(resetTimeouts.has(target)).toBe(true);
+
+    vi.advanceTimersByTime(150);
+    expect(reset).toHaveBeenCalledTimes(1);
+    expect(resetTimeouts.has(target)).toBe(false);
+  });
+
+  it ("works with function targets since they pass instanceof Object", () => {
+    const target = () => {};
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, 100, reset);
+    expect(isResetScheduled(target)).toBe(true);
+
+    vi.advanceTimersByTime(150);
+    expect(reset).toHaveBeenCalledTimes(1);
+    expect(resetTimeouts.has(target)).toBe(false);
+  });
+
   it ("throws error when target is null", () => {
     const reset = vi.fn();
     expect(() => scheduleButtonReset(null as any, 100, reset)).toThrow();
@@ -269,7 +293,6 @@ describe("scheduleButtonReset", () => {
     const reset = vi.fn();
 
     // First call — WeakMap has no entry, so clearTimeout(undefined) is invoked.
-    // Node's setTimeout polyfill rejects non-number values; the function must guard against this.
     scheduleButtonReset(target, 100, reset);
     expect(() => {}).not.toThrow();
     vi.advanceTimersByTime(100);

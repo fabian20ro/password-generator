@@ -17,6 +17,12 @@ export function isResetScheduled(target: object): boolean {
   return target instanceof Object && resetTimeouts.has(target);
 }
 
+/** Schedule a delayed reset callback for the given target.
+ *  Cancels any prior pending reset first (idempotent).
+ *  The `reset` closure fires exactly once at or after `delayMs`.
+ *  Rescheduling before expiry replaces the pending callback with the new one;
+ *  stale closures from earlier schedules are suppressed via timeout-id identity.
+ *  Throws if `target` is not an object (null, primitive, undefined). */
 export function scheduleButtonReset(target: object, delayMs: number, reset: () => void): void {
   cancelButtonReset(target);
 

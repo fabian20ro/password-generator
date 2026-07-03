@@ -21,7 +21,7 @@ describe("getSecureRandomInt", () => {
   it("should produce values uniformly distributed across full range", () => {
     const max = 1000;
     const counts = new Array(max).fill(0);
-    for (let i = 0; i < 10000; i++) {
+    for (let i = 0; i < 50000; i++) {
       const val = getSecureRandomInt(max);
       expect(val).toBeGreaterThanOrEqual(0);
       expect(val).toBeLessThan(max);

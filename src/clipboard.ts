@@ -40,14 +40,20 @@ export async function copyTextToClipboard(
 
   if (clipboard && typeof clipboard.writeText === "function") {
     try {
-      await clipboard.writeText(text);
+      const result = await clipboard.writeText(text);
+      // writeText returns void on success per its declared return type, but some
+      // polyfills incorrectly signal failure by returning false or null. Cast to
+      // unknown so we can safely compare at runtime without violating the
+      // declared return type.
+      if ((result as unknown) === false || (result as unknown) === null) {
+        throw new Error("polyfill reported clipboard failure");
+      }
       return true;
     } catch {
-      // writeText threw — fall back to legacy execCommand regardless of error type.
+      // writeText returned undefined (e.g., primitive boxed into object with no
+      // real method), threw, or polyfill flagged failure — fall back to legacy.
       // We already possess the text; falling back cannot leak additional data,
       // and writeText may throw non-Error values in edge cases (e.g., polyfills).
-      // Do not log here: a planned fallback is expected behavior, and a single
-      // diagnostic at the end-of-failure path below covers real failures.
     }
   }
 

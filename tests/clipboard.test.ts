@@ -158,14 +158,38 @@ describe("copyTextToClipboard", () => {
     expect(writes).toEqual([emojiText]);
   });
 
-  it("returns true even if writeText resolves to false", async () => {
+  it("returns false when writeText resolves to false (polyfill signals failure)", async () => {
     const clipboard = {
       async writeText(text: string): Promise<void> {
         return Promise.resolve(false);
       },
     } satisfies Pick<Clipboard, "writeText">;
 
-    await expect(copyTextToClipboard(clipboard, "secret")).resolves.toBe(true);
+    await expect(copyTextToClipboard(clipboard, "secret")).resolves.toBe(false);
+  });
+
+  it("falls back to execCommand when writeText resolves to false", async () => {
+    const mockTextarea = {
+      value: "",
+      setAttribute: vi.fn(),
+      style: { position: "", left: "" },
+      select: vi.fn(),
+      setSelectionRange: vi.fn((_start: number, _end: number) => {}),
+    };
+
+    vi.stubGlobal("document", {
+      createElement: () => mockTextarea as unknown as HTMLTextAreaElement,
+      execCommand: (_cmd: string) => true,
+      body: { appendChild: vi.fn(), removeChild: vi.fn() },
+    });
+
+    const clipboard = {
+      async writeText(): Promise<void> {
+        return Promise.resolve(false);
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+
+    await expect(copyTextToClipboard(clipboard, "fallback")).resolves.toBe(true);
   });
 
   it("returns true when writing a string with null bytes", async () => {
@@ -210,6 +234,7 @@ describe("copyTextToClipboard", () => {
   });
 
   it("returns false when clipboard is 0", async () => {
+    vi.unstubAllGlobals();
     await expect(copyTextToClipboard(0 as any, "secret")).resolves.toBe(false);
   });
 

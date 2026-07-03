@@ -398,6 +398,35 @@ describe("cancelButtonReset", () => {
     expect(resetTimeouts.has(target)).toBe(false);
   });
 
+  it ("prevents reset firing when cancelled at the last moment", () => {
+    const target = { id: "edge-cancel" };
+    const reset = vi.fn();
+    scheduleButtonReset(target, 100, reset);
+
+    // Cancel exactly at the expiry boundary.
+    vi.advanceTimersByTime(99);
+    cancelButtonReset(target);
+
+    expect(reset).not.toHaveBeenCalled();
+    expect(resetTimeouts.has(target)).toBe(false);
+  });
+
+  it ("suppresses multiple pending resets when cancelled once", () => {
+    const target = { id: "multi-cancel" };
+    const r1 = vi.fn();
+    const r2 = vi.fn();
+    scheduleButtonReset(target, 200, r1); // fires at t=200 if not cleared
+    vi.advanceTimersByTime(50);
+    scheduleButtonReset(target, 100, r2); // overrides, fires at t=150
+
+    cancelButtonReset(target);
+    expect(resetTimeouts.has(target)).toBe(false);
+
+    vi.advanceTimersByTime(200);
+    expect(r1).not.toHaveBeenCalled();
+    expect(r2).not.toHaveBeenCalled();
+  });
+
   it ("throws error when target is null", () => {
     const reset = vi.fn();
     scheduleButtonReset({ id: "pre" }, 100, reset); // populate WeakMap first

@@ -424,4 +424,26 @@ describe("copyTextToClipboard", () => {
     expect(result).toBe(false);
     expect(createElementSpy).not.toHaveBeenCalled(); // short-circuit avoids DOM work
   });
+
+  it("falls through to fallback when isSecureContext is undefined (older browsers)", async () => {
+    const createElementSpy = vi.fn();
+    vi.stubGlobal("window", {}); // no isSecureContext property → falls through
+    vi.stubGlobal("document", {
+      createElement: () => ({
+        value: "fallback-text",
+        setAttribute: vi.fn(),
+        tabIndex: undefined,
+        style: { position: "", left: "" },
+        select: vi.fn(),
+        setSelectionRange: vi.fn(),
+      }),
+      execCommand: (_cmd: string) => true,
+      body: { appendChild: createElementSpy, removeChild: vi.fn() },
+    });
+
+    const result = await copyTextToClipboard(undefined, "fallback-text");
+
+    expect(result).toBe(true);
+    expect(createElementSpy).toHaveBeenCalled(); // fallback was attempted
+  });
 });

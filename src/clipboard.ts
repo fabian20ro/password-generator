@@ -39,8 +39,11 @@ export async function copyTextToClipboard(
   }
 
   // In insecure contexts both navigator.clipboard and execCommand("copy") fail;
-  // short-circuit to avoid creating hidden DOM elements unnecessarily.
-  if (typeof window !== "undefined" && !(window as { isSecureContext?: boolean }).isSecureContext) {
+  // short-circuit to avoid creating hidden DOM elements unnecessarily. Only
+  // bail out when isSecureContext explicitly reports false — undefined (e.g. in
+  // older browsers that lack the property but still support execCommand) must
+  // fall through so the fallback can be attempted.
+  if (typeof window !== "undefined" && (window as { isSecureContext?: boolean }).isSecureContext === false) {
     return false;
   }
 

@@ -409,4 +409,19 @@ describe("copyTextToClipboard", () => {
     expect(document.execCommand).not.toHaveBeenCalled(); // modern path short-circuits
     vi.unstubAllGlobals();
   });
+
+  it("returns false early in insecure context (no DOM manipulation)", async () => {
+    const createElementSpy = vi.fn();
+    vi.stubGlobal("window", { isSecureContext: false });
+    vi.stubGlobal("document", {
+      createElement: createElementSpy,
+      execCommand: (_cmd: string) => true,
+      body: { appendChild: vi.fn(), removeChild: vi.fn() },
+    });
+
+    const result = await copyTextToClipboard(undefined, "secret");
+
+    expect(result).toBe(false);
+    expect(createElementSpy).not.toHaveBeenCalled(); // short-circuit avoids DOM work
+  });
 });

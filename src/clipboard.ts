@@ -38,6 +38,12 @@ export async function copyTextToClipboard(
     return false;
   }
 
+  // In insecure contexts both navigator.clipboard and execCommand("copy") fail;
+  // short-circuit to avoid creating hidden DOM elements unnecessarily.
+  if (typeof window !== "undefined" && !(window as { isSecureContext?: boolean }).isSecureContext) {
+    return false;
+  }
+
   if (clipboard && typeof clipboard.writeText === "function") {
     try {
       const result = await clipboard.writeText(text);

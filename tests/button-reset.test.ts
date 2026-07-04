@@ -407,6 +407,26 @@ describe("cancelButtonReset", () => {
     expect(() => cancelButtonReset(target)).not.toThrow();
   });
 
+  it ("leaves other targets' timeouts intact when canceling a fresh target", () => {
+    // Cross-target isolation: canceling an unscheduled target must not disturb
+    // WeakMap entries belonging to other, already-scheduled targets.
+    const busyTarget = { id: "busy" };
+    const freshTarget = { id: "fresh-isolation" };
+
+    scheduleButtonReset(busyTarget, 100, vi.fn());
+    expect(resetTimeouts.has(busyTarget)).toBe(true);
+    expect(resetTimeouts.has(freshTarget)).toBe(false);
+
+    cancelButtonReset(freshTarget); // no-op on fresh target
+
+    // The busy target must still be scheduled and cancellable.
+    expect(resetTimeouts.has(busyTarget)).toBe(true);
+    const resetFn = vi.fn();
+    scheduleButtonReset(busyTarget, 50, resetFn);
+    vi.advanceTimersByTime(60);
+    expect(resetFn).toHaveBeenCalledTimes(1);
+  });
+
   it ("clears the pending reset so the callback never fires", () => {
     const target = { id: "test" };
     const reset = vi.fn();

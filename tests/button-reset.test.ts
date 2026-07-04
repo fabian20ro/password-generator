@@ -514,6 +514,27 @@ describe("cancelButtonReset", () => {
     expect(() => cancelButtonReset(target)).not.toThrow();
   });
 
+  it ("actually invokes clearTimeout with the scheduled timeout id", () => {
+    const target = { id: "cleartimeout-spy" };
+    scheduleButtonReset(target, 100, vi.fn());
+    const scheduledId = resetTimeouts.get(target) as ReturnType<typeof setTimeout>;
+
+    vi.spyOn(globalThis, "clearTimeout");
+    cancelButtonReset(target);
+    expect(clearTimeout).toHaveBeenCalledWith(scheduledId);
+    (globalThis.clearTimeout as unknown as ReturnType<typeof vi.fn>).mockRestore();
+  });
+
+  it ("does not invoke clearTimeout on a fresh target", () => {
+    const fresh = { id: "fresh-no-clear" };
+    expect(resetTimeouts.has(fresh)).toBe(false);
+
+    vi.spyOn(globalThis, "clearTimeout");
+    cancelButtonReset(fresh);
+    expect(clearTimeout).not.toHaveBeenCalled();
+    (globalThis.clearTimeout as unknown as ReturnType<typeof vi.fn>).mockRestore();
+  });
+
   it ("does not throw when called after the reset has fired naturally", () => {
     const target = { id: "post-fire-cancel" };
     const reset = vi.fn();

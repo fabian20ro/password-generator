@@ -45,6 +45,14 @@ describe("scheduleButtonReset", () => {
       expect(isResetScheduled(null as any)).toBe(false);
     });
 
+    it ("returns false for undefined target without throwing", () => {
+      const sentinel = { id: "undefined-guard-sentinel" };
+      expect(resetTimeouts.has(sentinel)).toBe(false);
+      expect(() => isResetScheduled(undefined as any)).not.toThrow();
+      expect(isResetScheduled(undefined as any)).toBe(false);
+      expect(resetTimeouts.has(sentinel)).toBe(false);
+    });
+
     it ("returns false for primitive targets", () => {
       expect(isResetScheduled("string" as any)).toBe(false);
       expect(isResetScheduled(42 as any)).toBe(false);

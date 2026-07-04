@@ -446,4 +446,23 @@ describe("copyTextToClipboard", () => {
     expect(result).toBe(true);
     expect(createElementSpy).toHaveBeenCalled(); // fallback was attempted
   });
+
+  it("proceeds to execCommand when select/setSelectionRange throws during fallback", async () => {
+    vi.stubGlobal("document", {
+      createElement: () => ({
+        value: "secret",
+        setAttribute: vi.fn(),
+        tabIndex: undefined,
+        style: { position: "", left: "" },
+        select: vi.fn(() => { throw new Error("select blocked"); }),
+        setSelectionRange: vi.fn(() => { throw new Error("setSelectionRange blocked"); }),
+      }),
+      execCommand: (_cmd: string) => true, // succeeds despite selection failure
+      body: { appendChild: vi.fn(), removeChild: vi.fn() },
+    });
+
+    const result = await copyTextToClipboard(undefined, "secret");
+
+    expect(result).toBe(true); // fallback still succeeds via execCommand
+  });
 });

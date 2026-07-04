@@ -18,8 +18,13 @@ function fallbackCopy(text: string): boolean {
   let success = false;
 
   try {
-    textarea.select();
-    textarea.setSelectionRange(0, textarea.value.length);
+    try {
+      textarea.select();
+      textarea.setSelectionRange(0, textarea.value.length);
+    } catch {
+      // selection can fail in some browsers (e.g., off-screen textarea on mobile)
+      // but execCommand("copy") may still succeed — proceed anyway.
+    }
     success = document.execCommand("copy");
   } catch {
     // ignore — success stays false

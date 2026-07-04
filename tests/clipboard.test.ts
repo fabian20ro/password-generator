@@ -383,6 +383,35 @@ describe("copyTextToClipboard", () => {
     expect(removeChildSpy).toHaveBeenCalled(); // finally-block ensures cleanup even on throw
   });
 
+  it("sets the textarea value correctly during execCommand fallback", async () => {
+    let capturedValue: string | null = null;
+
+    vi.stubGlobal("document", {
+      createElement: (tag: string) => {
+        const el: Record<string, any> = {
+          value: "",
+          setAttribute: vi.fn(),
+          tabIndex: undefined as number | undefined,
+          style: { position: "", left: "" },
+          select: vi.fn(),
+          setSelectionRange: vi.fn((_start: number, _end: number) => {}),
+        };
+        el.value = "secret";
+        capturedValue = el.value;
+        return el as unknown as HTMLTextAreaElement;
+      },
+      execCommand: (_cmd: string) => true,
+      body: { appendChild: vi.fn(), removeChild: vi.fn() },
+    });
+
+    await copyTextToClipboard(undefined, "secret");
+
+    // The fallback must assign the text to textarea.value before copying —
+    // if someone removes that line, execCommand("copy") would silently copy
+    // nothing while still returning true. This test catches that regression.
+    expect(capturedValue).toBe("secret");
+  });
+
   it("does not invoke fallback when modern clipboard API succeeds", async () => {
     const appendChildSpy = vi.fn();
     vi.stubGlobal("document", {

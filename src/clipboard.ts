@@ -29,7 +29,11 @@ function fallbackCopy(text: string): boolean {
   } catch {
     // ignore — success stays false
   } finally {
-    document.body.removeChild(textarea);
+    // Guard against removeChild throwing if appendChild failed silently or
+    // body is unavailable — without this, a single failure cascades into two.
+    try {
+      document.body.removeChild(textarea);
+    } catch {}
   }
 
   return Boolean(success);

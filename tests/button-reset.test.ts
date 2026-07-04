@@ -276,6 +276,23 @@ describe("scheduleButtonReset", () => {
     expect(resetTimeouts.has(sentinel)).toBe(false);
   });
 
+  it ("throws error when target is undefined", () => {
+    const sentinel = { id: "undefined-schedule-sentinel" };
+    scheduleButtonReset({ id: "pre-undef" }, 100, vi.fn()); // ensure WeakMap has entries
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+    expect(() => scheduleButtonReset(undefined as any, 100, vi.fn())).toThrow();
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+  });
+
+  it ("does not leak WeakMap state when thrown on undefined target", () => {
+    // Defensive guard must throw before any WeakMap mutation.
+    const sentinel = { id: "undefined-leak-sentinel" };
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+    scheduleButtonReset({ id: "pre-undef2" }, 100, vi.fn()); // ensure WeakMap has entries
+    expect(() => scheduleButtonReset(undefined as any, 100, vi.fn())).toThrow();
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+  });
+
   it ("ensures cleanup occurs even if the reset function throws", () => {
     const target = { id: "test" };
     const reset = vi.fn(() => {

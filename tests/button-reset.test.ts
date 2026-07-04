@@ -209,6 +209,32 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
+  it ("WeakMap holds only the latest timeoutId after rescheduling (identity invariant)", () => {
+    const target = { id: "identity-invariant" };
+    const r1 = vi.fn(); // 300ms — would fire at t=300
+    const r2 = vi.fn(); // 500ms — rescheduled, fires at t=800
+
+    scheduleButtonReset(target, 300, r1);
+    const firstTimeoutId = resetTimeouts.get(target) as ReturnType<typeof setTimeout> | undefined;
+    expect(firstTimeoutId).toBeDefined();
+
+    vi.advanceTimersByTime(250); // before first expiry
+    scheduleButtonReset(target, 500, r2); // overrides — calls cancelButtonReset internally
+    const secondTimeoutId = resetTimeouts.get(target) as ReturnType<typeof setTimeout> | undefined;
+    expect(secondTimeoutId).toBeDefined();
+
+    // Core invariant: WeakMap holds ONLY the new timeout ID. Old one must be gone.
+    expect(resetTimeouts.get(target)).toBe(secondTimeoutId);
+    expect(resetTimeouts.get(target)).not.toBe(firstTimeoutId);
+
+    vi.advanceTimersByTime(500); // at t=750, r2 fires at t=750 (250+500)
+    expect(r1).not.toHaveBeenCalled();
+    expect(r2).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(300); // past old expiry time too — r1 must NOT fire as stale
+    expect(r1).not.toHaveBeenCalled();
+  });
+
   it ("suppresses stale callbacks when rescheduled with different closures", () => {
     const target = { id: "stale-test" };
     const r1 = vi.fn(); // 500ms — would fire at t=500

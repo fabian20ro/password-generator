@@ -1,5 +1,8 @@
 const resetTimeouts = new WeakMap<object, ReturnType<typeof setTimeout>>();
 
+/** Default delay (ms) used when callers omit an explicit `delayMs`. */
+export const DEFAULT_RESET_DELAY_MS = 300;
+
 export { resetTimeouts };
 
 /** Cancel any pending reset for the given target. No-op if nothing is scheduled. */

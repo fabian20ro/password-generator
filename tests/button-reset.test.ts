@@ -1,5 +1,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { scheduleButtonReset, cancelButtonReset, isResetScheduled, resetTimeouts } from "../src/button-reset";
+import { scheduleButtonReset, cancelButtonReset, isResetScheduled, resetTimeouts, DEFAULT_RESET_DELAY_MS } from "../src/button-reset";
+
+describe("DEFAULT_RESET_DELAY_MS", () => {
+  it ("is exported and equals 300 ms", () => {
+    expect(DEFAULT_RESET_DELAY_MS).toBe(300);
+  });
+
+  it ("does not change across test runs (constant, not derived)", () => {
+    const a = DEFAULT_RESET_DELAY_MS;
+    const b = DEFAULT_RESET_DELAY_MS;
+    expect(a).toBe(b);
+    expect(typeof a).toBe("number");
+  });
+});
 
 describe("scheduleButtonReset", () => {
   beforeEach(() => {

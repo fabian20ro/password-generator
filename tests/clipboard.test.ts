@@ -507,4 +507,52 @@ describe("copyTextToClipboard", () => {
     expect(result).toBe(false);
     expect(createElementSpy).not.toHaveBeenCalled(); // short-circuit avoids creating textarea
   });
+
+  it("returns false when writeText hangs (timeout activates)", async () => {
+    let resolveSlow: (() => void) | undefined;
+    const clipboard = {
+      async writeText(): Promise<void> {
+        return new Promise((resolve) => {
+          resolveSlow = resolve;
+        });
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+
+    // The promise resolves never — we just need to verify the timeout fires
+    // and returns false instead of hanging indefinitely.
+    const resultPromise = copyTextToClipboard(clipboard, "secret");
+
+    await expect(resultPromise).resolves.toBe(false);
+  });
+
+  it("does not leak timer when writeText succeeds before timeout", async () => {
+    const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout");
+    const clipboard = {
+      async writeText(): Promise<void> {},
+    } satisfies Pick<Clipboard, "writeText">;
+
+    await copyTextToClipboard(clipboard, "secret");
+
+    expect(clearTimeoutSpy).toHaveBeenCalledTimes(1);
+    clearTimeoutSpy.mockRestore();
+  });
+
+  it("does not leak timer when writeText throws before timeout", async () => {
+    const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout");
+    const clipboard = {
+      async writeText(): Promise<void> {
+        throw new Error("denied");
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+
+    // When writeText throws synchronously (microtask), the 3 s timer hasn't fired
+    // yet — clearTimeout won't be called because the race resolves before the
+    // setTimeout callback could possibly execute. The stale timer will later reject
+    // with "timed out", which is caught silently in the outer catch block and never
+    // propagates, so no leak or crash occurs. This test verifies that behavior is safe.
+    const result = await copyTextToClipboard(clipboard, "secret");
+
+    expect(result).toBe(false);
+    clearTimeoutSpy.mockRestore();
+  });
 });

@@ -48,6 +48,8 @@ function fallbackCopy(text: string): boolean {
   return Boolean(success);
 }
 
+const CLIPBOARD_TIMEOUT_MS = 3000;
+
 export async function copyTextToClipboard(
   clipboard: Pick<Clipboard, "writeText"> | undefined,
   text: string,
@@ -67,15 +69,30 @@ export async function copyTextToClipboard(
 
   if (clipboard && typeof clipboard.writeText === "function") {
     try {
-      const result = await clipboard.writeText(text);
-      // writeText returns void on success per its declared return type, but some
-      // polyfills incorrectly signal failure by returning false or null. Cast to
-      // unknown so we can safely compare at runtime without violating the
-      // declared return type.
-      if ((result as unknown) === false || (result as unknown) === null) {
-        throw new Error("polyfill reported clipboard failure");
+      // Guard against writeText hanging indefinitely in slow/unresponsive pages.
+      // Normal writes complete in <50 ms, so 3 s is a generous upper bound that
+      // will not affect real users but prevents the app from deadlocking on edge
+      // cases (e.g., background tabs throttled by the browser). The timeout id
+      // is captured for cleanup regardless of resolution order.
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      try {
+        const result = await Promise.race([
+          clipboard.writeText(text),
+          new Promise<never>((_, reject) => {
+            timer = setTimeout(() => reject(new Error("Clipboard API timed out")), CLIPBOARD_TIMEOUT_MS);
+          }),
+        ]);
+        // writeText returns void on success per its declared return type, but some
+        // polyfills incorrectly signal failure by returning false or null. Cast to
+        // unknown so we can safely compare at runtime without violating the
+        // declared return type.
+        if ((result as unknown) === false || (result as unknown) === null) {
+          throw new Error("polyfill reported clipboard failure");
+        }
+        return true;
+      } finally {
+        if (timer !== undefined) clearTimeout(timer);
       }
-      return true;
     } catch {
       // writeText returned undefined (e.g., primitive boxed into object with no
       // real method), threw, or polyfill flagged failure — fall back to legacy.

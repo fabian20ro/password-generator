@@ -599,6 +599,33 @@ describe("cancelButtonReset", () => {
     (globalThis.clearTimeout as unknown as ReturnType<typeof vi.fn>).mockRestore();
   });
 
+  it ("transitions isResetScheduled through true → false → true across cancel + reschedule", () => {
+    // State-machine assertion: the public isResetScheduled API must reflect the
+    // WeakMap state at each stage of a schedule → cancel → reschedule lifecycle.
+    const target = { id: "state-machine-cancel-reschedule" };
+
+    expect(isResetScheduled(target)).toBe(false);
+
+    scheduleButtonReset(target, 100, vi.fn());
+    expect(isResetScheduled(target)).toBe(true);
+    expect(resetTimeouts.has(target)).toBe(true);
+
+    cancelButtonReset(target);
+    expect(isResetScheduled(target)).toBe(false);
+    expect(resetTimeouts.has(target)).toBe(false);
+
+    const reset2 = vi.fn();
+    scheduleButtonReset(target, 100, reset2);
+    expect(isResetScheduled(target)).toBe(true);
+    expect(resetTimeouts.has(target)).toBe(true);
+
+    // Only the latest timeout ID should exist in the WeakMap.
+    const storedId = resetTimeouts.get(target);
+    expect(storedId).toBeDefined();
+    vi.advanceTimersByTime(150);
+    expect(reset2).toHaveBeenCalledTimes(1);
+  });
+
   it ("does not invoke clearTimeout on a fresh target", () => {
     const fresh = { id: "fresh-no-clear" };
     expect(resetTimeouts.has(fresh)).toBe(false);

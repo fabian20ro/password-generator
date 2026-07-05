@@ -48,7 +48,7 @@ function fallbackCopy(text: string): boolean {
   return Boolean(success);
 }
 
-const CLIPBOARD_TIMEOUT_MS = 3000;
+export const CLIPBOARD_TIMEOUT_MS = 3000;
 
 /**
  * Synchronous probe: returns true if either the modern Clipboard API is available
@@ -77,6 +77,7 @@ export function canCopyToClipboard(): boolean {
 export async function copyTextToClipboard(
   clipboard: Pick<Clipboard, "writeText"> | undefined,
   text: string,
+  timeoutMs = CLIPBOARD_TIMEOUT_MS,
 ): Promise<boolean> {
   if (typeof text !== "string" || text.trim().length === 0) {
     return false;
@@ -103,7 +104,7 @@ export async function copyTextToClipboard(
         const result = await Promise.race([
           clipboard.writeText(text),
           new Promise<never>((_, reject) => {
-            timer = setTimeout(() => reject(new Error("Clipboard API timed out")), CLIPBOARD_TIMEOUT_MS);
+            timer = setTimeout(() => reject(new Error("Clipboard API timed out")), timeoutMs);
           }),
         ]);
         // writeText returns void on success per its declared return type, but some

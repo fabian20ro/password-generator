@@ -601,6 +601,22 @@ describe("copyTextToClipboard", () => {
     await expect(resultPromise).resolves.toBe(false);
   });
 
+  it("uses custom timeout when provided", async () => {
+    let resolveSlow: (() => void) | undefined;
+    const clipboard = {
+      async writeText(): Promise<void> {
+        return new Promise((resolve) => {
+          resolveSlow = resolve;
+        });
+      },
+    } satisfies Pick<Clipboard, "writeText">;
+
+    // Test with a very short timeout (10ms) to verify it actually fires quickly
+    const resultPromise = copyTextToClipboard(clipboard, "secret", 10);
+
+    await expect(resultPromise).resolves.toBe(false);
+  });
+
   it("does not leak timer when writeText succeeds before timeout", async () => {
     const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout");
     const clipboard = {

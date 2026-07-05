@@ -450,6 +450,31 @@ describe("cancelButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
+  it ("leaves exactly one WeakMap entry after cancel + reschedule cycle", () => {
+    // Cancelling must fully purge the old timeout so a subsequent schedule
+    // does not accumulate stale entries — only the latest timeout should exist.
+    const target = { id: "cancel-reschedule-leak" };
+    const r1 = vi.fn();
+
+    scheduleButtonReset(target, 100, r1);
+    expect(resetTimeouts.get(target)).toBeDefined();
+
+    cancelButtonReset(target);
+    expect(resetTimeouts.has(target)).toBe(false);
+
+    const r2 = vi.fn();
+    scheduleButtonReset(target, 100, r2);
+    const newId = resetTimeouts.get(target);
+    expect(newId).toBeDefined();
+
+    // The stored id must be the fresh one — not the old timeout id.
+    expect(resetTimeouts.get(target)).toBe(newId);
+
+    vi.advanceTimersByTime(150);
+    expect(r1).not.toHaveBeenCalled();
+    expect(r2).toHaveBeenCalledTimes(1);
+  });
+
   it ("does not affect a different target's timeout", () => {
     const t1 = { id: "a" };
     const t2 = { id: "b" };

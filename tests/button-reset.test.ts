@@ -531,6 +531,22 @@ describe("cancelButtonReset", () => {
     expect(resetTimeouts.has(sentinel)).toBe(false);
   });
 
+  it ("throws on every non-object primitive type, not just strings", () => {
+    // Defensive guard uses the same instanceof Object check as scheduleButtonReset.
+    const sentinel = { id: "primitive-cascade-sentinel" };
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+
+    for (const bad of [null, 42, true, false]) {
+      expect(() => cancelButtonReset(bad as any))
+        .toThrow(/cancelButtonReset requires an object target/);
+    }
+
+    // No WeakMap mutation leaked from the throws.
+    for (const bad of [null, 42, true, false]) {
+      expect(resetTimeouts.has(sentinel)).toBe(false);
+    }
+  });
+
   it ("does not mutate any WeakMap entry when thrown on primitive target", () => {
     const sentinel = { id: "primitive-cancel-sentinel" };
     scheduleButtonReset({ id: "pre3" }, 100, vi.fn()); // ensure WeakMap has entries

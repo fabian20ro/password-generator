@@ -131,6 +131,5 @@ export async function copyTextToClipboard(
     return true;
   }
 
-  console.error("Clipboard copy failed: no API available");
   return false;
 }

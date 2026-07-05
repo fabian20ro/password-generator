@@ -8,6 +8,15 @@ function fallbackCopy(text: string): boolean {
     return false;
   }
 
+  // Guard against document.body being null/undefined — e.g. during early DOM
+  // lifecycle or unusual browser states. Without this, `body.appendChild` at
+  // line 17 would throw a TypeError that propagates up uncaught (copyTextToClipboard
+  // calls fallbackCopy without try/catch). Returning false here keeps the user
+  // experience clean and lets the caller handle the failure gracefully.
+  if (!(document as { body?: unknown }).body) {
+    return false;
+  }
+
   const textarea = document.createElement("textarea");
   textarea.value = text;
   textarea.setAttribute("readonly", "");

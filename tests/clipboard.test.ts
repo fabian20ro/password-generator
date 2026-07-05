@@ -494,4 +494,17 @@ describe("copyTextToClipboard", () => {
 
     expect(result).toBe(true); // fallback still succeeds via execCommand
   });
+
+  it("returns false when document.body is unavailable (no DOM manipulation)", async () => {
+    const createElementSpy = vi.fn();
+    vi.stubGlobal("document", {
+      createElement: createElementSpy,
+      body: null, // simulates early DOM lifecycle or unusual browser state
+    });
+
+    const result = await copyTextToClipboard(undefined, "secret");
+
+    expect(result).toBe(false);
+    expect(createElementSpy).not.toHaveBeenCalled(); // short-circuit avoids creating textarea
+  });
 });

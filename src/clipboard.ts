@@ -50,6 +50,30 @@ function fallbackCopy(text: string): boolean {
 
 const CLIPBOARD_TIMEOUT_MS = 3000;
 
+/**
+ * Synchronous probe: returns true if either the modern Clipboard API is available
+ * (navigator.clipboard.writeText is a function) or the legacy fallback path could
+ * work (document.body exists — execCommand("copy") may still succeed even without
+ * navigator.clipboard). Does NOT mutate DOM and does NOT invoke any browser APIs.
+ * Safe to call on every render cycle for conditional UI rendering.
+ */
+export function canCopyToClipboard(): boolean {
+  // Modern path: navigator.clipboard API available in secure contexts (HTTPS, localhost)
+  if (typeof navigator !== "undefined" && typeof (navigator as { clipboard?: unknown }).clipboard === "object") {
+    const cb = (navigator as { clipboard?: { writeText?: unknown } }).clipboard;
+    if (cb && typeof cb.writeText === "function") {
+      return true;
+    }
+  }
+
+  // Legacy fallback: needs a document body to create the hidden textarea
+  if (typeof document !== "undefined" && document.body) {
+    return true;
+  }
+
+  return false;
+}
+
 export async function copyTextToClipboard(
   clipboard: Pick<Clipboard, "writeText"> | undefined,
   text: string,

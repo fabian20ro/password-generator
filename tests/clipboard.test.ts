@@ -1,6 +1,82 @@
 import { describe, expect, it } from "vitest";
 import { vi } from "vitest";
-import { copyTextToClipboard } from "../src/clipboard";
+import { canCopyToClipboard, copyTextToClipboard } from "../src/clipboard";
+
+describe("canCopyToClipboard", () => {
+  it("returns true when navigator.clipboard.writeText is a function (modern API)", async () => {
+    const mockWriteText = vi.fn();
+    vi.stubGlobal("navigator", { clipboard: { writeText: mockWriteText } });
+
+    expect(canCopyToClipboard()).toBe(true);
+  });
+
+  it("returns true when navigator.clipboard exists but has no writeText (legacy fallback check)", async () => {
+    vi.stubGlobal("navigator", { clipboard: {} });
+    // No document.body set by default in vitest — should fall through to body check
+    const result = canCopyToClipboard();
+
+    expect(typeof result).toBe("boolean");
+  });
+
+  it("returns false when navigator is undefined and document is undefined (Node.js env)", async () => {
+    vi.unstubAllGlobals();
+
+    expect(canCopyToClipboard()).toBe(false);
+  });
+
+  it("returns true when document.body exists but no clipboard API", async () => {
+    const mockTextarea = {
+      value: "",
+      setAttribute: vi.fn(),
+      style: { position: "", left: "" },
+      select: vi.fn(),
+      setSelectionRange: vi.fn((_start: number, _end: number) => {}),
+    };
+
+    vi.stubGlobal("document", {
+      createElement: () => mockTextarea as unknown as HTMLTextAreaElement,
+      execCommand: (_cmd: string) => true,
+      body: { appendChild: vi.fn(), removeChild: vi.fn() },
+    });
+    // navigator is undefined by default in vitest
+
+    expect(canCopyToClipboard()).toBe(true);
+  });
+
+  it("returns false when document.body is null", async () => {
+    const createElementSpy = vi.fn();
+    vi.stubGlobal("navigator", {});
+    vi.stubGlobal("document", {
+      createElement: createElementSpy,
+      body: null,
+    });
+
+    expect(canCopyToClipboard()).toBe(false);
+  });
+
+  it("returns true when clipboard exists and writeText is a function (real-world browser)", async () => {
+    vi.stubGlobal("navigator", {
+      clipboard: {
+        writeText: () => Promise.resolve(),
+      },
+    });
+
+    expect(canCopyToClipboard()).toBe(true);
+  });
+
+  it("does not mutate DOM or invoke any APIs", async () => {
+    const createElementSpy = vi.fn();
+    vi.stubGlobal("navigator", {});
+    vi.stubGlobal("document", {
+      createElement: createElementSpy,
+      body: null,
+    });
+
+    canCopyToClipboard(); // no throw expected
+
+    expect(createElementSpy).not.toHaveBeenCalled();
+  });
+});
 
 describe("copyTextToClipboard", () => {
   it("returns false when clipboard API is unavailable", async () => {

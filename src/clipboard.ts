@@ -59,7 +59,7 @@ export const CLIPBOARD_TIMEOUT_MS = 3000;
  */
 export function canCopyToClipboard(): boolean {
   // Modern path: navigator.clipboard API available in secure contexts (HTTPS, localhost)
-  if (typeof navigator !== "undefined" && typeof (navigator as { clipboard?: unknown }).clipboard === "object") {
+  if (typeof navigator !== "undefined" && (navigator as { clipboard?: unknown }).clipboard) {
     const cb = (navigator as { clipboard?: { writeText?: unknown } }).clipboard;
     if (cb && typeof cb.writeText === "function") {
       return true;

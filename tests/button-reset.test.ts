@@ -530,6 +530,19 @@ describe("cancelButtonReset", () => {
     expect(() => cancelButtonReset(target)).not.toThrow();
   });
 
+  it ("is safe to call repeatedly on an unscheduled target (double-cancel no-op)", () => {
+    // Defensive invariant: cancelling a fresh target must not throw or mutate
+    // the WeakMap, even when invoked multiple times in succession.
+    const target = { id: "unscheduled-double" };
+    expect(resetTimeouts.has(target)).toBe(false);
+
+    cancelButtonReset(target);
+    expect(resetTimeouts.has(target)).toBe(false);
+
+    cancelButtonReset(target); // second call — must remain a no-op
+    expect(resetTimeouts.has(target)).toBe(false);
+  });
+
   it ("leaves other targets' timeouts intact when canceling a fresh target", () => {
     // Cross-target isolation: canceling an unscheduled target must not disturb
     // WeakMap entries belonging to other, already-scheduled targets.

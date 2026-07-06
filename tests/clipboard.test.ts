@@ -76,6 +76,20 @@ describe("canCopyToClipboard", () => {
 
     expect(createElementSpy).not.toHaveBeenCalled();
   });
+
+  it("falls through to legacy path when navigator.clipboard.writeText is not a function but document.body exists", () => {
+    vi.stubGlobal("navigator", { clipboard: { writeText: "not-a-function" } });
+    vi.stubGlobal("document", { body: {} });
+
+    expect(canCopyToClipboard()).toBe(true); // falls through to document.body check
+  });
+
+  it("returns false when navigator.clipboard.writeText is not a function and no document.body", () => {
+    vi.stubGlobal("navigator", { clipboard: { writeText: null } });
+    vi.unstubAllGlobals(); // removes stubs including document
+
+    expect(canCopyToClipboard()).toBe(false);
+  });
 });
 
 describe("copyTextToClipboard", () => {

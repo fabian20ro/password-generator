@@ -391,6 +391,30 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
     expect(resetTimeouts.has(target)).toBe(false);
   });
+
+  it ("rescheduling from inside the reset callback works — delete-before-fire ordering", () => {
+    // Validates that scheduleButtonReset deletes the WeakMap entry *before*
+    // invoking `reset()`, so a re-schedule issued inside the callback starts
+    // cleanly without fighting stale state.
+    const target = { id: "reenter" };
+    let outerFired = false;
+
+    scheduleButtonReset(target, 100, () => {
+      outerFired = true;
+      expect(resetTimeouts.has(target)).toBe(false); // entry already deleted
+      scheduleButtonReset(target, 50, vi.fn());      // fresh start for same target
+    });
+
+    expect(outerFired).toBe(false);
+
+    vi.advanceTimersByTime(100);
+    expect(outerFired).toBe(true);
+    expect(resetTimeouts.has(target)).toBe(true);     // new schedule took effect
+
+    vi.advanceTimersByTime(50);
+    // the inner callback was vi.fn() — verify no error thrown and entry cleared
+    expect(resetTimeouts.has(target)).toBe(false);
+  });
 });
 
 describe("cancelButtonReset", () => {

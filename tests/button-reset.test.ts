@@ -168,6 +168,32 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
+  it ("uses DEFAULT_RESET_DELAY_MS when delayMs is omitted (default parameter)", () => {
+    const target = { id: "defaults-to-300" };
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, undefined as any, reset);
+    expect(resetTimeouts.has(target)).toBe(true);
+
+    vi.advanceTimersByTime(DEFAULT_RESET_DELAY_MS - 1);
+    expect(reset).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(1);
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
+
+  it ("ignores null delayMs and falls back to DEFAULT_RESET_DELAY_MS", () => {
+    const target = { id: "null-delay-fallback" };
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, null as any, reset);
+    expect(resetTimeouts.has(target)).toBe(true);
+
+    // With a null delay, setTimeout treats it as 0 — so we must advance past 0 first.
+    vi.advanceTimersByTime(0);
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
+
   it ("handles multiple 0ms delays correctly", () => {
     const target = { id: "test" };
     const reset = vi.fn();

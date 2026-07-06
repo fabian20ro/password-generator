@@ -26,7 +26,11 @@ export function isResetScheduled(target: object): boolean {
  *  Rescheduling before expiry replaces the pending callback with the new one;
  *  stale closures from earlier schedules are suppressed via timeout-id identity.
  *  Throws if `target` is not an object (null, primitive, undefined). */
-export function scheduleButtonReset(target: object, delayMs: number, reset: () => void): void {
+export function scheduleButtonReset(
+  target: object,
+  delayMs = DEFAULT_RESET_DELAY_MS,
+  reset: () => void,
+): void {
   cancelButtonReset(target);
 
   const timeoutId = setTimeout(() => {

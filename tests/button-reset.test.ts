@@ -358,6 +358,38 @@ describe("scheduleButtonReset", () => {
     expect(resetTimeouts.has(sentinel)).toBe(false);
   });
 
+  it ("throws TypeError with the documented guard message (delegates to cancelButtonReset)", () => {
+    // scheduleButtonReset's input validation is implemented by delegating to
+    // cancelButtonReset(target) at line 34. The error type + message must
+    // therefore match cancelButtonReset's contract exactly — any refactor
+    // that changes the guard signature would otherwise slip past bare .toThrow()
+    // assertions above.
+    const reset = vi.fn();
+
+    for (const bad of [null as unknown as object, undefined as unknown as object]) {
+      try {
+        scheduleButtonReset(bad, 100, reset);
+      } catch (e) {
+        expect(e).toBeInstanceOf(TypeError);
+        expect((e as TypeError).message).toBe("cancelButtonReset requires an object target");
+      }
+    }
+
+    // Guard must fire before any WeakMap interaction — no mutation leaked.
+    const busy = { id: "schedule-guard-busy" };
+    scheduleButtonReset(busy, 100, vi.fn());
+    expect(resetTimeouts.has(busy)).toBe(true);
+
+    try {
+      scheduleButtonReset(null as any, 100, reset);
+    } catch (e) {
+      expect(e).toBeInstanceOf(TypeError);
+    }
+
+    // Busy target must remain untouched by the invalid call.
+    expect(resetTimeouts.has(busy)).toBe(true);
+  });
+
   it ("ensures cleanup occurs even if the reset function throws", () => {
     const target = { id: "test" };
     const reset = vi.fn(() => {

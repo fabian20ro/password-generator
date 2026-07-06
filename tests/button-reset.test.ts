@@ -168,6 +168,32 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
+  it ("uses DEFAULT_RESET_DELAY_MS when delayMs is omitted (default parameter)", () => {
+    const target = { id: "defaults-to-300" };
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, undefined as any, reset);
+    expect(resetTimeouts.has(target)).toBe(true);
+
+    vi.advanceTimersByTime(DEFAULT_RESET_DELAY_MS - 1);
+    expect(reset).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(1);
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
+
+  it ("ignores null delayMs and falls back to DEFAULT_RESET_DELAY_MS", () => {
+    const target = { id: "null-delay-fallback" };
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, null as any, reset);
+    expect(resetTimeouts.has(target)).toBe(true);
+
+    // With a null delay, setTimeout treats it as 0 — so we must advance past 0 first.
+    vi.advanceTimersByTime(0);
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
+
   it ("handles multiple 0ms delays correctly", () => {
     const target = { id: "test" };
     const reset = vi.fn();
@@ -332,6 +358,38 @@ describe("scheduleButtonReset", () => {
     expect(resetTimeouts.has(sentinel)).toBe(false);
   });
 
+  it ("throws TypeError with the documented guard message (delegates to cancelButtonReset)", () => {
+    // scheduleButtonReset's input validation is implemented by delegating to
+    // cancelButtonReset(target) at line 34. The error type + message must
+    // therefore match cancelButtonReset's contract exactly — any refactor
+    // that changes the guard signature would otherwise slip past bare .toThrow()
+    // assertions above.
+    const reset = vi.fn();
+
+    for (const bad of [null as unknown as object, undefined as unknown as object]) {
+      try {
+        scheduleButtonReset(bad, 100, reset);
+      } catch (e) {
+        expect(e).toBeInstanceOf(TypeError);
+        expect((e as TypeError).message).toBe("cancelButtonReset requires an object target");
+      }
+    }
+
+    // Guard must fire before any WeakMap interaction — no mutation leaked.
+    const busy = { id: "schedule-guard-busy" };
+    scheduleButtonReset(busy, 100, vi.fn());
+    expect(resetTimeouts.has(busy)).toBe(true);
+
+    try {
+      scheduleButtonReset(null as any, 100, reset);
+    } catch (e) {
+      expect(e).toBeInstanceOf(TypeError);
+    }
+
+    // Busy target must remain untouched by the invalid call.
+    expect(resetTimeouts.has(busy)).toBe(true);
+  });
+
   it ("ensures cleanup occurs even if the reset function throws", () => {
     const target = { id: "test" };
     const reset = vi.fn(() => {
@@ -391,6 +449,103 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
     expect(resetTimeouts.has(target)).toBe(false);
   });
+
+  it ("rescheduling from inside the reset callback works — delete-before-fire ordering", () => {
+    // Validates that scheduleButtonReset deletes the WeakMap entry *before*
+    // invoking `reset()`, so a re-schedule issued inside the callback starts
+    // cleanly without fighting stale state.
+    const target = { id: "reenter" };
+    let outerFired = false;
+
+    scheduleButtonReset(target, 100, () => {
+      outerFired = true;
+      expect(resetTimeouts.has(target)).toBe(false); // entry already deleted
+      scheduleButtonReset(target, 50, vi.fn());      // fresh start for same target
+    });
+
+    expect(outerFired).toBe(false);
+
+    vi.advanceTimersByTime(100);
+    expect(outerFired).toBe(true);
+    expect(resetTimeouts.has(target)).toBe(true);     // new schedule took effect
+
+    vi.advanceTimersByTime(50);
+    // the inner callback was vi.fn() — verify no error thrown and entry cleared
+    expect(resetTimeouts.has(target)).toBe(false);
+  });
+});
+
+describe("isResetScheduled", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it ("returns false for a fresh unscheduled target", () => {
+    const target = { id: "fresh-isolated" };
+    expect(resetTimeouts.has(target)).toBe(false);
+    expect(isResetScheduled(target)).toBe(false);
+  });
+
+  it ("returns true after scheduling, then transitions to false on cancel", () => {
+    const target = { id: "toggle-isolated" };
+    scheduleButtonReset(target, 100, vi.fn());
+    expect(isResetScheduled(target)).toBe(true);
+    cancelButtonReset(target);
+    expect(isResetScheduled(target)).toBe(false);
+  });
+
+  it ("returns false for null without throwing", () => {
+    const sentinel = { id: "null-isolated-sentinel" };
+    scheduleButtonReset({ id: "pre-null" }, 100, vi.fn());
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+    expect(() => isResetScheduled(null as any)).not.toThrow();
+    expect(isResetScheduled(null as any)).toBe(false);
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+  });
+
+  it ("returns false for undefined without throwing", () => {
+    const sentinel = { id: "undef-isolated-sentinel" };
+    scheduleButtonReset({ id: "pre-undef" }, 100, vi.fn());
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+    expect(() => isResetScheduled(undefined as any)).not.toThrow();
+    expect(isResetScheduled(undefined as any)).toBe(false);
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+  });
+
+  it ("returns false for primitive targets (string, number) without throwing", () => {
+    const sentinel = { id: "prim-isolated-sentinel" };
+    scheduleButtonReset({ id: "pre-prim" }, 100, vi.fn());
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+    expect(() => isResetScheduled("string-primitive" as any)).not.toThrow();
+    expect(isResetScheduled("string-primitive" as any)).toBe(false);
+    expect(() => isResetScheduled(42 as any)).not.toThrow();
+    expect(isResetScheduled(42 as any)).toBe(false);
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+  });
+
+  it ("returns false after the scheduled timeout fires naturally", () => {
+    const target = { id: "post-fire-isolated" };
+    scheduleButtonReset(target, 100, vi.fn());
+    expect(isResetScheduled(target)).toBe(true);
+    vi.advanceTimersByTime(100);
+    expect(isResetScheduled(target)).toBe(false);
+  });
+
+  it ("reflects the latest state across cancel + reschedule cycle", () => {
+    const target = { id: "cycle-isolated" };
+    expect(isResetScheduled(target)).toBe(false);
+    scheduleButtonReset(target, 100, vi.fn());
+    expect(isResetScheduled(target)).toBe(true);
+    cancelButtonReset(target);
+    expect(isResetScheduled(target)).toBe(false);
+    const reset2 = vi.fn();
+    scheduleButtonReset(target, 100, reset2);
+    expect(isResetScheduled(target)).toBe(true);
+  });
 });
 
 describe("cancelButtonReset", () => {
@@ -405,6 +560,19 @@ describe("cancelButtonReset", () => {
   it ("does nothing when no timeout is scheduled", () => {
     const target = { id: "empty" };
     expect(() => cancelButtonReset(target)).not.toThrow();
+  });
+
+  it ("is safe to call repeatedly on an unscheduled target (double-cancel no-op)", () => {
+    // Defensive invariant: cancelling a fresh target must not throw or mutate
+    // the WeakMap, even when invoked multiple times in succession.
+    const target = { id: "unscheduled-double" };
+    expect(resetTimeouts.has(target)).toBe(false);
+
+    cancelButtonReset(target);
+    expect(resetTimeouts.has(target)).toBe(false);
+
+    cancelButtonReset(target); // second call — must remain a no-op
+    expect(resetTimeouts.has(target)).toBe(false);
   });
 
   it ("leaves other targets' timeouts intact when canceling a fresh target", () => {

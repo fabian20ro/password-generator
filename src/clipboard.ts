@@ -8,6 +8,15 @@ function fallbackCopy(text: string): boolean {
     return false;
   }
 
+  // Guard against document.body being null/undefined — e.g. during early DOM
+  // lifecycle or unusual browser states. Without this, `body.appendChild` at
+  // line 17 would throw a TypeError that propagates up uncaught (copyTextToClipboard
+  // calls fallbackCopy without try/catch). Returning false here keeps the user
+  // experience clean and lets the caller handle the failure gracefully.
+  if (!(document as { body?: unknown }).body) {
+    return false;
+  }
+
   const textarea = document.createElement("textarea");
   textarea.value = text;
   textarea.setAttribute("readonly", "");
@@ -18,36 +27,102 @@ function fallbackCopy(text: string): boolean {
   let success = false;
 
   try {
-    textarea.select();
-    textarea.setSelectionRange(0, textarea.value.length);
+    try {
+      textarea.select();
+      textarea.setSelectionRange(0, textarea.value.length);
+    } catch {
+      // selection can fail in some browsers (e.g., off-screen textarea on mobile)
+      // but execCommand("copy") may still succeed — proceed anyway.
+    }
     success = document.execCommand("copy");
   } catch {
     // ignore — success stays false
   } finally {
-    document.body.removeChild(textarea);
+    // Guard against removeChild throwing if appendChild failed silently or
+    // body is unavailable — without this, a single failure cascades into two.
+    try {
+      document.body.removeChild(textarea);
+    } catch {}
   }
 
   return Boolean(success);
 }
 
+export const CLIPBOARD_TIMEOUT_MS = 3000;
+
+/**
+ * Synchronous probe: returns true if either the modern Clipboard API is available
+ * (navigator.clipboard.writeText is a function) or the legacy fallback path could
+ * work (document.body exists — execCommand("copy") may still succeed even without
+ * navigator.clipboard). Does NOT mutate DOM and does NOT invoke any browser APIs.
+ * Safe to call on every render cycle for conditional UI rendering.
+ */
+export function canCopyToClipboard(): boolean {
+  // Modern path: navigator.clipboard API available in secure contexts (HTTPS, localhost)
+  if (typeof navigator !== "undefined" && (navigator as { clipboard?: unknown }).clipboard) {
+    const cb = (navigator as { clipboard?: { writeText?: unknown } }).clipboard;
+    if (cb && typeof cb.writeText === "function") {
+      return true;
+    }
+  }
+
+  // Legacy fallback: needs a document body to create the hidden textarea
+  if (typeof document !== "undefined" && document.body) {
+    return true;
+  }
+
+  return false;
+}
+
 export async function copyTextToClipboard(
   clipboard: Pick<Clipboard, "writeText"> | undefined,
   text: string,
+  timeoutMs = CLIPBOARD_TIMEOUT_MS,
 ): Promise<boolean> {
   if (typeof text !== "string" || text.trim().length === 0) {
     return false;
   }
 
+  // In insecure contexts both navigator.clipboard and execCommand("copy") fail;
+  // short-circuit to avoid creating hidden DOM elements unnecessarily. Only
+  // bail out when isSecureContext explicitly reports false — undefined (e.g. in
+  // older browsers that lack the property but still support execCommand) must
+  // fall through so the fallback can be attempted.
+  if (typeof window !== "undefined" && (window as { isSecureContext?: boolean }).isSecureContext === false) {
+    return false;
+  }
+
   if (clipboard && typeof clipboard.writeText === "function") {
     try {
-      await clipboard.writeText(text);
-      return true;
+      // Guard against writeText hanging indefinitely in slow/unresponsive pages.
+      // Normal writes complete in <50 ms, so 3 s is a generous upper bound that
+      // will not affect real users but prevents the app from deadlocking on edge
+      // cases (e.g., background tabs throttled by the browser). The timeout id
+      // is captured for cleanup regardless of resolution order.
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      try {
+        const result = await Promise.race([
+          clipboard.writeText(text),
+          new Promise<never>((_, reject) => {
+            timer = setTimeout(() => reject(new Error("Clipboard API timed out")), timeoutMs);
+          }),
+        ]);
+        // writeText returns void on success per its declared return type, but some
+        // polyfills incorrectly signal failure by returning false or null. Cast to
+        // unknown so we can safely compare at runtime without violating the
+        // declared return type.
+        if ((result as unknown) === false || (result as unknown) === null) {
+          throw new Error("polyfill reported clipboard failure");
+        }
+        return true;
+      } finally {
+        if (timer !== undefined) clearTimeout(timer);
+      }
     } catch {
-      // writeText threw — fall back to legacy execCommand regardless of error type.
+      // writeText returned undefined (e.g., primitive boxed into object with no
+      // real method), threw, or polyfill flagged failure — fall back to legacy.
       // We already possess the text; falling back cannot leak additional data,
       // and writeText may throw non-Error values in edge cases (e.g., polyfills).
-      // Do not log here: a planned fallback is expected behavior, and a single
-      // diagnostic at the end-of-failure path below covers real failures.
     }
   }
 
@@ -56,6 +131,5 @@ export async function copyTextToClipboard(
     return true;
   }
 
-  console.error("Clipboard copy failed: no API available");
   return false;
 }

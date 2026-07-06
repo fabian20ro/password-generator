@@ -498,6 +498,41 @@ describe("cancelButtonReset", () => {
     expect(resetTimeouts.has(fresh)).toBe(false);
   });
 
+  describe("input validation", () => {
+    it ("throws when called with null target", () => {
+      const sentinel = { id: "null-cancel-sentinel" };
+      scheduleButtonReset({ id: "pre-null-cancel" }, 100, vi.fn()); // ensure WeakMap has entries
+      expect(resetTimeouts.has(sentinel)).toBe(false);
+      expect(() => cancelButtonReset(null as any)).toThrow(TypeError);
+      expect(resetTimeouts.has(sentinel)).toBe(false);
+    });
+
+    it ("throws when called with undefined target", () => {
+      const sentinel = { id: "undef-cancel-sentinel" };
+      expect(resetTimeouts.has(sentinel)).toBe(false);
+      expect(() => cancelButtonReset(undefined as any)).toThrow(TypeError);
+      expect(resetTimeouts.has(sentinel)).toBe(false);
+    });
+
+    it ("throws when called with a primitive target", () => {
+      const sentinel = { id: "prim-cancel-sentinel" };
+      scheduleButtonReset({ id: "pre-prim-cancel" }, 100, vi.fn()); // ensure WeakMap has entries
+      expect(resetTimeouts.has(sentinel)).toBe(false);
+      expect(() => cancelButtonReset("string-key-def" as any)).toThrow(TypeError);
+      expect(() => cancelButtonReset(42 as any)).toThrow(TypeError);
+      expect(resetTimeouts.has(sentinel)).toBe(false);
+    });
+
+    it ("rejects the same guard path scheduleButtonReset uses (consistent API contract)", () => {
+      // Defensive invariant: both public entry points reject non-objects.
+      const reset = vi.fn();
+      scheduleButtonReset({ id: "contract-ok" }, 100, reset);
+
+      expect(() => cancelButtonReset(null as any)).toThrow(/target/);
+      expect(() => scheduleButtonReset(null as any, 100, reset)).toThrow(/target/);
+    });
+  });
+
   it ("cleans up the WeakMap entry during cancel", () => {
     const target = { id: "cleanup-target" };
     scheduleButtonReset(target, 100, vi.fn());

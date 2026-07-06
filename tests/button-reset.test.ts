@@ -964,6 +964,79 @@ describe("cancelButtonReset", () => {
     expect(reset2).toHaveBeenCalledTimes(1);
   });
 
+  describe("return value", () => {
+    it ("returns true when a pending timeout was actually cleared", () => {
+      const target = { id: "ret-true" };
+      scheduleButtonReset(target, 100, vi.fn());
+      expect(cancelButtonReset(target)).toBe(true);
+      expect(resetTimeouts.has(target)).toBe(false);
+    });
+
+    it ("returns false when nothing is scheduled (no-op)", () => {
+      const target = { id: "ret-false-empty" };
+      expect(cancelButtonReset(target)).toBe(false);
+      expect(resetTimeouts.has(target)).toBe(false);
+    });
+
+    it ("returns false on double-cancel — second cancel sees nothing pending", () => {
+      const target = { id: "ret-double" };
+      scheduleButtonReset(target, 100, vi.fn());
+      expect(cancelButtonReset(target)).toBe(true); // first clear
+      expect(cancelButtonReset(target)).toBe(false); // second — no-op
+    });
+
+    it ("returns false when target was never scheduled", () => {
+      const fresh = { id: "ret-fresh" };
+      expect(resetTimeouts.has(fresh)).toBe(false);
+      expect(cancelButtonReset(fresh)).toBe(false);
+      // Fresh must remain untouched — no WeakMap mutation from a cancel on empty.
+      expect(resetTimeouts.has(fresh)).toBe(false);
+    });
+
+    it ("returns true and does not fire callback after successful cancel", () => {
+      const target = { id: "ret-no-fire" };
+      const reset = vi.fn();
+      scheduleButtonReset(target, 100, reset);
+      expect(cancelButtonReset(target)).toBe(true);
+      vi.advanceTimersByTime(200);
+      expect(reset).not.toHaveBeenCalled();
+    });
+
+    it ("returns false when called after timeout has already fired naturally", () => {
+      const target = { id: "ret-post-fire" };
+      scheduleButtonReset(target, 100, vi.fn());
+      vi.advanceTimersByTime(150); // let the timer fire and self-clean
+      expect(resetTimeouts.has(target)).toBe(false);
+      expect(cancelButtonReset(target)).toBe(false);
+    });
+
+    it ("returns false for null without throwing (throws before returning)", () => {
+      const sentinel = { id: "ret-null-sentinel" };
+      scheduleButtonReset({ id: "pre-ret-null" }, 100, vi.fn()); // populate WeakMap so guard doesn't short-circuit on empty map
+      expect(() => cancelButtonReset(null as any)).toThrow();
+    });
+
+    it ("returns false for primitive without throwing (throws before returning)", () => {
+      const sentinel = { id: "ret-prim-sentinel" };
+      scheduleButtonReset({ id: "pre-ret-prim" }, 100, vi.fn()); // populate WeakMap so guard doesn't short-circuit on empty map
+      expect(() => cancelButtonReset("string-key-ret" as any)).toThrow();
+    });
+
+    it ("preserves other targets' state when no-op", () => {
+      const busy = { id: "ret-busy" };
+      const fresh = { id: "ret-fresh-isolated" };
+      scheduleButtonReset(busy, 100, vi.fn());
+
+      // Cancel a fresh target — must be no-op and leave busy untouched.
+      expect(cancelButtonReset(fresh)).toBe(false);
+      expect(resetTimeouts.has(busy)).toBe(true);
+      expect(isResetScheduled(busy)).toBe(true);
+
+      // Busy should still fire at its time.
+      vi.advanceTimersByTime(150);
+    });
+  });
+
   describe("defensive guard", () => {
     it ("throws when target is null (own contract)", () => {
       const sentinel = { id: "cancel-null-sentinel" };

@@ -5,14 +5,18 @@ export const DEFAULT_RESET_DELAY_MS = 300;
 
 export { resetTimeouts };
 
-/** Cancel any pending reset for the given target. No-op if nothing is scheduled. */
-export function cancelButtonReset(target: object): void {
+/** Cancel any pending reset for the given target. Returns true if a scheduled
+ *  timeout was actually cleared, false if nothing was pending (no-op). No-op
+ *  targets do NOT throw; they just report their empty state via return value. */
+export function cancelButtonReset(target: object): boolean {
   if (!(target instanceof Object)) throw new TypeError("cancelButtonReset requires an object target");
   const timeoutId = resetTimeouts.get(target);
   if (timeoutId !== undefined) {
     clearTimeout(timeoutId);
     resetTimeouts.delete(target);
+    return true;
   }
+  return false;
 }
 
 /** Returns true if a reset has been scheduled for the target and not yet cancelled or fired. */

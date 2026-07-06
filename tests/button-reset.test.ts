@@ -911,6 +911,38 @@ describe("cancelButtonReset", () => {
     (globalThis.clearTimeout as unknown as ReturnType<typeof vi.fn>).mockRestore();
   });
 
+  it ("invokes clearTimeout AND deletes the WeakMap entry in a single cancel call", () => {
+    // Regression invariant: cancel must perform BOTH side effects — clearing
+    // the native timeout and removing the WeakMap entry — atomically. Dropping
+    // either would cause stale state (isResetScheduled lies) or leaked timers
+    // (callback fires after cancel). The ordering matters: clear first, then
+    // delete, so isResetScheduled stays true until the timer is actually dead.
+    const target = { id: "dual-side-effect" };
+    const reset = vi.fn();
+    scheduleButtonReset(target, 100, reset);
+
+    const scheduledId = resetTimeouts.get(target) as ReturnType<typeof setTimeout>;
+    expect(scheduledId).toBeDefined();
+
+    const clearSpy = vi.spyOn(globalThis, "clearTimeout");
+    cancelButtonReset(target);
+
+    // Side-effect #1: native timer must be cancelled with the stored id.
+    expect(clearSpy).toHaveBeenCalledWith(scheduledId);
+    clearSpy.mockRestore();
+
+    // Side-effect #2: WeakMap entry must be removed entirely.
+    expect(resetTimeouts.has(target)).toBe(false);
+    expect(resetTimeouts.get(target)).toBeUndefined();
+
+    // State invariant: isResetScheduled reflects the post-cancel state.
+    expect(isResetScheduled(target)).toBe(false);
+
+    // Behavioral proof: advancing time must not fire the stale callback.
+    vi.advanceTimersByTime(200);
+    expect(reset).not.toHaveBeenCalled();
+  });
+
   it ("does not throw when called after the reset has fired naturally", () => {
     const target = { id: "post-fire-cancel" };
     const reset = vi.fn();

@@ -739,6 +739,78 @@ describe("cancelButtonReset", () => {
     expect(r2).not.toHaveBeenCalled();
   });
 
+  it ("suppresses stale closure when called at t=0 before any delay elapses", () => {
+    // Cancelling at virtual time zero must prevent the pending reset from ever firing.
+    const target = { id: "zero-elapsed" };
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, 100, reset);
+    expect(resetTimeouts.has(target)).toBe(true);
+
+    cancelButtonReset(target); // immediate cancel — no time advanced
+
+    vi.advanceTimersByTime(200);
+    expect(reset).not.toHaveBeenCalled();
+  });
+
+  it ("clears WeakMap entry when reset callback throws during scheduled firing", () => {
+    // Defensive: the schedule's setTimeout handler deletes the WeakMap entry
+    // only after a successful identity check. If reset() throws, that delete
+    // still occurs *before* reset() is invoked (per source line 37-39), so
+    // subsequent cancel calls on the same target must not re-trigger stale state.
+    const target = { id: "throw-cleanup" };
+    let callCount = 0;
+
+    scheduleButtonReset(target, 100, () => {
+      callCount++;
+      throw new Error("reset boom");
+    });
+
+    try {
+      vi.advanceTimersByTime(200); // advance past expiry
+    } catch {
+      // expected — reset throws inside setTimeout handler
+    }
+
+    expect(callCount).toBe(1);
+    // WeakMap entry must be cleaned up even after a throw.
+    expect(resetTimeouts.has(target)).toBe(false);
+
+    // A fresh schedule + cancel cycle must work cleanly afterwards.
+    const cleanReset = vi.fn();
+    scheduleButtonReset(target, 100, cleanReset);
+    cancelButtonReset(target);
+    expect(isResetScheduled(target)).toBe(false);
+  });
+
+  it ("cancels reset scheduled on an array target", () => {
+    const target: number[] = [99];
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, 100, reset);
+    expect(resetTimeouts.has(target)).toBe(true);
+
+    cancelButtonReset(target);
+    expect(resetTimeouts.has(target)).toBe(false);
+    expect(isResetScheduled(target)).toBe(false);
+
+    // Verify the scheduled timeout would not have fired.
+    vi.advanceTimersByTime(200);
+    expect(reset).not.toHaveBeenCalled();
+  });
+
+  it ("cancels reset scheduled on a function target", () => {
+    const target = () => {};
+    const reset = vi.fn();
+
+    scheduleButtonReset(target, 100, reset);
+    expect(resetTimeouts.has(target)).toBe(true);
+
+    cancelButtonReset(target);
+    expect(resetTimeouts.has(target)).toBe(false);
+    expect(isResetScheduled(target)).toBe(false);
+  });
+
   it ("throws error when target is null", () => {
     const reset = vi.fn();
     scheduleButtonReset({ id: "pre" }, 100, reset); // populate WeakMap first

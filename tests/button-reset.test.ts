@@ -666,6 +666,26 @@ describe("cancelButtonReset", () => {
     expect(resetTimeouts.has(fresh)).toBe(false);
   });
 
+  it ("returns false when no timeout was scheduled (documented return contract)", () => {
+    // Defensive: the documented boolean return must reflect actual state —
+    // a fresh-target cancel is not silently "successful".
+    const target = { id: "return-contract" };
+    expect(resetTimeouts.has(target)).toBe(false);
+
+    const result = cancelButtonReset(target);
+    expect(result).toBe(false);
+  });
+
+  it ("returns true when an actual timeout was cleared (documented return contract)", () => {
+    // Defensive: canceling a real pending reset must report success.
+    const target = { id: "return-contract-scheduled" };
+    scheduleButtonReset(target, 100, vi.fn());
+
+    const result = cancelButtonReset(target);
+    expect(result).toBe(true);
+    expect(resetTimeouts.has(target)).toBe(false);
+  });
+
   describe("input validation", () => {
     it ("throws when called with null target", () => {
       const sentinel = { id: "null-cancel-sentinel" };

@@ -443,6 +443,79 @@ describe("scheduleButtonReset", () => {
   });
 });
 
+describe("isResetScheduled", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it ("returns false for a fresh unscheduled target", () => {
+    const target = { id: "fresh-isolated" };
+    expect(resetTimeouts.has(target)).toBe(false);
+    expect(isResetScheduled(target)).toBe(false);
+  });
+
+  it ("returns true after scheduling, then transitions to false on cancel", () => {
+    const target = { id: "toggle-isolated" };
+    scheduleButtonReset(target, 100, vi.fn());
+    expect(isResetScheduled(target)).toBe(true);
+    cancelButtonReset(target);
+    expect(isResetScheduled(target)).toBe(false);
+  });
+
+  it ("returns false for null without throwing", () => {
+    const sentinel = { id: "null-isolated-sentinel" };
+    scheduleButtonReset({ id: "pre-null" }, 100, vi.fn());
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+    expect(() => isResetScheduled(null as any)).not.toThrow();
+    expect(isResetScheduled(null as any)).toBe(false);
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+  });
+
+  it ("returns false for undefined without throwing", () => {
+    const sentinel = { id: "undef-isolated-sentinel" };
+    scheduleButtonReset({ id: "pre-undef" }, 100, vi.fn());
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+    expect(() => isResetScheduled(undefined as any)).not.toThrow();
+    expect(isResetScheduled(undefined as any)).toBe(false);
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+  });
+
+  it ("returns false for primitive targets (string, number) without throwing", () => {
+    const sentinel = { id: "prim-isolated-sentinel" };
+    scheduleButtonReset({ id: "pre-prim" }, 100, vi.fn());
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+    expect(() => isResetScheduled("string-primitive" as any)).not.toThrow();
+    expect(isResetScheduled("string-primitive" as any)).toBe(false);
+    expect(() => isResetScheduled(42 as any)).not.toThrow();
+    expect(isResetScheduled(42 as any)).toBe(false);
+    expect(resetTimeouts.has(sentinel)).toBe(false);
+  });
+
+  it ("returns false after the scheduled timeout fires naturally", () => {
+    const target = { id: "post-fire-isolated" };
+    scheduleButtonReset(target, 100, vi.fn());
+    expect(isResetScheduled(target)).toBe(true);
+    vi.advanceTimersByTime(100);
+    expect(isResetScheduled(target)).toBe(false);
+  });
+
+  it ("reflects the latest state across cancel + reschedule cycle", () => {
+    const target = { id: "cycle-isolated" };
+    expect(isResetScheduled(target)).toBe(false);
+    scheduleButtonReset(target, 100, vi.fn());
+    expect(isResetScheduled(target)).toBe(true);
+    cancelButtonReset(target);
+    expect(isResetScheduled(target)).toBe(false);
+    const reset2 = vi.fn();
+    scheduleButtonReset(target, 100, reset2);
+    expect(isResetScheduled(target)).toBe(true);
+  });
+});
+
 describe("cancelButtonReset", () => {
   beforeEach(() => {
     vi.useFakeTimers();

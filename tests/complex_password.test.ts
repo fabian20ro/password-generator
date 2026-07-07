@@ -146,6 +146,53 @@ describe("getSecureRandomInt", () => {
       // Each char should appear roughly half the time (10000 total chars / 4 options).
       for (const c of "abAB") expect(counts[c]).toBeGreaterThan(500);
     });
+
+    describe("asymmetric category boundary (length === categories.length)", () => {
+      it("must include exactly one char from each category when categories differ wildly in size", () => {
+        const categories = [['X'], ['a', 'b', 'c', 'd', 'e', 'f']];
+        // 50 samples — the tiny category must always contribute its sole character.
+        for (let i = 0; i < 50; i++) {
+          const pw = generateComplexPassword(2, categories);
+          expect(pw.length).toBe(2);
+          expect([...pw]).toContain('X');
+        }
+      });
+
+      it("must not allow a category to contribute more than one char at exact-length boundary", () => {
+        // Three categories, length=3. Each must contribute exactly 1.
+        const categories = [['A'], ['B'], ['C']];
+        for (let i = 0; i < 50; i++) {
+          const pw = generateComplexPassword(3, categories);
+          expect(pw).toMatch(/^[ABC]{3}$/);
+          // After shuffle, each category contributes exactly one position — count must be 1 each.
+          const counts: Record<string, number> = {};
+          for (const c of [...pw]) {
+            counts[c] = (counts[c] ?? 0) + 1;
+          }
+          expect(counts.A).toBe(1);
+          expect(counts.B).toBe(1);
+          expect(counts.C).toBe(1);
+        }
+      });
+
+      it("must sample the extra character from the full union, not bias toward any category", () => {
+        const categories = [['a', 'b'], ['A', 'B']]; // length=3 (one extra beyond 2)
+        const counts: Record<string, number> = {};
+        for (const c of "abAB") counts[c] = 0;
+        for (let i = 0; i < 5000; i++) {
+          const pw = generateComplexPassword(3, categories);
+          expect(pw.length).toBe(3);
+          // Each password must contain one from each category.
+          const hasUpper = [...pw].some(c => 'AB'.includes(c));
+          const hasLower = [...pw].some(c => 'ab'.includes(c));
+          expect(hasUpper).toBe(true);
+          expect(hasLower).toBe(true);
+          for (const c of pw) counts[c]++;
+        }
+        // The 4 characters should be roughly equally sampled across 5000 iterations × 3 chars = 15000 samples.
+        for (const c of "abAB") expect(counts[c]).toBeGreaterThan(2000);
+      });
+    });
   });
 
 });

@@ -17,8 +17,15 @@ const USERNAME_COUNT = 10;
 const statusEl = document.getElementById("status") as HTMLParagraphElement;
 const srStatusEl = document.getElementById("sr-status") as HTMLDivElement;
 
-function announceStatus(message: string): void {
-  if (statusEl) statusEl.textContent = message;
+function announceStatus(message: string, isError?: boolean): void {
+  if (statusEl) {
+    statusEl.textContent = message;
+    if (isError) {
+      statusEl.style.color = "var(--error-color, #e74c3c)";
+    } else {
+      statusEl.style.color = "";
+    }
+  }
   if (srStatusEl) srStatusEl.textContent = message;
 }
 
@@ -49,7 +56,7 @@ async function copyToClipboard(text: string, btn: HTMLButtonElement): Promise<vo
   btn.classList.add("error");
   btn.title = "Clipboard access unavailable or denied";
   btn.setAttribute("aria-label", ERROR_COPY_LABEL);
-  announceStatus("Copy failed. Clipboard access unavailable or denied.");
+  announceStatus("Copy failed. Clipboard access unavailable or denied.", true);
 
   scheduleButtonReset(btn, 2000, () => {
     resetButtonState(btn);

@@ -11,12 +11,17 @@ export function getSecureRandomInt(max: number): number {
   if (max <= 0 || max > UINT32_MODULUS || max % 1 !== 0) {
     throw new Error("Max must be between 1 and UINT32_MODULUS");
   }
-  
+
+  const crypto = globalThis.crypto;
+  if (!crypto?.getRandomValues) {
+    throw new Error("Crypto API unavailable — cannot generate secure random values");
+  }
+
   const buf = new Uint32Array(1);
-  
+
   do {
-    globalThis.crypto.getRandomValues(buf);
+    crypto.getRandomValues(buf);
   } while (buf[0] >= UINT32_MODULUS - (UINT32_MODULUS % max));
-  
+
   return buf[0] % max;
 }

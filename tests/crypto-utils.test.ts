@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { getSecureRandomInt } from "../src/crypto-utils";
 
 describe("getSecureRandomInt", () => {
@@ -28,4 +28,34 @@ describe("getSecureRandomInt", () => {
     expect(val).toBe(0);
   });
 
+  it("throws when Crypto API is unavailable (crypto missing)", () => {
+    Object.defineProperty(globalThis, "crypto", { value: undefined, configurable: true, writable: true });
+    try {
+      expect(() => getSecureRandomInt(10)).toThrow("Crypto API unavailable");
+    } finally {
+      // Restore original crypto — vitest expects it for other tests in suite
+      const orig = globalThis.crypto;
+      Object.defineProperty(globalThis, "crypto", { value: orig, configurable: true, writable: true });
+    }
+  });
+
+  it("throws when getRandomValues is missing from crypto", () => {
+    const realCrypto = (globalThis as any).crypto;
+    Object.defineProperty(globalThis, "crypto", { value: {}, configurable: true, writable: true });
+    try {
+      expect(() => getSecureRandomInt(10)).toThrow("Crypto API unavailable");
+    } finally {
+      Object.defineProperty(globalThis, "crypto", { value: realCrypto, configurable: true, writable: true });
+    }
+  });
+
+  it("throws when getRandomValues is not a function on crypto object", () => {
+    const realCrypto = (globalThis as any).crypto;
+    Object.defineProperty(globalThis, "crypto", { value: { getRandomValues: null }, configurable: true, writable: true });
+    try {
+      expect(() => getSecureRandomInt(10)).toThrow("Crypto API unavailable");
+    } finally {
+      Object.defineProperty(globalThis, "crypto", { value: realCrypto, configurable: true, writable: true });
+    }
+  });
 });

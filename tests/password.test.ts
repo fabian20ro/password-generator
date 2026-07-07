@@ -112,6 +112,16 @@ describe("generatePassword", () => {
     expect(pw).toBe("aaaaaaaaaa");
   });
 
+  it("produces only characters from the provided custom charset (hex)", () => {
+    // Custom hex-only charset — verify output is strictly limited to those chars
+    const hexCharset = "0123456789abcdef";
+    for (let i = 0; i < 100; i++) {
+      const pw = generatePasswordWithCharset(16, hexCharset);
+      expect(pw).toHaveLength(16);
+      expect([...pw].every(c => hexCharset.includes(c))).toBe(true);
+    }
+  });
+
   it("handles length up to MAX_LENGTH", () => {
     const length = 65536;
     const pw = generatePasswordWithCharset(length, "abc");
@@ -224,5 +234,68 @@ describe("generateComplexPassword", () => {
     const pw = generateComplexPassword(length, categories);
     const fullCharset = CHARS + SYMBOLS;
     expect(isValidPassword(pw, fullCharset)).toBe(true);
+  });
+
+  it("shuffle distributes category picks across all positions", () => {
+    // With emoji-only categories, fillers draw from same set — every char is category-sourced
+    const categories = [["🔤"], ["⚡"]];
+    const length = 6;
+    for (let i = 0; i < 500; i++) {
+      const pw = generateComplexPassword(length, categories);
+      // Use spread to count actual characters (emoji are multi-byte in UTF-16)
+      expect([...pw].length).toBe(length);
+      expect([...pw].includes("🔤")).toBe(true);
+      expect([...pw].includes("⚡")).toBe(true);
+    }
+  });
+
+  it("shuffle distributes character positions uniformly across samples", () => {
+    // With emoji-only categories, every char is category-sourced — verify shuffle spreads them across all positions
+    const categories = [["🔤"], ["⚡"]];
+    const length = 6;
+    const posCounts: Record<number, number> = {};
+    for (let i = 0; i < 1000; i++) {
+      const pw = generateComplexPassword(length, categories);
+      // Track where "⚡" lands — verify it appears in all positions including the end
+      for (let pos = 0; pos < length; pos++) {
+        if (pw[pos] === "⚡") posCounts[pos] = (posCounts[pos] || 0) + 1;
+      }
+    }
+    // Each position should see ⚡ in at least ~5% of samples
+    for (let pos = 0; pos < length; pos++) {
+      const ratio = (posCounts[pos] || 0) / 1000;
+      expect(ratio).toBeGreaterThan(0.05);
+      expect(ratio).toBeLessThan(0.95);
+    }
+  });
+
+  it("shuffle distributes picks uniformly across positions", () => {
+    // Use non-overlapping categories so we can definitively track where each category's pick lands after shuffle
+    const categories = [["a"], ["b"]];
+    const length = 6;
+    // Track which character is at each position (only "a" or "b" appear initially)
+    const aInPos: number[] = Array(length).fill(0);
+    const bInPos: number[] = Array(length).fill(0);
+    for (let i = 0; i < 3000; i++) {
+      const pw = generateComplexPassword(length, categories);
+      for (let pos = 0; pos < length; pos++) {
+        if (pw[pos] === "a") aInPos[pos]++;
+        else if (pw[pos] === "b") bInPos[pos]++;
+      }
+    }
+    // Both category picks should appear across all positions (shuffle spreads them)
+    for (let pos = 0; pos < length; pos++) {
+      const aRatio = aInPos[pos] / 3000;
+      const bRatio = bInPos[pos] / 3000;
+      expect(aRatio).toBeGreaterThan(0.15);
+      expect(bRatio).toBeGreaterThan(0.15);
+    }
+  });
+
+  it("returns an empty string when all category sub-arrays are empty", () => {
+    const categories: string[][] = [[], [], []];
+    const length = 10;
+    const pw = generateComplexPassword(length, categories);
+    expect(pw).toBe("");
   });
 });

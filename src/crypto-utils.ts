@@ -17,11 +17,12 @@ export function getSecureRandomInt(max: number): number {
     throw new Error("Crypto API unavailable — cannot generate secure random values");
   }
 
+  const threshold = UINT32_MODULUS - (UINT32_MODULUS % max);
   const buf = new Uint32Array(1);
 
   do {
     crypto.getRandomValues(buf);
-  } while (buf[0] >= UINT32_MODULUS - (UINT32_MODULUS % max));
+  } while (buf[0] >= threshold);
 
   return buf[0] % max;
 }

@@ -292,6 +292,19 @@ describe("generateComplexPassword", () => {
     }
   });
 
+  it("guarantees category coverage with overlapping character sets", () => {
+    // Categories share characters — verify each category still contributes at least one pick per password
+    const overlapCategory1 = "abcxyz";
+    const overlapCategory2 = "cdeyza";
+    const categories = [overlapCategory1.split(""), overlapCategory2.split("")];
+    const length = 8;
+    for (let i = 0; i < 500; i++) {
+      const pw = generateComplexPassword(length, categories);
+      expect([...pw].some(c => overlapCategory1.includes(c))).toBe(true);
+      expect([...pw].some(c => overlapCategory2.includes(c))).toBe(true);
+    }
+  });
+
   it("returns an empty string when all category sub-arrays are empty", () => {
     const categories: string[][] = [[], [], []];
     const length = 10;

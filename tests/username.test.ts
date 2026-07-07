@@ -2,6 +2,34 @@ import { describe, it, expect } from "vitest";
 import { generateUsername, generateUsernames } from "../src/username";
 
 describe("username generation", () => {
+  describe("generateUsername()", () => {
+    it("returns three underscore-separated parts: adjective_noun_4digits", () => {
+      for (let i = 0; i < 50; i++) {
+        const username = generateUsername();
+        const parts = username.split("_");
+        expect(parts).toHaveLength(3);
+        expect(parts[0]).toMatch(/^[a-z]+$/);
+        expect(parts[1]).toMatch(/^[a-z]+$/);
+        expect(parts[2]).toMatch(/^[0-9]{4}$/);
+      }
+    });
+
+    it("returns a string in the full lowercase-alpha format", () => {
+      for (let i = 0; i < 50; i++) {
+        const username = generateUsername();
+        expect(username).toMatch(/^[a-z]+_[a-z]+_[0-9]{4}$/);
+      }
+    });
+
+    it("returns a string with no uppercase letters or special characters", () => {
+      for (let i = 0; i < 50; i++) {
+        const username = generateUsername();
+        expect(username).not.toMatch(/[A-Z]/);
+        expect(username).not.toMatch(/[^a-z0-9_]/);
+      }
+    });
+  });
+
   describe("edge cases", () => {
     it("returns an empty array for count 0", () => {
       expect(generateUsernames(0)).toEqual([]);

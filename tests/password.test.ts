@@ -204,6 +204,33 @@ describe("generatePasswordWithNumbersOnly", () => {
     expect(pw).toHaveLength(length);
     expect(pw).toMatch(/^[0-9]+$/);
   });
+
+  it("only contains characters from the actual NUMBERS_ONLY_CHARSET (verified at runtime)", () => {
+    // Verify charset compliance using source constants — mirrors the symbols test at line 182
+    const numbersOnlyCharset = CHARS.substring(52);
+    for (let i = 0; i < 200; i++) {
+      const pw = generatePasswordWithNumbersOnly(32);
+      expect(pw).toHaveLength(32);
+      expect([...pw].every(c => numbersOnlyCharset.includes(c))).toBe(true);
+    }
+  });
+
+  it("only contains letters", () => {
+    const length = 20;
+    const pw = generatePasswordWithLettersOnly(length);
+    expect(pw).toHaveLength(length);
+    expect(pw).toMatch(/^[A-Za-z]+$/);
+  });
+
+  it("only contains characters from the actual LETTERS_ONLY_CHARSET (verified at runtime)", () => {
+    // Verify charset compliance using source constants — mirrors the symbols test at line 182
+    const lettersOnlyCharset = CHARS.substring(0, 52);
+    for (let i = 0; i < 200; i++) {
+      const pw = generatePasswordWithLettersOnly(32);
+      expect(pw).toHaveLength(32);
+      expect([...pw].every(c => lettersOnlyCharset.includes(c))).toBe(true);
+    }
+  });
 });
 
 describe("generateComplexPassword", () => {

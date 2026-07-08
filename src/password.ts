@@ -10,6 +10,29 @@ export const LENGTHS = [23, 24, 25, 26, 27, 28, 29, 30, 31, 32] as const;
 
 export const MAX_LENGTH = 65536;
 
+const AMBIGUOUS_CHARS = new Set(["0", "O", "l", "I", "1"]);
+
+/**
+ * Filters out visually ambiguous characters from a charset to prevent
+ * transcription errors when copying passwords manually.
+ * Excludes: 0/O, l/I/l, 1
+ */
+function filterAmbiguousCharset(charset: string): string {
+  return [...charset].filter(c => !AMBIGUOUS_CHARS.has(c)).join('');
+}
+
+/**
+ * Generates a cryptographically secure random password with no visually ambiguous characters.
+ * Useful for manual copy-paste use cases where chars like '0'/'O', 'l'/'I', '1' are hard to distinguish.
+ *
+ * @param length The desired length of the password.
+ * @returns The generated password string, or empty string if charset is exhausted.
+ */
+export function generatePasswordAmbiguityFree(length: number): string {
+  const filtered = filterAmbiguousCharset(CHARS);
+  if (filtered.length === 0) return "";
+  return generatePasswordWithCharset(length, filtered);
+}
 
 /**
  * Generates a cryptographically secure random password.

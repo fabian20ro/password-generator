@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generatePasswordWithLettersOnly, generatePasswordWithNumbersOnly, generateAll, LENGTHS, CHARSET_LEN, isValidPassword, generateComplexPassword, MAX_LENGTH, CHARS, SYMBOLS } from "../src/password";
+import { generatePassword, generatePasswordWithCharset, generatePasswordWithSymbols, generatePasswordWithLettersOnly, generatePasswordWithNumbersOnly, generateAll, LENGTHS, CHARSET_LEN, isValidPassword, generateComplexPassword, MAX_LENGTH, CHARS, SYMBOLS, generatePasswordAmbiguityFree } from "../src/password";
 import { getSecureRandomInt } from "../src/crypto-utils";
 
 const originalCrypto = globalThis.crypto;
@@ -337,5 +337,26 @@ describe("generateComplexPassword", () => {
     const length = 10;
     const pw = generateComplexPassword(length, categories);
     expect(pw).toBe("");
+  });
+});
+
+describe("generatePasswordAmbiguityFree", () => {
+  it("returns a password of correct length without ambiguous characters", () => {
+    const length = 20;
+    for (let i = 0; i < 50; i++) {
+      const pw = generatePasswordAmbiguityFree(length);
+      expect(pw).toHaveLength(length);
+      // Verify no ambiguous chars: 0, O, l, I, 1
+      expect([...pw].every(c => !["0", "O", "l", "I", "1"].includes(c))).toBe(true);
+    }
+  });
+
+  it("returns an empty string for non-positive length", () => {
+    expect(generatePasswordAmbiguityFree(0)).toBe("");
+    expect(generatePasswordAmbiguityFree(-5)).toBe("");
+  });
+
+  it("returns an empty string for non-integer length", () => {
+    expect(generatePasswordAmbiguityFree(2.5)).toBe("");
   });
 });

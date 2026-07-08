@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { generateUsername, generateUsernames } from "../src/username";
+import { generateUsername, generateUsernames, USERNAME_ADJECTIVES, USERNAME_NOUNS } from "../src/username";
 
 describe("username generation", () => {
   describe("generateUsername()", () => {
@@ -84,31 +84,11 @@ describe("username generation", () => {
 
   it("only emits adjectives and nouns from their defined lists", () => {
     // Source-defined vocabulary — must stay in sync with generator output.
-    const adjectiveList = [
-      "agile", "brave", "calm", "clever", "curious",
-      "eager", "fierce", "gentle", "happy", "jolly",
-      "kind", "lively", "mighty", "nimble", "playful",
-      "proud", "quick", "sly", "swift", "wild",
-      "ancient", "awesome", "bright", "bouncy", "chill",
-      "mystic", "radiant", "silent", "vibrant", "zen", "astral", "cosmic", "lunar", "solar", "stellar",
-      "legendary", "epic", "zenith",
-    ] as const;
-
-    const nounList = [
-      "antelope", "badger", "beaver", "buffalo", "cougar",
-      "dolphin", "eagle", "falcon", "fox", "jaguar",
-      "lemur", "lynx", "otter", "panther", "rabbit",
-      "raven", "tiger", "walrus", "wolf", "zebra",
-      "arctic", "atlas", "blaze", "breeze", "chaos",
-      "nebula", "quasar", "pulsar", "comet", "meteor", "galaxy", "asteroid", "supernova", "planet", "star",
-      "dragon", "phoenix", "kraken",
-    ] as const;
-
     for (let i = 0; i < 100; i++) {
       const username = generateUsername();
       const [adj, noun] = username.split("_");
-      expect(adjectiveList).toContain(adj);
-      expect(nounList).toContain(noun);
+      expect(USERNAME_ADJECTIVES).toContain(adj);
+      expect(USERNAME_NOUNS).toContain(noun);
     }
   });
 

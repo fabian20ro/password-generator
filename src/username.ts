@@ -1,6 +1,6 @@
 import { getSecureRandomInt } from "./crypto-utils";
 
-const USERNAME_ADJECTIVES = [
+export const USERNAME_ADJECTIVES: readonly string[] = [
   "agile", "brave", "calm", "clever", "curious",
   "eager", "fierce", "gentle", "happy", "jolly",
   "kind", "lively", "mighty", "nimble", "playful",
@@ -8,9 +8,9 @@ const USERNAME_ADJECTIVES = [
   "ancient", "awesome", "bright", "bouncy", "chill",
   "mystic", "radiant", "silent", "vibrant", "zen", "astral", "cosmic", "lunar", "solar", "stellar",
   "legendary", "epic", "zenith",
-] as const;
+];
 
-const USERNAME_NOUNS = [
+export const USERNAME_NOUNS: readonly string[] = [
   "antelope", "badger", "beaver", "buffalo", "cougar",
   "dolphin", "eagle", "falcon", "fox", "jaguar",
   "lemur", "lynx", "otter", "panther", "rabbit",

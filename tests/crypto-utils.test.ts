@@ -36,6 +36,30 @@ describe("getSecureRandomInt", () => {
     expect(() => getSecureRandomInt(5.5)).toThrow("Max must be between 1 and UINT32_MODULUS");
   });
 
+  it("handles max=UINT32_MODULUS correctly (zero-rejection degenerate case)", () => {
+    const val = getSecureRandomInt(UINT32_MODULUS);
+    expect(val).toBeGreaterThanOrEqual(0);
+    // When max == UINT32_MODULUS, threshold == UINT32_MODULUS so no rejection;
+    // return is the raw uint32 value — verify it fits in uint32 range.
+    expect(val).toBeLessThan(UINT32_MODULUS);
+  });
+
+  it("produces approximately uniform distribution", () => {
+    const buckets = new Array(10).fill(0);
+    for (let i = 0; i < 5000; i++) {
+      const val = getSecureRandomInt(10);
+      expect(val).toBeGreaterThanOrEqual(0);
+      expect(val).toBeLessThan(10);
+      buckets[val]++;
+    }
+    // Each bucket should receive ~500 ± 3σ samples (binomial tolerance).
+    const expected = 500;
+    const tolerance = 3 * Math.sqrt(expected);
+    for (const count of buckets) {
+      expect(Math.abs(count - expected)).toBeLessThan(tolerance);
+    }
+  });
+
   it("throws when Crypto API is unavailable (crypto missing)", () => {
     Object.defineProperty(globalThis, "crypto", { value: undefined, configurable: true, writable: true });
     try {

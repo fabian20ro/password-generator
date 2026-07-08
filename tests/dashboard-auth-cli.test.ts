@@ -97,4 +97,140 @@ describe("dashboard auth CLI", () => {
       rmSync(directory, { recursive: true, force: true });
     }
   });
+
+  describe("argument validation", () => {
+    it("rejects missing --output with exit code 2", () => {
+      let err: NodeJS.ErrnoException | undefined;
+      try {
+        execFileSync(process.execPath, [
+          cli,
+          "--username",
+          "fabian",
+          "--password-length",
+          "32",
+          "--secret-length",
+          "32",
+        ], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+      } catch (caught) {
+        err = caught as NodeJS.ErrnoException;
+      }
+
+      expect(err).toBeDefined();
+      expect((err as NodeJS.ErrnoException).status).toBe(2);
+      const combinedOutput = [String(err!.stdout ?? ""), String(err!.stderr ?? "")].join("\n");
+      expect(combinedOutput).toContain("--output FILE is required");
+    });
+
+    it("rejects password-length below 24 with exit code 2", () => {
+      const directory = mkdtempSync(join(tmpdir(), "dashboard-auth-"));
+      const target = join(directory, "credentials.yaml");
+      try {
+        let err: NodeJS.ErrnoException | undefined;
+        try {
+          execFileSync(process.execPath, [
+            cli,
+            "--output",
+            target,
+            "--username",
+            "fabian",
+            "--password-length",
+            "10",
+            "--secret-length",
+            "32",
+          ], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+        } catch (caught) {
+          err = caught as NodeJS.ErrnoException;
+        }
+
+        expect(err).toBeDefined();
+        expect((err as NodeJS.ErrnoException).status).toBe(2);
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    });
+
+    it("rejects password-length above 256 with exit code 2", () => {
+      const directory = mkdtempSync(join(tmpdir(), "dashboard-auth-"));
+      const target = join(directory, "credentials.yaml");
+      try {
+        let err: NodeJS.ErrnoException | undefined;
+        try {
+          execFileSync(process.execPath, [
+            cli,
+            "--output",
+            target,
+            "--username",
+            "fabian",
+            "--password-length",
+            "300",
+            "--secret-length",
+            "32",
+          ], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+        } catch (caught) {
+          err = caught as NodeJS.ErrnoException;
+        }
+
+        expect(err).toBeDefined();
+        expect((err as NodeJS.ErrnoException).status).toBe(2);
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    });
+
+    it("rejects non-integer password-length with exit code 2", () => {
+      const directory = mkdtempSync(join(tmpdir(), "dashboard-auth-"));
+      const target = join(directory, "credentials.yaml");
+      try {
+        let err: NodeJS.ErrnoException | undefined;
+        try {
+          execFileSync(process.execPath, [
+            cli,
+            "--output",
+            target,
+            "--username",
+            "fabian",
+            "--password-length",
+            "abc",
+            "--secret-length",
+            "32",
+          ], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+        } catch (caught) {
+          err = caught as NodeJS.ErrnoException;
+        }
+
+        expect(err).toBeDefined();
+        expect((err as NodeJS.ErrnoException).status).toBe(2);
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    });
+
+    it("rejects secret-length out of range with exit code 2", () => {
+      const directory = mkdtempSync(join(tmpdir(), "dashboard-auth-"));
+      const target = join(directory, "credentials.yaml");
+      try {
+        let err: NodeJS.ErrnoException | undefined;
+        try {
+          execFileSync(process.execPath, [
+            cli,
+            "--output",
+            target,
+            "--username",
+            "fabian",
+            "--password-length",
+            "32",
+            "--secret-length",
+            "10",
+          ], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+        } catch (caught) {
+          err = caught as NodeJS.ErrnoException;
+        }
+
+        expect(err).toBeDefined();
+        expect((err as NodeJS.ErrnoException).status).toBe(2);
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    });
+  });
 });

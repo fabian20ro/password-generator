@@ -111,4 +111,31 @@ describe("username generation", () => {
       expect(nounList).toContain(noun);
     }
   });
+
+  it("distributes adjective and noun selection roughly uniformly", () => {
+    // Verifies the RNG selects each vocabulary item with approximately equal probability.
+    // Catches subtle bias that format-only tests miss.
+    const SAMPLES = 1000;
+    const adjCounts = new Map<string, number>();
+    const nounCounts = new Map<string, number>();
+
+    for (let i = 0; i < SAMPLES; i++) {
+      const [adj, noun] = generateUsername().split("_");
+      adjCounts.set(adj, (adjCounts.get(adj) ?? 0) + 1);
+      nounCounts.set(noun, (nounCounts.get(noun) ?? 0) + 1);
+    }
+
+    // Every item must appear at least once in N samples.
+    expect([...adjCounts.values()].every(c => c >= 1)).toBe(true);
+    expect([...nounCounts.values()].every(c => c >= 1)).toBe(true);
+
+    // Max count should not exceed 4× the min count (catches gross bias).
+    const adjMin = Math.min(...adjCounts.values());
+    const adjMax = Math.max(...adjCounts.values());
+    const nounMin = Math.min(...nounCounts.values());
+    const nounMax = Math.max(...nounCounts.values());
+
+    expect(adjMax / adjMin).toBeLessThanOrEqual(4);
+    expect(nounMax / nounMin).toBeLessThanOrEqual(4);
+  });
 });

@@ -144,6 +144,8 @@ describe("dashboard auth CLI", () => {
 
         expect(err).toBeDefined();
         expect((err as NodeJS.ErrnoException).status).toBe(2);
+        const combinedOutput = [String(err!.stdout ?? ""), String(err!.stderr ?? "")].join("\n");
+        expect(combinedOutput).toContain("must be an integer");
       } finally {
         rmSync(directory, { recursive: true, force: true });
       }
@@ -172,6 +174,8 @@ describe("dashboard auth CLI", () => {
 
         expect(err).toBeDefined();
         expect((err as NodeJS.ErrnoException).status).toBe(2);
+        const combinedOutput = [String(err!.stdout ?? ""), String(err!.stderr ?? "")].join("\n");
+        expect(combinedOutput).toContain("must be an integer");
       } finally {
         rmSync(directory, { recursive: true, force: true });
       }

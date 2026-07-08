@@ -8,12 +8,12 @@ export const UINT32_MODULUS = 0x1_0000_0000;
  * @returns A random integer.
  */
 export function getSecureRandomInt(max: number): number {
-  if (max <= 0 || max > UINT32_MODULUS || max % 1 !== 0) {
+  if (!Number.isInteger(max) || max <= 0 || max > UINT32_MODULUS) {
     throw new Error("Max must be between 1 and UINT32_MODULUS");
   }
 
-  const crypto = globalThis.crypto;
-  if (!crypto?.getRandomValues) {
+  const crypto = globalThis.crypto?.getRandomValues;
+  if (typeof crypto !== "function") {
     throw new Error("Crypto API unavailable — cannot generate secure random values");
   }
 
@@ -21,7 +21,7 @@ export function getSecureRandomInt(max: number): number {
   const buf = new Uint32Array(1);
 
   do {
-    crypto.getRandomValues(buf);
+    globalThis.crypto!.getRandomValues(buf);
   } while (buf[0] >= threshold);
 
   return buf[0] % max;

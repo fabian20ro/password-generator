@@ -146,6 +146,110 @@ describe("getSecureRandomInt", () => {
       // Each char should appear roughly half the time (10000 total chars / 4 options).
       for (const c of "abAB") expect(counts[c]).toBeGreaterThan(500);
     });
+
+    describe("overlapping character sets between categories", () => {
+      it("must guarantee at least one char from each category even when they share characters", () => {
+        // Categories overlap: both contain 'X'. The function must still pick
+        // independently from each, so every output has a guaranteed contribution.
+        const categories = [['A', 'B', 'X'], ['X', 'C']];
+        for (let i = 0; i < 100; i++) {
+          const pw = generateComplexPassword(4, categories);
+          expect(pw.length).toBe(4);
+          // From category 0: must contain A, B, or X
+          const hasCat0 = [...pw].some(c => ['A', 'B', 'X'].includes(c));
+          // From category 1: must contain X or C
+          const hasCat1 = [...pw].some(c => ['X', 'C'].includes(c));
+          expect(hasCat0).toBe(true);
+          expect(hasCat1).toBe(true);
+        }
+      });
+
+      it("must include one char from each category when overlap is complete", () => {
+        // Category 1 is a subset of category 0 — every char in cat1 also satisfies cat0.
+        const categories = [['A', 'B', 'C'], ['A']];
+        for (let i = 0; i < 200; i++) {
+          const pw = generateComplexPassword(3, categories);
+          expect(pw.length).toBe(3);
+          // Cat0 contributes A/B/C; cat1 contributes A. Both constraints must hold.
+          expect([...pw].some(c => ['A', 'B', 'C'].includes(c))).toBe(true);
+          expect([...pw].includes('A')).toBe(true);
+        }
+      });
+
+      it("must not silently skip a category when length is exactly categories.length", () => {
+        // Tight boundary: 3 chars, 3 overlapping categories. Each must contribute one.
+        const categories = [['X', 'Y'], ['Y', 'Z'], ['Z']];
+        for (let i = 0; i < 200; i++) {
+          const pw = generateComplexPassword(3, categories);
+          expect(pw.length).toBe(3);
+          // Each password must have at least one char from each category's alphabet.
+          const chars = [...pw];
+          expect(chars.some(c => ['X', 'Y'].includes(c))).toBe(true);
+          expect(chars.some(c => ['Y', 'Z'].includes(c))).toBe(true);
+          expect(chars.some(c => ['Z'].includes(c))).toBe(true);
+        }
+      });
+
+      it("must produce variety with overlapping categories (crypto randomness check)", () => {
+        const categories = [['A', 'B'], ['B']];
+        const seen = new Set<string>();
+        for (let i = 0; i < 50; i++) {
+          const pw = generateComplexPassword(4, categories);
+          expect(pw.length).toBe(4);
+          // Cat1 guarantees 'B'; cat0 contributes A or B.
+          expect([...pw].some(c => ['A', 'B'].includes(c))).toBe(true);
+          seen.add(pw);
+        }
+        expect(seen.size).toBeGreaterThan(5);
+      });
+    });
+
+    describe("asymmetric category boundary (length === categories.length)", () => {
+      it("must include exactly one char from each category when categories differ wildly in size", () => {
+        const categories = [['X'], ['a', 'b', 'c', 'd', 'e', 'f']];
+        // 50 samples — the tiny category must always contribute its sole character.
+        for (let i = 0; i < 50; i++) {
+          const pw = generateComplexPassword(2, categories);
+          expect(pw.length).toBe(2);
+          expect([...pw]).toContain('X');
+        }
+      });
+
+      it("must not allow a category to contribute more than one char at exact-length boundary", () => {
+        // Three categories, length=3. Each must contribute exactly 1.
+        const categories = [['A'], ['B'], ['C']];
+        for (let i = 0; i < 50; i++) {
+          const pw = generateComplexPassword(3, categories);
+          expect(pw).toMatch(/^[ABC]{3}$/);
+          // After shuffle, each category contributes exactly one position — count must be 1 each.
+          const counts: Record<string, number> = {};
+          for (const c of [...pw]) {
+            counts[c] = (counts[c] ?? 0) + 1;
+          }
+          expect(counts.A).toBe(1);
+          expect(counts.B).toBe(1);
+          expect(counts.C).toBe(1);
+        }
+      });
+
+      it("must sample the extra character from the full union, not bias toward any category", () => {
+        const categories = [['a', 'b'], ['A', 'B']]; // length=3 (one extra beyond 2)
+        const counts: Record<string, number> = {};
+        for (const c of "abAB") counts[c] = 0;
+        for (let i = 0; i < 5000; i++) {
+          const pw = generateComplexPassword(3, categories);
+          expect(pw.length).toBe(3);
+          // Each password must contain one from each category.
+          const hasUpper = [...pw].some(c => 'AB'.includes(c));
+          const hasLower = [...pw].some(c => 'ab'.includes(c));
+          expect(hasUpper).toBe(true);
+          expect(hasLower).toBe(true);
+          for (const c of pw) counts[c]++;
+        }
+        // The 4 characters should be roughly equally sampled across 5000 iterations × 3 chars = 15000 samples.
+        for (const c of "abAB") expect(counts[c]).toBeGreaterThan(2000);
+      });
+    });
   });
 
 });

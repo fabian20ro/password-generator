@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getSecureRandomInt } from "../src/crypto-utils";
+import { getSecureRandomInt, UINT32_MODULUS } from "../src/crypto-utils";
 
 describe("getSecureRandomInt", () => {
   it("throws error if max is <= 0", () => {
@@ -26,6 +26,14 @@ describe("getSecureRandomInt", () => {
   it("handles max=1 correctly", () => {
     const val = getSecureRandomInt(1);
     expect(val).toBe(0);
+  });
+
+  it("throws if max exceeds UINT32_MODULUS", () => {
+    expect(() => getSecureRandomInt(UINT32_MODULUS + 1)).toThrow("Max must be between 1 and UINT32_MODULUS");
+  });
+
+  it("throws if max is non-integer (fractional)", () => {
+    expect(() => getSecureRandomInt(5.5)).toThrow("Max must be between 1 and UINT32_MODULUS");
   });
 
   it("throws when Crypto API is unavailable (crypto missing)", () => {

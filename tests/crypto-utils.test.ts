@@ -60,6 +60,10 @@ describe("getSecureRandomInt", () => {
     }
   });
 
+  it("throws if max is NaN (non-numeric)", () => {
+    expect(() => getSecureRandomInt(NaN)).toThrow("Max must be between 1 and UINT32_MODULUS");
+  });
+
   it("throws when Crypto API is unavailable (crypto missing)", () => {
     Object.defineProperty(globalThis, "crypto", { value: undefined, configurable: true, writable: true });
     try {

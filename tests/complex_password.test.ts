@@ -78,6 +78,11 @@ describe("getSecureRandomInt", () => {
       expect(pw).toBe("");
     });
 
+    it("should return empty string when no categories are provided", () => {
+      const pw = generateComplexPassword(10, []);
+      expect(pw).toBe("");
+    });
+
     it("should handle non-integer lengths by returning an empty string", () => {
       const categories = [['A', 'B'], ['1', '2']];
       expect(generateComplexPassword(2.5, categories)).toBe("");

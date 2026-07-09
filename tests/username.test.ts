@@ -40,6 +40,11 @@ describe("username generation", () => {
       expect(generateUsernames(-10)).toEqual([]);
     });
 
+    it("returns an empty array for excessive count (> 1024)", () => {
+      expect(generateUsernames(1025)).toEqual([]);
+      expect(generateUsernames(10000)).toEqual([]);
+    });
+
     it("returns an empty array for non-integer counts", () => {
       expect(generateUsernames(2.5)).toEqual([]);
     });

@@ -32,7 +32,9 @@ export function generateUsername(): string {
   return `${adjective}_${noun}_${randomFourDigitNumber()}`;
 }
 
+const MAX_USERNAME_COUNT = 1024;
+
 export function generateUsernames(count: number): string[] {
-  if (!Number.isInteger(count) || count <= 0) return [];
+  if (!Number.isInteger(count) || count <= 0 || count > MAX_USERNAME_COUNT) return [];
   return Array.from({ length: count }, () => generateUsername());
 }

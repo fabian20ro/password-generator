@@ -236,5 +236,78 @@ describe("dashboard auth CLI", () => {
         rmSync(directory, { recursive: true, force: true });
       }
     });
+
+    it("--help prints usage and exits cleanly", () => {
+      let err: NodeJS.ErrnoException | undefined;
+      try {
+        execFileSync(process.execPath, [
+          cli,
+          "--help",
+        ], { encoding: "utf8" });
+      } catch (caught) {
+        err = caught as NodeJS.ErrnoException;
+      }
+
+      expect(err).toBeUndefined();
+    });
+
+    it("-h prints usage and exits cleanly", () => {
+      let err: NodeJS.ErrnoException | undefined;
+      try {
+        execFileSync(process.execPath, [
+          cli,
+          "-h",
+        ], { encoding: "utf8" });
+      } catch (caught) {
+        err = caught as NodeJS.ErrnoException;
+      }
+
+      expect(err).toBeUndefined();
+    });
+
+    it("rejects empty username with exit code 2", () => {
+      let err: NodeJS.ErrnoException | undefined;
+      try {
+        execFileSync(process.execPath, [
+          cli,
+          "--output",
+          "/tmp/dashboard-auth-empty.yaml",
+          "--username",
+          "",
+          "--password-length",
+          "32",
+          "--secret-length",
+          "32",
+        ], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+      } catch (caught) {
+        err = caught as NodeJS.ErrnoException;
+      }
+
+      expect(err).toBeDefined();
+      expect((err as NodeJS.ErrnoException).status).toBe(2);
+    });
+
+    it("rejects unknown arguments with exit code 2", () => {
+      let err: NodeJS.ErrnoException | undefined;
+      try {
+        execFileSync(process.execPath, [
+          cli,
+          "--output",
+          "/tmp/dashboard-auth-unknown.yaml",
+          "--username",
+          "fabian",
+          "--password-length",
+          "32",
+          "--secret-length",
+          "32",
+          "--nonexistent-flag",
+        ], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+      } catch (caught) {
+        err = caught as NodeJS.ErrnoException;
+      }
+
+      expect(err).toBeDefined();
+      expect((err as NodeJS.ErrnoException).status).toBe(2);
+    });
   });
 });

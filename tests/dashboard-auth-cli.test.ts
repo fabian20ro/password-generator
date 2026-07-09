@@ -63,6 +63,17 @@ describe("dashboard auth CLI", () => {
       expect(parsed.username).toBe("ops");
       expect(parsed.password).toHaveLength(48);
       expect(parsed.secret.length).toBeGreaterThan(64);
+
+      // File mode 0o600 applies to both YAML and JSON output paths (writeFileSync with mode: 0o600)
+      expect(statSync(target).mode & 0o777).toBe(0o600);
+
+      // Secret format: <uuid>-<alphanumeric-string> — observable contract, not just "long enough"
+      const secretRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}-[A-Za-z0-9]+$/;
+      expect(parsed.secret).toMatch(secretRegex);
+
+      // JSON output must not include YAML-only fields (e.g. password_hash) — schema is exact {username, password, secret}
+      const jsonKeys = Object.keys(parsed);
+      expect(jsonKeys.sort()).toEqual(["password", "secret", "username"]);
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }
@@ -235,6 +246,79 @@ describe("dashboard auth CLI", () => {
       } finally {
         rmSync(directory, { recursive: true, force: true });
       }
+    });
+
+    it("--help prints usage and exits cleanly", () => {
+      let err: NodeJS.ErrnoException | undefined;
+      try {
+        execFileSync(process.execPath, [
+          cli,
+          "--help",
+        ], { encoding: "utf8" });
+      } catch (caught) {
+        err = caught as NodeJS.ErrnoException;
+      }
+
+      expect(err).toBeUndefined();
+    });
+
+    it("-h prints usage and exits cleanly", () => {
+      let err: NodeJS.ErrnoException | undefined;
+      try {
+        execFileSync(process.execPath, [
+          cli,
+          "-h",
+        ], { encoding: "utf8" });
+      } catch (caught) {
+        err = caught as NodeJS.ErrnoException;
+      }
+
+      expect(err).toBeUndefined();
+    });
+
+    it("rejects empty username with exit code 2", () => {
+      let err: NodeJS.ErrnoException | undefined;
+      try {
+        execFileSync(process.execPath, [
+          cli,
+          "--output",
+          "/tmp/dashboard-auth-empty.yaml",
+          "--username",
+          "",
+          "--password-length",
+          "32",
+          "--secret-length",
+          "32",
+        ], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+      } catch (caught) {
+        err = caught as NodeJS.ErrnoException;
+      }
+
+      expect(err).toBeDefined();
+      expect((err as NodeJS.ErrnoException).status).toBe(2);
+    });
+
+    it("rejects unknown arguments with exit code 2", () => {
+      let err: NodeJS.ErrnoException | undefined;
+      try {
+        execFileSync(process.execPath, [
+          cli,
+          "--output",
+          "/tmp/dashboard-auth-unknown.yaml",
+          "--username",
+          "fabian",
+          "--password-length",
+          "32",
+          "--secret-length",
+          "32",
+          "--nonexistent-flag",
+        ], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+      } catch (caught) {
+        err = caught as NodeJS.ErrnoException;
+      }
+
+      expect(err).toBeDefined();
+      expect((err as NodeJS.ErrnoException).status).toBe(2);
     });
   });
 });

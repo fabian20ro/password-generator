@@ -83,6 +83,32 @@ describe("generatePassword", () => {
     }
   });
 
+  it("generates multiple copies per slot when count > 1", () => {
+    const passwords = generateAll(3);
+    expect(passwords).toHaveLength(LENGTHS.length * 3);
+    for (const len of LENGTHS) {
+      expect(passwords.filter(p => p.length === len)).toHaveLength(3);
+    }
+  });
+
+  it("produces different passwords when count > 1", () => {
+    const passwords = generateAll(5);
+    // Group by length and verify each group has unique entries
+    for (const len of LENGTHS) {
+      const group = passwords.filter(p => p.length === len);
+      expect(new Set(group).size).toBe(group.length);
+    }
+  });
+
+  it("returns empty array for non-positive count", () => {
+    expect(generateAll(0)).toEqual([]);
+    expect(generateAll(-1)).toEqual([]);
+  });
+
+  it("returns empty array for non-integer count", () => {
+    expect(generateAll(2.5)).toEqual([]);
+  });
+
   it("returns a string of the requested length and contains characters from all categories", () => {
     const categories = [["abc"], ["123"], ["!@#"]];
     const length = 10;
@@ -329,6 +355,18 @@ describe("generateComplexPassword", () => {
       const pw = generateComplexPassword(length, categories);
       expect([...pw].some(c => overlapCategory1.includes(c))).toBe(true);
       expect([...pw].some(c => overlapCategory2.includes(c))).toBe(true);
+    }
+  });
+
+  it("handles identical-category sub-arrays without losing charset compliance", () => {
+    // When user supplies duplicate charsets, each pick still draws from the shared set — verify output stays valid
+    const idChar = "abc";
+    const categories = Array(3).fill(idChar.split(""));
+    const length = 10;
+    for (let i = 0; i < 200; i++) {
+      const pw = generateComplexPassword(length, categories);
+      expect(pw).toHaveLength(length);
+      expect(isValidPassword(pw, idChar)).toBe(true);
     }
   });
 

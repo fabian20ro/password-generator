@@ -21,6 +21,9 @@ function filterAmbiguousCharset(charset: string): string {
   return [...charset].filter(c => !AMBIGUOUS_CHARS.has(c)).join('');
 }
 
+/** Pre-computed ambiguity-free alphanumeric charset — constant at module load. */
+const AMBIGUITY_FREE_CHARSET = filterAmbiguousCharset(CHARS);
+
 /**
  * Generates a cryptographically secure random password with no visually ambiguous characters.
  * Useful for manual copy-paste use cases where chars like '0'/'O', 'l'/'I', '1' are hard to distinguish.
@@ -29,9 +32,8 @@ function filterAmbiguousCharset(charset: string): string {
  * @returns The generated password string, or empty string if charset is exhausted.
  */
 export function generatePasswordAmbiguityFree(length: number): string {
-  const filtered = filterAmbiguousCharset(CHARS);
-  if (filtered.length === 0) return "";
-  return generatePasswordWithCharset(length, filtered);
+  if (AMBIGUITY_FREE_CHARSET.length === 0) return "";
+  return generatePasswordWithCharset(length, AMBIGUITY_FREE_CHARSET);
 }
 
 /**
@@ -101,8 +103,21 @@ export function generatePasswordWithCharset(length: number, charset: string): st
   return passwordArray.join('');
 }
 
-export function generateAll(): string[] {
-  return LENGTHS.map((len) => generatePassword(len));
+/**
+ * Generates a password for each defined length in LENGTHS.
+ * Optionally produces multiple copies per slot for copy-paste convenience.
+ *
+ * @param count How many passwords to generate per length slot (default: 1).
+ */
+export function generateAll(count: number = 1): string[] {
+  if (!Number.isInteger(count) || count <= 0) return [];
+  const result: string[] = [];
+  for (const len of LENGTHS) {
+    for (let i = 0; i < count; i++) {
+      result.push(generatePassword(len));
+    }
+  }
+  return result;
 }
 
 /**

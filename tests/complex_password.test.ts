@@ -78,6 +78,11 @@ describe("getSecureRandomInt", () => {
       expect(pw).toBe("");
     });
 
+    it("should return empty string when no categories are provided", () => {
+      const pw = generateComplexPassword(10, []);
+      expect(pw).toBe("");
+    });
+
     it("should handle non-integer lengths by returning an empty string", () => {
       const categories = [['A', 'B'], ['1', '2']];
       expect(generateComplexPassword(2.5, categories)).toBe("");
@@ -201,6 +206,28 @@ describe("getSecureRandomInt", () => {
           seen.add(pw);
         }
         expect(seen.size).toBeGreaterThan(5);
+      });
+    });
+
+    describe("long passwords with small categories", () => {
+      it("must sample extra characters uniformly from the full union when length >> categories.length", () => {
+        // 3 categories × 4 chars each, length=100 → ~97 extras.
+        // Each char should be sampled roughly equally across iterations.
+        const categories = [['a', 'b'], ['A', 'B'], ['1', '2']];
+        const counts: Record<string, number> = {};
+        for (const c of "abAB12") counts[c] = 0;
+        for (let i = 0; i < 500; i++) {
+          const pw = generateComplexPassword(100, categories);
+          expect(pw.length).toBe(100);
+          // Each password must contain one char from each category.
+          expect([...pw].some(c => 'ab'.includes(c))).toBe(true);
+          expect([...pw].some(c => 'AB'.includes(c))).toBe(true);
+          expect([...pw].some(c => '12'.includes(c))).toBe(true);
+          for (const c of pw) counts[c]++;
+        }
+        // 500 iterations × 100 chars = 50,000 total samples across 6 options.
+        // Expect ~8333 per char ± generous tolerance; each must exceed 4000.
+        for (const c of "abAB12") expect(counts[c]).toBeGreaterThan(4000);
       });
     });
 

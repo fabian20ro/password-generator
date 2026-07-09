@@ -332,6 +332,18 @@ describe("generateComplexPassword", () => {
     }
   });
 
+  it("handles identical-category sub-arrays without losing charset compliance", () => {
+    // When user supplies duplicate charsets, each pick still draws from the shared set — verify output stays valid
+    const idChar = "abc";
+    const categories = Array(3).fill(idChar.split(""));
+    const length = 10;
+    for (let i = 0; i < 200; i++) {
+      const pw = generateComplexPassword(length, categories);
+      expect(pw).toHaveLength(length);
+      expect(isValidPassword(pw, idChar)).toBe(true);
+    }
+  });
+
   it("returns an empty string when all category sub-arrays are empty", () => {
     const categories: string[][] = [[], [], []];
     const length = 10;

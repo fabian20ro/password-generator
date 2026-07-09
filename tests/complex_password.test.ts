@@ -93,6 +93,11 @@ describe("getSecureRandomInt", () => {
       expect(generateComplexPassword(0, categories)).toBe("");
     });
 
+    it("should handle length less than categories.length by returning an empty string", () => {
+      const categories = [['A', 'B'], ['1', '2'], ['!']]; // 3 categories
+      expect(generateComplexPassword(2, categories)).toBe(""); // length < 3
+    });
+
     it("should throw error if length exceeds MAX_LENGTH", () => {
       const categories = [['A', 'B'], ['1', '2']];
       expect(() => generateComplexPassword(70000, categories)).toThrow(/Length exceeds maximum allowed: 65536/);

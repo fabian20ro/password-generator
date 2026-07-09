@@ -95,6 +95,11 @@ describe("getSecureRandomInt", () => {
     }
   });
 
+  it("throws if max is Infinity (Number.isInteger returns true for Infinity)", () => {
+    expect(() => getSecureRandomInt(Infinity)).toThrow("Max must be between 1 and UINT32_MODULUS");
+    expect(() => getSecureRandomInt(-Infinity)).toThrow("Max must be between 1 and UINT32_MODULUS");
+  });
+
   it("produces uniform binary output (max=2) under zero-rejection conditions", () => {
     // Guard: skip if crypto API unavailable in this environment
     const c = globalThis.crypto as any;

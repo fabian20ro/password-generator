@@ -44,6 +44,10 @@ describe("username generation", () => {
       expect(generateUsernames(2.5)).toEqual([]);
     });
 
+    it("returns an empty array for NaN count", () => {
+      expect(generateUsernames(NaN)).toEqual([]);
+    });
+
     it("returns an array of length 1 when count is 1", () => {
       const usernames = generateUsernames(1);
       expect(usernames).toHaveLength(1);

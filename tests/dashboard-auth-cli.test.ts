@@ -63,6 +63,17 @@ describe("dashboard auth CLI", () => {
       expect(parsed.username).toBe("ops");
       expect(parsed.password).toHaveLength(48);
       expect(parsed.secret.length).toBeGreaterThan(64);
+
+      // File mode 0o600 applies to both YAML and JSON output paths (writeFileSync with mode: 0o600)
+      expect(statSync(target).mode & 0o777).toBe(0o600);
+
+      // Secret format: <uuid>-<alphanumeric-string> — observable contract, not just "long enough"
+      const secretRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}-[A-Za-z0-9]+$/;
+      expect(parsed.secret).toMatch(secretRegex);
+
+      // JSON output must not include YAML-only fields (e.g. password_hash) — schema is exact {username, password, secret}
+      const jsonKeys = Object.keys(parsed);
+      expect(jsonKeys.sort()).toEqual(["password", "secret", "username"]);
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

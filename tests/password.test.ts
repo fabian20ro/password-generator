@@ -83,6 +83,32 @@ describe("generatePassword", () => {
     }
   });
 
+  it("generates multiple copies per slot when count > 1", () => {
+    const passwords = generateAll(3);
+    expect(passwords).toHaveLength(LENGTHS.length * 3);
+    for (const len of LENGTHS) {
+      expect(passwords.filter(p => p.length === len)).toHaveLength(3);
+    }
+  });
+
+  it("produces different passwords when count > 1", () => {
+    const passwords = generateAll(5);
+    // Group by length and verify each group has unique entries
+    for (const len of LENGTHS) {
+      const group = passwords.filter(p => p.length === len);
+      expect(new Set(group).size).toBe(group.length);
+    }
+  });
+
+  it("returns empty array for non-positive count", () => {
+    expect(generateAll(0)).toEqual([]);
+    expect(generateAll(-1)).toEqual([]);
+  });
+
+  it("returns empty array for non-integer count", () => {
+    expect(generateAll(2.5)).toEqual([]);
+  });
+
   it("returns a string of the requested length and contains characters from all categories", () => {
     const categories = [["abc"], ["123"], ["!@#"]];
     const length = 10;

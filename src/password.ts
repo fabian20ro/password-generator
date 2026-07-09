@@ -103,8 +103,21 @@ export function generatePasswordWithCharset(length: number, charset: string): st
   return passwordArray.join('');
 }
 
-export function generateAll(): string[] {
-  return LENGTHS.map((len) => generatePassword(len));
+/**
+ * Generates a password for each defined length in LENGTHS.
+ * Optionally produces multiple copies per slot for copy-paste convenience.
+ *
+ * @param count How many passwords to generate per length slot (default: 1).
+ */
+export function generateAll(count: number = 1): string[] {
+  if (!Number.isInteger(count) || count <= 0) return [];
+  const result: string[] = [];
+  for (const len of LENGTHS) {
+    for (let i = 0; i < count; i++) {
+      result.push(generatePassword(len));
+    }
+  }
+  return result;
 }
 
 /**

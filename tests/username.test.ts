@@ -122,4 +122,28 @@ describe("username generation", () => {
     expect(adjMax / adjMin).toBeLessThanOrEqual(4);
     expect(nounMax / nounMin).toBeLessThanOrEqual(4);
   });
+
+  it("distributes the numeric suffix roughly uniformly across 1000–9999", () => {
+    // Verifies randomFourDigitNumber() produces values without positional bias.
+    // Complements the adjective/noun uniformity test above.
+    const SAMPLES = 5000;
+    const BUCKETS = 10;
+    const bucketSize = Math.floor(9000 / BUCKETS); // 900
+    const buckets = Array(BUCKETS).fill(0);
+
+    for (let i = 0; i < SAMPLES; i++) {
+      const numPart = generateUsername().split("_")[2];
+      const bucket = Math.floor((Number(numPart) - 1000) / bucketSize);
+      buckets[bucket]++;
+    }
+
+    // Each of the 10 buckets should contain roughly SAMPLES/BUCKETS values.
+    // Allow up to 3× deviation from expected to account for statistical variance.
+    const expected = SAMPLES / BUCKETS;
+    const observedMax = Math.max(...buckets);
+    const observedMin = Math.min(...buckets);
+
+    expect(observedMax).toBeLessThanOrEqual(expected * 2.5);
+    expect(observedMin).toBeGreaterThanOrEqual(expected * 0.5);
+  });
 });

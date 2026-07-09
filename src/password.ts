@@ -103,18 +103,56 @@ export function generatePasswordWithCharset(length: number, charset: string): st
   return passwordArray.join('');
 }
 
+/** Character classes used to classify password characters. */
+export const CHAR_CLASS_UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+export const CHAR_CLASS_LOWER = "abcdefghijklmnopqrstuvwxyz";
+export const CHAR_CLASS_DIGIT = "0123456789";
+
+const MAX_DIVERSITY_RETRIES = 20;
+
+function countDistinctClasses(pw: string): number {
+  let classes = 0;
+  if ([...CHAR_CLASS_UPPER].some(c => pw.includes(c))) classes++;
+  if ([...CHAR_CLASS_LOWER].some(c => pw.includes(c))) classes++;
+  if ([...CHAR_CLASS_DIGIT].some(c => pw.includes(c))) classes++;
+  return classes;
+}
+
+/** Options for `generateAll`. */
+export interface GenerateAllOptions {
+  /** Minimum number of distinct character classes (upper, lower, digit) each password must contain. Defaults to 2. */
+  minClassesPerPassword?: number;
+  /** Maximum retry attempts when a generated password fails the class-diversity check. Default: 20. */
+  maxRetries?: number;
+}
+
 /**
  * Generates a password for each defined length in LENGTHS.
- * Optionally produces multiple copies per slot for copy-paste convenience.
+ * Optionally produces multiple copies per slot for copy-paste convenience,
+ * and enforces character-class diversity per password.
  *
  * @param count How many passwords to generate per length slot (default: 1).
+ * @param options Optional diversity constraints applied to each generated password.
  */
-export function generateAll(count: number = 1): string[] {
+export function generateAll(count: number = 1, options?: GenerateAllOptions): string[] {
   if (!Number.isInteger(count) || count <= 0) return [];
+
+  const minClasses = Math.min(3, Math.max(0, options?.minClassesPerPassword ?? 2));
+  const maxRetries = options?.maxRetries ?? MAX_DIVERSITY_RETRIES;
+
+  function generateDiverse(length: number): string {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      const pw = generatePassword(length);
+      if (countDistinctClasses(pw) >= minClasses) return pw;
+    }
+    // Fallback: use whatever was generated on last attempt.
+    return generatePassword(length);
+  }
+
   const result: string[] = [];
   for (const len of LENGTHS) {
     for (let i = 0; i < count; i++) {
-      result.push(generatePassword(len));
+      result.push(generateDiverse(len));
     }
   }
   return result;

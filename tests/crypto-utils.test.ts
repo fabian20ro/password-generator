@@ -111,6 +111,36 @@ describe("getSecureRandomInt", () => {
     }
   });
 
+  it("throws when getRandomValues is a number on crypto object", () => {
+    const realCrypto = (globalThis as any).crypto;
+    Object.defineProperty(globalThis, "crypto", { value: { getRandomValues: 42 }, configurable: true, writable: true });
+    try {
+      expect(() => getSecureRandomInt(10)).toThrow("Crypto API unavailable");
+    } finally {
+      Object.defineProperty(globalThis, "crypto", { value: realCrypto, configurable: true, writable: true });
+    }
+  });
+
+  it("throws when getRandomValues is a string on crypto object", () => {
+    const realCrypto = (globalThis as any).crypto;
+    Object.defineProperty(globalThis, "crypto", { value: { getRandomValues: "not-a-function" }, configurable: true, writable: true });
+    try {
+      expect(() => getSecureRandomInt(10)).toThrow("Crypto API unavailable");
+    } finally {
+      Object.defineProperty(globalThis, "crypto", { value: realCrypto, configurable: true, writable: true });
+    }
+  });
+
+  it("throws when getRandomValues is a boolean on crypto object", () => {
+    const realCrypto = (globalThis as any).crypto;
+    Object.defineProperty(globalThis, "crypto", { value: { getRandomValues: true }, configurable: true, writable: true });
+    try {
+      expect(() => getSecureRandomInt(10)).toThrow("Crypto API unavailable");
+    } finally {
+      Object.defineProperty(globalThis, "crypto", { value: realCrypto, configurable: true, writable: true });
+    }
+  });
+
   it("throws if max is Infinity (Number.isInteger returns true for Infinity)", () => {
     expect(() => getSecureRandomInt(Infinity)).toThrow("Max must be between 1 and UINT32_MODULUS");
     expect(() => getSecureRandomInt(-Infinity)).toThrow("Max must be between 1 and UINT32_MODULUS");

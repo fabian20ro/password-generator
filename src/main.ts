@@ -11,7 +11,6 @@ const COPIED_COPY_LABEL = "Password copied";
 const ERROR_COPY_LABEL = "Copy failed";
 
 
-
 const USERNAME_COUNT = 10;
 
 const statusEl = document.getElementById("status") as HTMLParagraphElement;

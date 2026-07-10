@@ -44,6 +44,22 @@ describe("getSecureRandomInt", () => {
     expect(val).toBeLessThan(UINT32_MODULUS);
   });
 
+  it("produces uniform distribution across full uint32 range (zero-rejection path)", () => {
+    const buckets = new Array(100).fill(0);
+    for (let i = 0; i < 200_000; i++) {
+      const val = getSecureRandomInt(UINT32_MODULUS);
+      expect(val).toBeGreaterThanOrEqual(0);
+      expect(val).toBeLessThan(UINT32_MODULUS);
+      buckets[Math.floor(val / (UINT32_MODULUS / 100))]++;
+    }
+    // Each bucket should receive ~2000 ± 5σ samples (Bonferroni correction for 100 independent bins).
+    const expected = 2000;
+    const tolerance = 5 * Math.sqrt(expected);
+    for (const count of buckets) {
+      expect(Math.abs(count - expected)).toBeLessThan(tolerance);
+    }
+  });
+
   it("produces approximately uniform distribution", () => {
     const buckets = new Array(10).fill(0);
     for (let i = 0; i < 5000; i++) {
@@ -88,6 +104,36 @@ describe("getSecureRandomInt", () => {
   it("throws when getRandomValues is not a function on crypto object", () => {
     const realCrypto = (globalThis as any).crypto;
     Object.defineProperty(globalThis, "crypto", { value: { getRandomValues: null }, configurable: true, writable: true });
+    try {
+      expect(() => getSecureRandomInt(10)).toThrow("Crypto API unavailable");
+    } finally {
+      Object.defineProperty(globalThis, "crypto", { value: realCrypto, configurable: true, writable: true });
+    }
+  });
+
+  it("throws when getRandomValues is a number on crypto object", () => {
+    const realCrypto = (globalThis as any).crypto;
+    Object.defineProperty(globalThis, "crypto", { value: { getRandomValues: 42 }, configurable: true, writable: true });
+    try {
+      expect(() => getSecureRandomInt(10)).toThrow("Crypto API unavailable");
+    } finally {
+      Object.defineProperty(globalThis, "crypto", { value: realCrypto, configurable: true, writable: true });
+    }
+  });
+
+  it("throws when getRandomValues is a string on crypto object", () => {
+    const realCrypto = (globalThis as any).crypto;
+    Object.defineProperty(globalThis, "crypto", { value: { getRandomValues: "not-a-function" }, configurable: true, writable: true });
+    try {
+      expect(() => getSecureRandomInt(10)).toThrow("Crypto API unavailable");
+    } finally {
+      Object.defineProperty(globalThis, "crypto", { value: realCrypto, configurable: true, writable: true });
+    }
+  });
+
+  it("throws when getRandomValues is a boolean on crypto object", () => {
+    const realCrypto = (globalThis as any).crypto;
+    Object.defineProperty(globalThis, "crypto", { value: { getRandomValues: true }, configurable: true, writable: true });
     try {
       expect(() => getSecureRandomInt(10)).toThrow("Crypto API unavailable");
     } finally {

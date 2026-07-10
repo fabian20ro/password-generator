@@ -94,7 +94,7 @@ export function generatePasswordWithNumbersOnly(length: number): string {
 export function generatePasswordWithCharset(length: number, charset: string): string {
   if (!Number.isInteger(length) || length <= 0 || !charset) return "";
   if (length > MAX_LENGTH) throw new Error(`Length exceeds maximum allowed: ${MAX_LENGTH}`);
-  const chars = Array.from(charset);
+  const chars = Array.from(new Set(charset));
   const charsetLen = chars.length;
   const passwordArray = new Array(length);
   for (let i = 0; i < length; i++) {
@@ -110,11 +110,17 @@ export const CHAR_CLASS_DIGIT = "0123456789";
 
 const MAX_DIVERSITY_RETRIES = 20;
 
+/** Precomputed class Sets — allocated once at module load, reused per call. */
+const CLASS_SETS = [new Set(CHAR_CLASS_UPPER), new Set(CHAR_CLASS_LOWER), new Set(CHAR_CLASS_DIGIT)];
+
 function countDistinctClasses(pw: string): number {
   let classes = 0;
-  if ([...CHAR_CLASS_UPPER].some(c => pw.includes(c))) classes++;
-  if ([...CHAR_CLASS_LOWER].some(c => pw.includes(c))) classes++;
-  if ([...CHAR_CLASS_DIGIT].some(c => pw.includes(c))) classes++;
+  for (let i = 0; i < pw.length; i++) {
+    const c = pw[i];
+    if (CLASS_SETS[0].has(c)) classes++;
+    else if (CLASS_SETS[1].has(c)) classes++;
+    else if (CLASS_SETS[2].has(c)) classes++;
+  }
   return classes;
 }
 

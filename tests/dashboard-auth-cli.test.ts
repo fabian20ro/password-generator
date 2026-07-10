@@ -321,6 +321,27 @@ describe("dashboard auth CLI", () => {
       expect((err as NodeJS.ErrnoException).status).toBe(2);
     });
 
+    it("--password-length at minimum boundary (24) succeeds with exact output length", () => {
+      const directory = mkdtempSync(join(tmpdir(), "dashboard-auth-"));
+      const target = join(directory, "credentials.yaml");
+      try {
+        execFileSync(process.execPath, [
+          cli,
+          "--output", target,
+          "--username", "fabian",
+          "--password-length", "24",
+          "--secret-length", "32",
+        ], { encoding: "utf8" });
+
+        const output = readFileSync(target, "utf8");
+        const match = output.match(/password: '([^']+)'/);
+        expect(match).not.toBeNull();
+        expect(match![1]).toHaveLength(24);
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    });
+
     it("--secret-length controls secret length proportionally", () => {
       const directory = mkdtempSync(join(tmpdir(), "dashboard-auth-"));
       try {

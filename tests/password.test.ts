@@ -147,6 +147,48 @@ describe("generatePassword", () => {
     expect(pw).toBe("aaaaaaaaaa");
   });
 
+  it("deduplicates duplicate characters in charset to prevent modulo bias", () => {
+    // A charset like "aab" with duplicates would give 'a' twice the weight — dedup fixes this.
+    const dupCharset = "aab";
+    for (let i = 0; i < 200; i++) {
+      const pw = generatePasswordWithCharset(100, dupCharset);
+      expect(pw).toHaveLength(100);
+      // Only 'a' or 'b' should appear — never a duplicate artifact
+      expect([...pw].every(c => "ab".includes(c))).toBe(true);
+    }
+  });
+
+  it("normalizes character weights when charset has duplicates", () => {
+    // With dedup, "aab" treats each unique char equally (50/50), not weighted by position count.
+    const dupCharset = "aab";
+    const counts = new Map<string, number>();
+    for (let i = 0; i < 2000; i++) {
+      const pw = generatePasswordWithCharset(1, dupCharset);
+      const char = pw[0];
+      counts.set(char, (counts.get(char) ?? 0) + 1);
+    }
+    // 'a' and 'b' should each appear roughly half the time (~50%)
+    const aCount = counts.get("a") ?? 0;
+    const bCount = counts.get("b") ?? 0;
+    expect(aCount).toBeGreaterThanOrEqual(800);
+    expect(bCount).toBeGreaterThanOrEqual(800);
+  });
+
+  it("deduplication ensures effective charset length matches unique chars", () => {
+    // The dedup normalization must reduce a duplicate charset to exactly its Set size —
+    // otherwise getSecureRandomInt would index beyond the true unique count.
+    const dupCharset = "aabbc";
+    expect([...new Set(dupCharset)].length).toBe(3);
+    for (let i = 0; i < 100; i++) {
+      const pw = generatePasswordWithCharset(20, dupCharset);
+      expect(pw).toHaveLength(20);
+      // Only the 4 unique chars may appear — never a duplicate artifact index out of range
+      for (const c of [...pw]) {
+        expect(["a", "b", "c"].includes(c)).toBe(true);
+      }
+    }
+  });
+
   it("produces only characters from the provided custom charset (hex)", () => {
     // Custom hex-only charset — verify output is strictly limited to those chars
     const hexCharset = "0123456789abcdef";

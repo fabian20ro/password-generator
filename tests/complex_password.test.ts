@@ -216,7 +216,7 @@ describe("getSecureRandomInt", () => {
 
     describe("long passwords with small categories", () => {
       it("must sample extra characters uniformly from the full union when length >> categories.length", () => {
-        // 3 categories × 4 chars each, length=100 → ~97 extras.
+        // 3 categories × 2 chars each, length=100 → ~97 extras.
         // Each char should be sampled roughly equally across iterations.
         const categories = [['a', 'b'], ['A', 'B'], ['1', '2']];
         const counts: Record<string, number> = {};
@@ -231,8 +231,32 @@ describe("getSecureRandomInt", () => {
           for (const c of pw) counts[c]++;
         }
         // 500 iterations × 100 chars = 50,000 total samples across 6 options.
-        // Expect ~8333 per char ± generous tolerance; each must exceed 4000.
-        for (const c of "abAB12") expect(counts[c]).toBeGreaterThan(4000);
+        // Expected ~8333 per char. Tight tolerance catches real sampling bias:
+        // each must exceed 5500 (~3.4σ below mean), confirming uniformity.
+        const expected = (500 * 100) / 6;
+        for (const c of "abAB12") expect(counts[c]).toBeGreaterThan(5500);
+      });
+
+      it("must distribute extra characters uniformly across positions, not bias toward any slot", () => {
+        // With length=4 and 3 categories, exactly 1 extra char per password.
+        // After Fisher-Yates shuffle, each position should show balanced distribution
+        // of all chars in the union — no slot is favored for extra-char placement.
+        const categories = [['a', 'b'], ['A', 'B'], ['1', '2']];
+        const pos0Counts: Record<string, number> = {};
+        const pos3Counts: Record<string, number> = {};
+        for (const c of "abAB12") { pos0Counts[c] = 0; pos3Counts[c] = 0; }
+        for (let i = 0; i < 5000; i++) {
+          const pw = generateComplexPassword(4, categories);
+          expect(pw.length).toBe(4);
+          pos0Counts[pw[0]]++;
+          pos3Counts[pw[3]]++;
+        }
+        // Expected ~833 per position (P≈1/6 at any slot after shuffle).
+        // Threshold 400 is ~5.2σ below mean — catches real bias without flakiness.
+        for (const c of "abAB12") {
+          expect(pos0Counts[c]).toBeGreaterThan(400);
+          expect(pos3Counts[c]).toBeGreaterThan(400);
+        }
       });
     });
 

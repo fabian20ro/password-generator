@@ -320,5 +320,45 @@ describe("dashboard auth CLI", () => {
       expect(err).toBeDefined();
       expect((err as NodeJS.ErrnoException).status).toBe(2);
     });
+
+    it("--secret-length controls secret length proportionally", () => {
+      const directory = mkdtempSync(join(tmpdir(), "dashboard-auth-"));
+      try {
+        // Shorter secret length: --secret-length 32 → UUID (36) + "-" + 32 chars = ~69 total
+        const targetA = join(directory, "creds-short.yaml");
+        execFileSync(process.execPath, [
+          cli,
+          "--output", targetA,
+          "--username", "fabian",
+          "--password-length", "32",
+          "--secret-length", "32",
+        ], { encoding: "utf8" });
+
+        // Longer secret length: --secret-length 64 → UUID (36) + "-" + 64 chars = ~101 total
+        const targetB = join(directory, "creds-long.yaml");
+        execFileSync(process.execPath, [
+          cli,
+          "--output", targetB,
+          "--username", "fabian",
+          "--password-length", "32",
+          "--secret-length", "64",
+        ], { encoding: "utf8" });
+
+        const contentA = readFileSync(targetA, "utf8");
+        const contentB = readFileSync(targetB, "utf8");
+
+        const matchA = contentA.match(/secret: '([^']+)'/);
+        const matchB = contentB.match(/secret: '([^']+)'/);
+        expect(matchA).not.toBeNull();
+        expect(matchB).not.toBeNull();
+
+        const secretA = matchA![1];
+        const secretB = matchB![1];
+        // UUID prefix is fixed at 36 chars + dash; difference must equal length delta (64-32=32)
+        expect(secretB.length - secretA.length).toBe(32);
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    });
   });
 });

@@ -26,10 +26,9 @@ export function generateUsername(): string {
   return `${adjective}_${noun}_${randomFourDigitNumber()}`;
 }
 
-export function randomFourDigitNumber(): string {
+export function randomFourDigitNumber(): number {
   const range = 9000;
-  const num = getSecureRandomInt(range) + 1000;
-  return num.toString();
+  return getSecureRandomInt(range) + 1000;
 }
 
 const MAX_USERNAME_COUNT = 1024;

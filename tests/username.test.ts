@@ -3,13 +3,12 @@ import { generateUsername, generateUsernames, USERNAME_ADJECTIVES, USERNAME_NOUN
 
 describe("username generation", () => {
   describe("randomFourDigitNumber()", () => {
-    it("returns a four-digit string in range 1000–9999", () => {
+    it("returns a four-digit number in range 1000–9999", () => {
       for (let i = 0; i < 200; i++) {
         const val = randomFourDigitNumber();
-        expect(val).toMatch(/^[0-9]{4}$/);
-        const n = Number(val);
-        expect(n).toBeGreaterThanOrEqual(1000);
-        expect(n).toBeLessThanOrEqual(9999);
+        expect(typeof val).toBe("number");
+        expect(val).toBeGreaterThanOrEqual(1000);
+        expect(val).toBeLessThanOrEqual(9999);
       }
     });
 
@@ -20,7 +19,7 @@ describe("username generation", () => {
       const buckets = Array(BUCKETS).fill(0);
 
       for (let i = 0; i < SAMPLES; i++) {
-        const num = Number(randomFourDigitNumber());
+        const num = randomFourDigitNumber();
         const bucket = Math.floor((num - 1000) / bucketSize);
         buckets[bucket]++;
       }

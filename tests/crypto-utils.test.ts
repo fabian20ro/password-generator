@@ -46,15 +46,15 @@ describe("getSecureRandomInt", () => {
 
   it("produces uniform distribution across full uint32 range (zero-rejection path)", () => {
     const buckets = new Array(100).fill(0);
-    for (let i = 0; i < 50_000; i++) {
+    for (let i = 0; i < 200_000; i++) {
       const val = getSecureRandomInt(UINT32_MODULUS);
       expect(val).toBeGreaterThanOrEqual(0);
       expect(val).toBeLessThan(UINT32_MODULUS);
       buckets[Math.floor(val / (UINT32_MODULUS / 100))]++;
     }
-    // Each bucket should receive ~500 ± 3σ samples.
-    const expected = 500;
-    const tolerance = 3 * Math.sqrt(expected);
+    // Each bucket should receive ~2000 ± 5σ samples (Bonferroni correction for 100 independent bins).
+    const expected = 2000;
+    const tolerance = 5 * Math.sqrt(expected);
     for (const count of buckets) {
       expect(Math.abs(count - expected)).toBeLessThan(tolerance);
     }

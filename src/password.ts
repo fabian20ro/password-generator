@@ -110,11 +110,17 @@ export const CHAR_CLASS_DIGIT = "0123456789";
 
 const MAX_DIVERSITY_RETRIES = 20;
 
+/** Precomputed class Sets — allocated once at module load, reused per call. */
+const CLASS_SETS = [new Set(CHAR_CLASS_UPPER), new Set(CHAR_CLASS_LOWER), new Set(CHAR_CLASS_DIGIT)];
+
 function countDistinctClasses(pw: string): number {
   let classes = 0;
-  if ([...CHAR_CLASS_UPPER].some(c => pw.includes(c))) classes++;
-  if ([...CHAR_CLASS_LOWER].some(c => pw.includes(c))) classes++;
-  if ([...CHAR_CLASS_DIGIT].some(c => pw.includes(c))) classes++;
+  for (let i = 0; i < pw.length; i++) {
+    const c = pw[i];
+    if (CLASS_SETS[0].has(c)) classes++;
+    else if (CLASS_SETS[1].has(c)) classes++;
+    else if (CLASS_SETS[2].has(c)) classes++;
+  }
   return classes;
 }
 

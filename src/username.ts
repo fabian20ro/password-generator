@@ -20,16 +20,16 @@ export const USERNAME_NOUNS: readonly string[] = [
   "dragon", "phoenix", "kraken",
 ] as const;
 
-function randomFourDigitNumber(): string {
-  const range = 9000;
-  const num = getSecureRandomInt(range) + 1000;
-  return num.toString();
-}
-
 export function generateUsername(): string {
   const adjective = USERNAME_ADJECTIVES[getSecureRandomInt(USERNAME_ADJECTIVES.length)];
   const noun = USERNAME_NOUNS[getSecureRandomInt(USERNAME_NOUNS.length)];
   return `${adjective}_${noun}_${randomFourDigitNumber()}`;
+}
+
+export function randomFourDigitNumber(): string {
+  const range = 9000;
+  const num = getSecureRandomInt(range) + 1000;
+  return num.toString();
 }
 
 const MAX_USERNAME_COUNT = 1024;

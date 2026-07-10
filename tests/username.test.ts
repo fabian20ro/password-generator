@@ -1,7 +1,39 @@
 import { describe, it, expect } from "vitest";
-import { generateUsername, generateUsernames, USERNAME_ADJECTIVES, USERNAME_NOUNS } from "../src/username";
+import { generateUsername, generateUsernames, USERNAME_ADJECTIVES, USERNAME_NOUNS, randomFourDigitNumber } from "../src/username";
 
 describe("username generation", () => {
+  describe("randomFourDigitNumber()", () => {
+    it("returns a four-digit string in range 1000–9999", () => {
+      for (let i = 0; i < 200; i++) {
+        const val = randomFourDigitNumber();
+        expect(val).toMatch(/^[0-9]{4}$/);
+        const n = Number(val);
+        expect(n).toBeGreaterThanOrEqual(1000);
+        expect(n).toBeLessThanOrEqual(9999);
+      }
+    });
+
+    it("distributes uniformly across the full 1000–9999 range", () => {
+      const SAMPLES = 5000;
+      const BUCKETS = 10;
+      const bucketSize = Math.floor(9000 / BUCKETS); // 900
+      const buckets = Array(BUCKETS).fill(0);
+
+      for (let i = 0; i < SAMPLES; i++) {
+        const num = Number(randomFourDigitNumber());
+        const bucket = Math.floor((num - 1000) / bucketSize);
+        buckets[bucket]++;
+      }
+
+      const expected = SAMPLES / BUCKETS;
+      const observedMax = Math.max(...buckets);
+      const observedMin = Math.min(...buckets);
+
+      expect(observedMax).toBeLessThanOrEqual(expected * 2.5);
+      expect(observedMin).toBeGreaterThanOrEqual(expected * 0.5);
+    });
+  });
+
   describe("generateUsername()", () => {
     it("returns three underscore-separated parts: adjective_noun_4digits", () => {
       for (let i = 0; i < 50; i++) {

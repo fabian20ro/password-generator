@@ -109,6 +109,15 @@ describe("generatePassword", () => {
     expect(generateAll(2.5)).toEqual([]);
   });
 
+  it("enforces minClassesPerPassword=3 to require all three character classes", () => {
+    const passwords = generateAll(1, { minClassesPerPassword: 3 });
+    for (const pw of passwords) {
+      const hasUpper = /[A-Z]/.test(pw);
+      const hasLower = /[a-z]/.test(pw);
+      const hasDigit = /[0-9]/.test(pw);
+      expect(hasUpper && hasLower && hasDigit).toBe(true);
+    }
+  });
   it("returns a string of the requested length and contains characters from all categories", () => {
     const categories = [["abc"], ["123"], ["!@#"]];
     const length = 10;

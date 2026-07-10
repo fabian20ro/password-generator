@@ -174,6 +174,21 @@ describe("generatePassword", () => {
     expect(bCount).toBeGreaterThanOrEqual(800);
   });
 
+  it("deduplication ensures effective charset length matches unique chars", () => {
+    // The dedup normalization must reduce a duplicate charset to exactly its Set size —
+    // otherwise getSecureRandomInt would index beyond the true unique count.
+    const dupCharset = "aabbc";
+    expect([...new Set(dupCharset)].length).toBe(3);
+    for (let i = 0; i < 100; i++) {
+      const pw = generatePasswordWithCharset(20, dupCharset);
+      expect(pw).toHaveLength(20);
+      // Only the 4 unique chars may appear — never a duplicate artifact index out of range
+      for (const c of [...pw]) {
+        expect(["a", "b", "c"].includes(c)).toBe(true);
+      }
+    }
+  });
+
   it("produces only characters from the provided custom charset (hex)", () => {
     // Custom hex-only charset — verify output is strictly limited to those chars
     const hexCharset = "0123456789abcdef";

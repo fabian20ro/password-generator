@@ -95,6 +95,7 @@ export function generatePasswordWithCharset(length: number, charset: string): st
   if (!Number.isInteger(length) || length <= 0 || !charset) return "";
   if (length > MAX_LENGTH) throw new Error(`Length exceeds maximum allowed: ${MAX_LENGTH}`);
   const chars = Array.from(new Set(charset));
+  if (chars.length === 0) return "";
   const charsetLen = chars.length;
   const passwordArray = new Array(length);
   for (let i = 0; i < length; i++) {

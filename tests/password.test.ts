@@ -158,6 +158,11 @@ describe("generatePassword", () => {
     }
   });
 
+  it("returns empty string for charset that deduplicates to nothing", () => {
+    // An empty-string charset is blocked by !charset, but defense-in-depth must not infinite-loop.
+    expect(generatePasswordWithCharset(24, "")).toBe("");
+  });
+
   it("normalizes character weights when charset has duplicates", () => {
     // With dedup, "aab" treats each unique char equally (50/50), not weighted by position count.
     const dupCharset = "aab";

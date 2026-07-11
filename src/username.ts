@@ -40,7 +40,18 @@ export function randomFourDigitNumber(): number {
 
 const MAX_USERNAME_COUNT = 1024;
 
-export function generateUsernames(count: number): string[] {
+export function generateUsernames(count: number, maxAttempts = MAX_USERNAME_COUNT * 16): string[] {
   if (!Number.isInteger(count) || count <= 0 || count > MAX_USERNAME_COUNT) return [];
-  return Array.from({ length: count }, () => generateUsername());
+  const seen = new Set<string>();
+  const result: string[] = [];
+  let attempts = 0;
+  while (result.length < count && attempts < maxAttempts) {
+    const username = generateUsername();
+    if (!seen.has(username)) {
+      seen.add(username);
+      result.push(username);
+    }
+    attempts++;
+  }
+  return result;
 }

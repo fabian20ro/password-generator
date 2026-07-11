@@ -88,6 +88,12 @@ describe("username generation", () => {
       expect(usernames).toHaveLength(1);
       expect(usernames[0]).toMatch(/^[A-Z][a-z]+_[A-Z][a-z]+_[0-9]{4}$/);
     });
+
+    it("produces no duplicates within a batch", () => {
+      const usernames = generateUsernames(20);
+      const uniqueCount = new Set(usernames).size;
+      expect(uniqueCount).toBe(usernames.length);
+    });
   });
 
   it("matches the pattern [A-Z][a-z]+_[A-Z][a-z]+_[0-9]+", () => {

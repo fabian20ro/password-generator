@@ -20,11 +20,18 @@ export const USERNAME_NOUNS: readonly string[] = [
   "dragon", "phoenix", "kraken",
 ] as const;
 
+function capitalize(s: string): string {
+  if (!s) return s;
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 export function generateUsername(): string {
   const adjective = USERNAME_ADJECTIVES[getSecureRandomInt(USERNAME_ADJECTIVES.length)];
   const noun = USERNAME_NOUNS[getSecureRandomInt(USERNAME_NOUNS.length)];
-  return `${adjective}_${noun}_${randomFourDigitNumber()}`;
+  return `${capitalize(adjective)}_${capitalize(noun)}_${randomFourDigitNumber()}`;
 }
+
+export { capitalize };
 
 export function randomFourDigitNumber(): number {
   const range = 9000;

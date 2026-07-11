@@ -20,6 +20,10 @@ export const USERNAME_NOUNS: readonly string[] = [
   "dragon", "phoenix", "kraken",
 ] as const;
 
+/**
+ * Capitalizes the first character of a string.
+ * Returns the input unchanged for empty or falsy strings.
+ */
 function capitalize(s: string): string {
   if (!s) return s;
   return s.charAt(0).toUpperCase() + s.slice(1);

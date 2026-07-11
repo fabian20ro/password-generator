@@ -65,22 +65,22 @@ describe("username generation", () => {
       expect(generateUsernames(0)).toEqual([]);
     });
 
-    it("returns an empty array for negative counts", () => {
-      expect(generateUsernames(-1)).toEqual([]);
-      expect(generateUsernames(-10)).toEqual([]);
+    it("throws for negative counts", () => {
+      expect(() => generateUsernames(-1)).toThrow(RangeError);
+      expect(() => generateUsernames(-10)).toThrow(RangeError);
     });
 
-    it("returns an empty array for excessive count (> 1024)", () => {
-      expect(generateUsernames(1025)).toEqual([]);
-      expect(generateUsernames(10000)).toEqual([]);
+    it("throws for excessive count (> 1024)", () => {
+      expect(() => generateUsernames(1025)).toThrow(RangeError);
+      expect(() => generateUsernames(10000)).toThrow(RangeError);
     });
 
-    it("returns an empty array for non-integer counts", () => {
-      expect(generateUsernames(2.5)).toEqual([]);
+    it("throws for non-integer counts", () => {
+      expect(() => generateUsernames(2.5)).toThrow(RangeError);
     });
 
-    it("returns an empty array for NaN count", () => {
-      expect(generateUsernames(NaN)).toEqual([]);
+    it("throws for NaN count", () => {
+      expect(() => generateUsernames(NaN)).toThrow(RangeError);
     });
 
     it("returns an array of length 1 when count is 1", () => {

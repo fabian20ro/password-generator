@@ -3,13 +3,12 @@ import { generateUsername, generateUsernames, USERNAME_ADJECTIVES, USERNAME_NOUN
 
 describe("username generation", () => {
   describe("randomFourDigitNumber()", () => {
-    it("returns a four-digit string in range 1000–9999", () => {
+    it("returns a four-digit number in range 1000–9999", () => {
       for (let i = 0; i < 200; i++) {
         const val = randomFourDigitNumber();
-        expect(val).toMatch(/^[0-9]{4}$/);
-        const n = Number(val);
-        expect(n).toBeGreaterThanOrEqual(1000);
-        expect(n).toBeLessThanOrEqual(9999);
+        expect(typeof val).toBe("number");
+        expect(val).toBeGreaterThanOrEqual(1000);
+        expect(val).toBeLessThanOrEqual(9999);
       }
     });
 
@@ -20,7 +19,7 @@ describe("username generation", () => {
       const buckets = Array(BUCKETS).fill(0);
 
       for (let i = 0; i < SAMPLES; i++) {
-        const num = Number(randomFourDigitNumber());
+        const num = randomFourDigitNumber();
         const bucket = Math.floor((num - 1000) / bucketSize);
         buckets[bucket]++;
       }
@@ -35,29 +34,28 @@ describe("username generation", () => {
   });
 
   describe("generateUsername()", () => {
-    it("returns three underscore-separated parts: adjective_noun_4digits", () => {
+    it("returns three underscore-separated parts: Adjective_Noun_4digits", () => {
       for (let i = 0; i < 50; i++) {
         const username = generateUsername();
         const parts = username.split("_");
         expect(parts).toHaveLength(3);
-        expect(parts[0]).toMatch(/^[a-z]+$/);
-        expect(parts[1]).toMatch(/^[a-z]+$/);
+        expect(parts[0]).toMatch(/^[A-Z][a-z]*$/);
+        expect(parts[1]).toMatch(/^[A-Z][a-z]*$/);
         expect(parts[2]).toMatch(/^[0-9]{4}$/);
       }
     });
 
-    it("returns a string in the full lowercase-alpha format", () => {
+    it("returns a string in the Capitalized_Title format", () => {
       for (let i = 0; i < 50; i++) {
         const username = generateUsername();
-        expect(username).toMatch(/^[a-z]+_[a-z]+_[0-9]{4}$/);
+        expect(username).toMatch(/^[A-Z][a-z]+_[A-Z][a-z]+_[0-9]{4}$/);
       }
     });
 
-    it("returns a string with no uppercase letters or special characters", () => {
+    it("returns a string with no lowercase letters in the first letter of words", () => {
       for (let i = 0; i < 50; i++) {
         const username = generateUsername();
-        expect(username).not.toMatch(/[A-Z]/);
-        expect(username).not.toMatch(/[^a-z0-9_]/);
+        expect(username).toMatch(/^[A-Z][a-z]+_[A-Z][a-z]+_[0-9]{4}$/);
       }
     });
   });
@@ -88,14 +86,20 @@ describe("username generation", () => {
     it("returns an array of length 1 when count is 1", () => {
       const usernames = generateUsernames(1);
       expect(usernames).toHaveLength(1);
-      expect(usernames[0]).toMatch(/^[a-z]+_[a-z]+_[0-9]{4}$/);
+      expect(usernames[0]).toMatch(/^[A-Z][a-z]+_[A-Z][a-z]+_[0-9]{4}$/);
+    });
+
+    it("produces no duplicates within a batch", () => {
+      const usernames = generateUsernames(20);
+      const uniqueCount = new Set(usernames).size;
+      expect(uniqueCount).toBe(usernames.length);
     });
   });
 
-  it("matches the pattern [a-z]+_[a-z]+_[0-9]+", () => {
+  it("matches the pattern [A-Z][a-z]+_[A-Z][a-z]+_[0-9]+", () => {
     for (let i = 0; i < 50; i++) {
       const username = generateUsername();
-      expect(username).toMatch(/^[a-z]+_[a-z]+_[0-9]{4}$/);
+      expect(username).toMatch(/^[A-Z][a-z]+_[A-Z][a-z]+_[0-9]{4}$/);
     }
   });
 
@@ -103,7 +107,7 @@ describe("username generation", () => {
     const usernames = generateUsernames(5);
     expect(usernames).toHaveLength(5);
     usernames.forEach(username => {
-      expect(username).toMatch(/^[a-z]+_[a-z]+_[0-9]{4}$/);
+      expect(username).toMatch(/^[A-Z][a-z]+_[A-Z][a-z]+_[0-9]{4}$/);
     });
   });
 
@@ -128,8 +132,8 @@ describe("username generation", () => {
     for (let i = 0; i < 100; i++) {
       const username = generateUsername();
       const [adj, noun] = username.split("_");
-      expect(USERNAME_ADJECTIVES).toContain(adj);
-      expect(USERNAME_NOUNS).toContain(noun);
+      expect(USERNAME_ADJECTIVES).toContain(adj.toLowerCase());
+      expect(USERNAME_NOUNS).toContain(noun.toLowerCase());
     }
   });
 

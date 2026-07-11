@@ -21,7 +21,11 @@ export function getSecureRandomInt(max: number): number {
   const buf = new Uint32Array(1);
 
   do {
-    globalThis.crypto!.getRandomValues(buf);
+    try {
+      globalThis.crypto!.getRandomValues(buf);
+    } catch {
+      throw new Error("Crypto API unavailable — cannot generate secure random values");
+    }
   } while (buf[0] >= threshold);
 
   return buf[0] % max;

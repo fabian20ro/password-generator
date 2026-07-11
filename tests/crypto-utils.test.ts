@@ -141,6 +141,26 @@ describe("getSecureRandomInt", () => {
     }
   });
 
+  it("throws when getRandomValues throws at runtime (try/catch guards against call-time failures)", () => {
+    const realCrypto = (globalThis as any).crypto;
+    Object.defineProperty(globalThis, "crypto", { value: { getRandomValues: () => { throw new Error("simulated crypto error"); } }, configurable: true, writable: true });
+    try {
+      expect(() => getSecureRandomInt(10)).toThrow("Crypto API unavailable");
+    } finally {
+      Object.defineProperty(globalThis, "crypto", { value: realCrypto, configurable: true, writable: true });
+    }
+  });
+
+  it("throws when getRandomValues throws TypeError at runtime (non-standard rejection)", () => {
+    const realCrypto = (globalThis as any).crypto;
+    Object.defineProperty(globalThis, "crypto", { value: { getRandomValues: () => { throw new TypeError("bad buffer"); } }, configurable: true, writable: true });
+    try {
+      expect(() => getSecureRandomInt(10)).toThrow("Crypto API unavailable");
+    } finally {
+      Object.defineProperty(globalThis, "crypto", { value: realCrypto, configurable: true, writable: true });
+    }
+  });
+
   it("throws if max is Infinity (Number.isInteger returns true for Infinity)", () => {
     expect(() => getSecureRandomInt(Infinity)).toThrow("Max must be between 1 and UINT32_MODULUS");
     expect(() => getSecureRandomInt(-Infinity)).toThrow("Max must be between 1 and UINT32_MODULUS");

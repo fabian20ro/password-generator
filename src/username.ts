@@ -20,6 +20,10 @@ export const USERNAME_NOUNS: readonly string[] = [
   "dragon", "phoenix", "kraken",
 ] as const;
 
+/**
+ * Capitalizes the first character of a string.
+ * Returns the input unchanged for empty or falsy strings.
+ */
 function capitalize(s: string): string {
   if (!s) return s;
   return s.charAt(0).toUpperCase() + s.slice(1);
@@ -41,7 +45,9 @@ export function randomFourDigitNumber(): number {
 const MAX_USERNAME_COUNT = 1024;
 
 export function generateUsernames(count: number, maxAttempts = MAX_USERNAME_COUNT * 16): string[] {
-  if (!Number.isInteger(count) || count <= 0 || count > MAX_USERNAME_COUNT) return [];
+  if (!Number.isInteger(count) || count < 0 || count > MAX_USERNAME_COUNT) {
+    throw new RangeError(`Invalid username count: ${count}. Must be between 0 and ${MAX_USERNAME_COUNT}.`);
+  }
   const seen = new Set<string>();
   const result: string[] = [];
   let attempts = 0;

@@ -11,7 +11,7 @@
     "dashboard-auth": "node scripts/generate-dashboard-auth.mjs"
   },
   "devDependencies": {
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "vite": "^8.0.16",
     "vitest": "^4.1.10"
   }

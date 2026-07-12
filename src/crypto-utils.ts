@@ -20,9 +20,11 @@ export function getSecureRandomInt(max: number): number {
   const threshold = UINT32_MODULUS - (UINT32_MODULUS % max);
   const buf = new Uint32Array(1);
 
+  const getRandomValues = crypto!.bind(globalThis.crypto!);
+
   do {
     try {
-      globalThis.crypto!.getRandomValues(buf);
+      getRandomValues(buf);
     } catch {
       throw new Error("Crypto API unavailable — cannot generate secure random values");
     }

@@ -140,7 +140,7 @@ describe("username generation", () => {
   it("distributes adjective and noun selection roughly uniformly", () => {
     // Verifies the RNG selects each vocabulary item with approximately equal probability.
     // Catches subtle bias that format-only tests miss.
-    const SAMPLES = 1000;
+    const SAMPLES = 5000;
     const adjCounts = new Map<string, number>();
     const nounCounts = new Map<string, number>();
 

@@ -342,6 +342,57 @@ describe("dashboard auth CLI", () => {
       }
     });
 
+    it("escapes single quotes in username via yamlQuote", () => {
+      const directory = mkdtempSync(join(tmpdir(), "dashboard-auth-"));
+      const target = join(directory, "credentials.yaml");
+      try {
+        execFileSync(process.execPath, [
+          cli,
+          "--output", target,
+          "--username", "fabian",
+          "--password-length", "32",
+          "--secret-length", "32",
+        ], { encoding: "utf8" });
+
+        const output = readFileSync(target, "utf8");
+        // yamlQuote wraps every value in single quotes — username line must match this shape
+        const userLineMatch = output.match(/^    username: '([^']+)'$/m);
+        expect(userLineMatch).not.toBeNull();
+        expect(userLineMatch![1]).toBe("fabian");
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    });
+
+    it("--json output is exact 3-key JSON schema", () => {
+      const directory = mkdtempSync(join(tmpdir(), "dashboard-auth-"));
+      const target = join(directory, "credentials.json");
+      try {
+        const stdout = execFileSync(process.execPath, [
+          cli,
+          "--output", target,
+          "--username", "fabian",
+          "--password-length", "32",
+          "--secret-length", "32",
+          "--json",
+        ], { encoding: "utf8" });
+
+        const parsed = JSON.parse(readFileSync(target, "utf8")) as Record<string, unknown>;
+        const keys = Object.keys(parsed).sort();
+        expect(keys).toEqual(["password", "secret", "username"]);
+        expect(typeof parsed.username).toBe("string");
+        expect(typeof parsed.password).toBe("string");
+        expect(typeof parsed.secret).toBe("string");
+
+        // Security invariant: password and secret are never printed to the terminal
+        const stdoutStr = String(stdout);
+        expect(stdoutStr).not.toContain(parsed.password as string);
+        expect(stdoutStr).not.toContain(parsed.secret as string);
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    });
+
     it("--secret-length controls secret length proportionally", () => {
       const directory = mkdtempSync(join(tmpdir(), "dashboard-auth-"));
       try {

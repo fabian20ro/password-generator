@@ -189,8 +189,11 @@ describe("scheduleButtonReset", () => {
     scheduleButtonReset(target, null as any, reset);
     expect(resetTimeouts.has(target)).toBe(true);
 
-    // With a null delay, setTimeout treats it as 0 — so we must advance past 0 first.
-    vi.advanceTimersByTime(0);
+    // null is coerced to DEFAULT_RESET_DELAY_MS (300ms), so 299ms → not yet fired.
+    vi.advanceTimersByTime(DEFAULT_RESET_DELAY_MS - 1);
+    expect(reset).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(1);
     expect(reset).toHaveBeenCalledTimes(1);
   });
 

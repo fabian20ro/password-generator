@@ -37,12 +37,17 @@ export function scheduleButtonReset(
 ): void {
   cancelButtonReset(target);
 
+  // Coerce null/undefined to the documented default; NaN → clamp to 0.
+  const effectiveDelay = (delayMs === null || delayMs === undefined)
+    ? DEFAULT_RESET_DELAY_MS
+    : Number.isNaN(delayMs) ? 0 : Math.max(0, delayMs);
+
   const timeoutId = setTimeout(() => {
     if (resetTimeouts.get(target) === timeoutId) {
       resetTimeouts.delete(target);
       reset();
     }
-  }, delayMs);
+  }, effectiveDelay);
 
   resetTimeouts.set(target, timeoutId);
 }

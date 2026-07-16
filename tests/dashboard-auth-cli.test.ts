@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, statSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
@@ -388,6 +388,36 @@ describe("dashboard auth CLI", () => {
         const stdoutStr = String(stdout);
         expect(stdoutStr).not.toContain(parsed.password as string);
         expect(stdoutStr).not.toContain(parsed.secret as string);
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    });
+
+    it("refuses to overwrite an existing credentials file", () => {
+      const directory = mkdtempSync(join(tmpdir(), "dashboard-auth-"));
+      try {
+        const target = join(directory, "credentials.yaml");
+        // Pre-create the output so writeFileSync(flag:"wx") must refuse
+        writeFileSync(target, "old content\n", { encoding: "utf8" });
+
+        let err: NodeJS.ErrnoException | undefined;
+        try {
+          execFileSync(process.execPath, [
+            cli,
+            "--output", target,
+            "--username", "fabian",
+            "--password-length", "32",
+            "--secret-length", "32",
+          ], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+        } catch (caught) {
+          err = caught as NodeJS.ErrnoException;
+        }
+
+        expect(err).toBeDefined();
+        expect((err as NodeJS.ErrnoException).status).toBe(2);
+        const combinedOutput = [String(err!.stdout ?? ""), String(err!.stderr ?? "")].join("\n");
+        // The CLI's catch block prints the thrown error + usage; "exist" covers EEXIST wording
+        expect(combinedOutput.toLowerCase()).toMatch(/exist|eexist/i);
       } finally {
         rmSync(directory, { recursive: true, force: true });
       }

@@ -37,6 +37,12 @@ export function scheduleButtonReset(
 ): void {
   cancelButtonReset(target);
 
+  // Reject a missing or non-callable reset callback — a stale schedule with no
+  // handler would fire and silently throw on `reset()`, crashing the page.
+  if (typeof reset !== "function") {
+    return;
+  }
+
   // Coerce null/undefined to the documented default; NaN → clamp to 0.
   const effectiveDelay = (delayMs === null || delayMs === undefined)
     ? DEFAULT_RESET_DELAY_MS

@@ -393,6 +393,41 @@ describe("scheduleButtonReset", () => {
     expect(resetTimeouts.has(busy)).toBe(true);
   });
 
+  it ("silently ignores a missing (undefined) reset callback without scheduling", () => {
+    const fresh = { id: "missing-reset" };
+    expect(resetTimeouts.has(fresh)).toBe(false);
+
+    // Calling with undefined reset — should not schedule, must be no-op.
+    scheduleButtonReset(fresh, 100, undefined as any);
+    expect(resetTimeouts.has(fresh)).toBe(false);
+    expect(isResetScheduled(fresh)).toBe(false);
+
+    // Advancing time must not fire anything (nothing was scheduled).
+    vi.advanceTimersByTime(200);
+    expect(resetTimeouts.has(fresh)).toBe(false);
+  });
+
+  it ("silently ignores a non-function reset callback without scheduling", () => {
+    const fresh = { id: "non-fn-reset" };
+    expect(resetTimeouts.has(fresh)).toBe(false);
+
+    scheduleButtonReset(fresh, 100, null as any);
+    expect(resetTimeouts.has(fresh)).toBe(false);
+    expect(isResetScheduled(fresh)).toBe(false);
+
+    vi.advanceTimersByTime(200);
+    expect(resetTimeouts.has(fresh)).toBe(false);
+  });
+
+  it ("silently ignores a string reset callback without scheduling", () => {
+    const fresh = { id: "string-reset" };
+    expect(resetTimeouts.has(fresh)).toBe(false);
+
+    scheduleButtonReset(fresh, 100, "not-a-function" as any);
+    expect(resetTimeouts.has(fresh)).toBe(false);
+    expect(isResetScheduled(fresh)).toBe(false);
+  });
+
   it ("ensures cleanup occurs even if the reset function throws", () => {
     const target = { id: "test" };
     const reset = vi.fn(() => {

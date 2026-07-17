@@ -18,7 +18,10 @@ const ERROR_COPY_LABEL = "Copy failed";
 const USERNAME_COUNT = 10;
 
 const statusEl = document.getElementById("status") as HTMLParagraphElement;
+if (statusEl) statusEl.setAttribute("role", "status");
+
 const srStatusEl = document.getElementById("sr-status") as HTMLDivElement;
+if (srStatusEl) srStatusEl.setAttribute("role", "status");
 
 function announceStatus(message: string, isError?: boolean): void {
   if (statusEl) {

@@ -152,8 +152,19 @@ export function generateAll(count: number = 1, options?: GenerateAllOptions): st
       const pw = generatePassword(length);
       if (countDistinctClasses(pw) >= minClasses) return pw;
     }
-    // Fallback: use whatever was generated on last attempt.
-    return generatePassword(length);
+    // Fallback: guarantee diversity by injecting missing-class characters.
+    const chars = Array.from(generatePassword(length));
+    const neededSets = CLASS_SETS.slice(0, minClasses).filter(set => {
+      let hasChar = false;
+      for (const c of chars) if (set.has(c)) { hasChar = true; break; }
+      return !hasChar;
+    });
+    for (let i = 0; i < neededSets.length && i < length; i++) {
+      const set = neededSets[i];
+      const replacementIdx = getSecureRandomInt(length);
+      chars[replacementIdx] = [...set][getSecureRandomInt(set.size)];
+    }
+    return chars.join('');
   }
 
   const result: string[] = [];

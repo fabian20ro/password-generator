@@ -4,6 +4,10 @@ import { scheduleButtonReset } from "./button-reset";
 import { generateUsernames } from "./username";
 
 const COPY_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M3.5 10.5h-1a1.5 1.5 0 0 1-1.5-1.5v-6a1.5 1.5 0 0 1 1.5-1.5h6a1.5 1.5 0 0 1 1.5 1.5v1"/></svg>`;
+
+/** Duration before the copy button auto-resets after a successful copy. */
+export const COPY_BUTTON_RESET_MS = 1500;
+
 const CHECK_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.5 3.5 6.5-8"/></svg>`;
 
 const DEFAULT_COPY_LABEL = "Copy password";
@@ -45,7 +49,7 @@ async function copyToClipboard(text: string, btn: HTMLButtonElement): Promise<vo
     btn.setAttribute("aria-label", COPIED_COPY_LABEL);
     announceStatus("Value copied to clipboard.");
 
-    scheduleButtonReset(btn, 1500, () => {
+    scheduleButtonReset(btn, COPY_BUTTON_RESET_MS, () => {
       resetButtonState(btn);
     });
     return;

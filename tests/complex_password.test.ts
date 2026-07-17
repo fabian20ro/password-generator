@@ -72,8 +72,14 @@ describe("getSecureRandomInt", () => {
       expect(pw).toMatch(/[!]/);
     });
 
-    it("should handle categories containing an empty string", () => {
+    it("should handle categories containing an empty array", () => {
       const categories = [['A', 'B'], []];
+      const pw = generateComplexPassword(10, categories);
+      expect(pw).toBe("");
+    });
+
+    it("should return empty string when a category contains only an empty string", () => {
+      const categories = [['A', 'B'], ['']];
       const pw = generateComplexPassword(10, categories);
       expect(pw).toBe("");
     });

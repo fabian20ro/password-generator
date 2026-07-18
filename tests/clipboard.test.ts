@@ -90,6 +90,24 @@ describe("canCopyToClipboard", () => {
 
     expect(canCopyToClipboard()).toBe(false);
   });
+
+  it("falls through to legacy path when navigator.clipboard is a primitive (e.g. string)", () => {
+    vi.stubGlobal("navigator", { clipboard: "not-an-object" });
+    vi.stubGlobal("document", { body: {} });
+
+    // getClipboardAPI returns null because `clipboard` is not truthy as an object;
+    // function must fall through to document.body legacy check and return true.
+    expect(canCopyToClipboard()).toBe(true);
+  });
+
+  it("returns false when navigator exists but has no clipboard property", () => {
+    vi.stubGlobal("navigator", {});
+    vi.unstubAllGlobals(); // removes stubs including document — body is undefined in plain vitest
+
+    // getClipboardAPI: nav.clipboard is undefined (falsy) → returns null;
+    // legacy check also fails because typeof document === "undefined".
+    expect(canCopyToClipboard()).toBe(false);
+  });
 });
 
 describe("copyTextToClipboard", () => {

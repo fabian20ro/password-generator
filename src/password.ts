@@ -159,9 +159,15 @@ export function generateAll(count: number = 1, options?: GenerateAllOptions): st
       for (const c of chars) if (set.has(c)) { hasChar = true; break; }
       return !hasChar;
     });
+    // Track modified positions to prevent overwriting previously injected characters.
+    const usedPositions = new Set<number>();
     for (let i = 0; i < neededSets.length && i < length; i++) {
       const set = neededSets[i];
-      const replacementIdx = getSecureRandomInt(length);
+      let replacementIdx: number;
+      do {
+        replacementIdx = getSecureRandomInt(length);
+      } while (usedPositions.has(replacementIdx));
+      usedPositions.add(replacementIdx);
       chars[replacementIdx] = [...set][getSecureRandomInt(set.size)];
     }
     return chars.join('');

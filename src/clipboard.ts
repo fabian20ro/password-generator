@@ -51,6 +51,40 @@ function fallbackCopy(text: string): boolean {
 export const CLIPBOARD_TIMEOUT_MS = 3000;
 
 /**
+ * Verifies that the Clipboard API actually works in this context — not just
+ * that it exists. Attempts a zero-length write via navigator.clipboard.writeText("")
+ * and returns true if it succeeds (or resolves without rejection). Returns false
+ * on any error, timeout, or rejection. Use this to gate UI decisions (e.g., show
+ * an "clipboard unavailable" banner) rather than relying solely on canCopyToClipboard(),
+ * which only checks API existence.
+ *
+ * Safe: does not expose user data, does not mutate DOM, and completes within
+ * the configured timeout even if the browser hangs.
+ */
+export async function probeClipboard(timeoutMs = CLIPBOARD_TIMEOUT_MS): Promise<boolean> {
+  const api = getClipboardAPI();
+
+  // Short-circuit when API object is absent — no point attempting a write.
+  if (!api || typeof api.writeText !== "function") {
+    return false;
+  }
+
+  try {
+    await Promise.race([
+      api.writeText(""),
+      new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error("probe timeout")), timeoutMs);
+      }),
+    ]);
+    return true;
+  } catch {
+    // writeText rejected (permission denied, blocked context), threw a non-Error
+    // value, or timed out — all indicate the API is unusable right now.
+    return false;
+  }
+}
+
+/**
  * Returns navigator.clipboard when available, null otherwise. Single point of
  * access for the Clipboard API probe — avoids repeating the double-cast pattern
  * used across canCopyToClipboard and copyTextToClipboard's secure-context check.

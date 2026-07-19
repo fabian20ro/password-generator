@@ -46,17 +46,7 @@ function fallbackCopy(text: string): boolean {
 
 export const CLIPBOARD_TIMEOUT_MS = 3000;
 
-/**
- * Verifies that the Clipboard API actually works in this context — not just
- * that it exists. Attempts a zero-length write via navigator.clipboard.writeText("")
- * and returns true if it succeeds (or resolves without rejection). Returns false
- * on any error, timeout, or rejection. Use this to gate UI decisions (e.g., show
- * an "clipboard unavailable" banner) rather than relying solely on canCopyToClipboard(),
- * which only checks API existence.
- *
- * Safe: does not expose user data, does not mutate DOM, and completes within
- * the configured timeout even if the browser hangs.
- */
+/** Verifies Clipboard API works at runtime via a zero-length write; returns false on any error/timeout. Safe — no DOM mutation or user data exposure. */
 export async function probeClipboard(timeoutMs = CLIPBOARD_TIMEOUT_MS): Promise<boolean> {
   const api = getClipboardAPI();
 
@@ -80,11 +70,7 @@ export async function probeClipboard(timeoutMs = CLIPBOARD_TIMEOUT_MS): Promise<
   }
 }
 
-/**
- * Returns navigator.clipboard when available, null otherwise. Single point of
- * access for the Clipboard API probe — avoids repeating the double-cast pattern
- * used across canCopyToClipboard and copyTextToClipboard's secure-context check.
- */
+/** Returns navigator.clipboard when available, null otherwise — single access point for Clipboard API checks. */
 function getClipboardAPI(): Clipboard | null {
   if (typeof navigator !== "undefined") {
     const nav = navigator as { clipboard?: unknown };
@@ -95,13 +81,7 @@ function getClipboardAPI(): Clipboard | null {
   return null;
 }
 
-/**
- * Synchronous probe: returns true if either the modern Clipboard API is available
- * (navigator.clipboard.writeText is a function) or the legacy fallback path could
- * work (document.body exists — execCommand("copy") may still succeed even without
- * navigator.clipboard). Does NOT mutate DOM and does NOT invoke any browser APIs.
- * Safe to call on every render cycle for conditional UI rendering.
- */
+/** Sync probe: true if modern Clipboard API or legacy execCommand path is available. No DOM mutation; safe for every render cycle. */
 export function canCopyToClipboard(): boolean {
   const api = getClipboardAPI();
   if (api && typeof api.writeText === "function") {

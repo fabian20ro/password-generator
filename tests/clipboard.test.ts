@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { vi } from "vitest";
-import { canCopyToClipboard, copyTextToClipboard } from "../src/clipboard";
+import { canCopyToClipboard, copyTextToClipboard, probeClipboard } from "../src/clipboard";
 
 describe("canCopyToClipboard", () => {
   it("returns true when navigator.clipboard.writeText is a function (modern API)", async () => {
@@ -678,5 +678,109 @@ describe("copyTextToClipboard", () => {
 
     expect(result).toBe(false);
     clearTimeoutSpy.mockRestore();
+  });
+});
+
+describe("probeClipboard", () => {
+  it("returns true when navigator.clipboard.writeText resolves successfully with empty string", async () => {
+    vi.stubGlobal("navigator", {
+      clipboard: {
+        async writeText(_text: string) {},
+      },
+    });
+
+    const result = await probeClipboard();
+
+    expect(result).toBe(true);
+  });
+
+  it("returns false when navigator.clipboard is undefined (no API)", async () => {
+    vi.unstubAllGlobals();
+
+    const result = await probeClipboard();
+
+    expect(result).toBe(false);
+  });
+
+  it("returns false when writeText rejects (permission denied)", async () => {
+    vi.stubGlobal("navigator", {
+      clipboard: {
+        async writeText() {
+          throw new Error("PermissionDeniedError");
+        },
+      },
+    });
+
+    const result = await probeClipboard();
+
+    expect(result).toBe(false);
+  });
+
+  it("returns false when writeText throws a non-Error value", async () => {
+    vi.stubGlobal("navigator", {
+      clipboard: {
+        async writeText() {
+          throw "string error";
+        },
+      },
+    });
+
+    const result = await probeClipboard();
+
+    expect(result).toBe(false);
+  });
+
+  it("returns false on timeout when writeText hangs", async () => {
+    vi.stubGlobal("navigator", {
+      clipboard: {
+        // Never resolves — simulates a hung browser.
+        writeText() {
+          return new Promise(() => {});
+        },
+      },
+    });
+
+    const result = await probeClipboard(50); // short timeout for test speed
+
+    expect(result).toBe(false);
+  });
+
+  it("respects custom timeout parameter", async () => {
+    vi.stubGlobal("navigator", {
+      clipboard: {
+        writeText() {
+          return new Promise(() => {});
+        },
+      },
+    });
+
+    const start = Date.now();
+    await probeClipboard(100);
+    const elapsed = Date.now() - start;
+
+    expect(elapsed).toBeGreaterThanOrEqual(90); // allow small variance
+  });
+
+  it("does not leak the timer when writeText resolves before timeout", async () => {
+    vi.stubGlobal("navigator", {
+      clipboard: {
+        async writeText(_text: string) {},
+      },
+    });
+
+    const result = await probeClipboard();
+
+    expect(result).toBe(true);
+    // No unhandled rejection, no error — timer should have been cleared by success path.
+  });
+
+  it("returns false when clipboard exists but writeText is not a function", async () => {
+    vi.stubGlobal("navigator", {
+      clipboard: {}, // no writeText property
+    });
+
+    const result = await probeClipboard();
+
+    expect(result).toBe(false);
   });
 });

@@ -1,8 +1,4 @@
-/**
- * Fallback copy using document.execCommand("copy") for environments where
- * navigator.clipboard is unavailable. Requires a focused textarea element to
- * work reliably in older browsers (IE11, old Firefox).
- */
+/** Fallback copy via document.execCommand("copy") for non-modern contexts. */
 function fallbackCopy(text: string): boolean {
   if (typeof document === "undefined" || typeof document.createElement !== "function") {
     return false;

@@ -4,19 +4,15 @@ function fallbackCopy(text: string): boolean {
     return false;
   }
 
-  // Guard against document.body being null/undefined — e.g. during early DOM
-  // lifecycle or unusual browser states. Without this, `body.appendChild` at
-  // line 17 would throw a TypeError that propagates up uncaught (copyTextToClipboard
-  // calls fallbackCopy without try/catch). Returning false here keeps the user
-  // experience clean and lets the caller handle the failure gracefully.
-  if (!(document as { body?: unknown }).body) {
+  // Guard against document.body being null/undefined during early DOM lifecycle.
+  if (!document.body) {
     return false;
   }
 
   const textarea = document.createElement("textarea");
   textarea.value = text;
   textarea.setAttribute("readonly", "");
-  textarea.tabIndex = -1; // ensures programmatic focus on mobile browsers where unfocused elements can't be selected
+  textarea.tabIndex = -1;
   textarea.style.position = "absolute";
   textarea.style.left = "-9999px";
   document.body.appendChild(textarea);
@@ -26,16 +22,14 @@ function fallbackCopy(text: string): boolean {
     try {
       textarea.select();
       textarea.setSelectionRange(0, textarea.value.length);
-    } catch {
+    } catch (e) {
       // selection can fail in some browsers (e.g., off-screen textarea on mobile)
       // but execCommand("copy") may still succeed — proceed anyway.
     }
     success = document.execCommand("copy");
-  } catch {
+  } catch (err) {
     // ignore — success stays false
   } finally {
-    // Guard against removeChild throwing if appendChild failed silently or
-    // body is unavailable — without this, a single failure cascades into two.
     try {
       document.body.removeChild(textarea);
     } catch {}
@@ -45,8 +39,9 @@ function fallbackCopy(text: string): boolean {
 }
 
 export const CLIPBOARD_TIMEOUT_MS = 3000;
+export const MAX_CLIPBOARD_TEXT_BYTES = 10240; // ~10 KiB upper bound for clipboard payloads
 
-/** Verifies Clipboard API works at runtime via a zero-length write; returns false on any error/timeout. Safe — no DOM mutation or user data exposure. */
+/** Probe: write empty string to Clipboard API, returns false on error/timeout. */
 export async function probeClipboard(timeoutMs = CLIPBOARD_TIMEOUT_MS): Promise<boolean> {
   const api = getClipboardAPI();
 
@@ -70,18 +65,12 @@ export async function probeClipboard(timeoutMs = CLIPBOARD_TIMEOUT_MS): Promise<
   }
 }
 
-/** Returns navigator.clipboard when available, null otherwise — single access point for Clipboard API checks. */
+/** Returns navigator.clipboard when available, null otherwise. */
 function getClipboardAPI(): Clipboard | null {
-  if (typeof navigator !== "undefined") {
-    const nav = navigator as { clipboard?: unknown };
-    if (nav.clipboard) {
-      return nav.clipboard as Clipboard;
-    }
-  }
-  return null;
+  return navigator?.clipboard ?? null;
 }
 
-/** Sync probe: true if modern Clipboard API or legacy execCommand path is available. No DOM mutation; safe for every render cycle. */
+/** True if modern Clipboard API or legacy execCommand path is available. No DOM mutation. */
 export function canCopyToClipboard(): boolean {
   const api = getClipboardAPI();
   if (api && typeof api.writeText === "function") {
@@ -102,6 +91,13 @@ export async function copyTextToClipboard(
   timeoutMs = CLIPBOARD_TIMEOUT_MS,
 ): Promise<boolean> {
   if (typeof text !== "string" || text.trim().length === 0) {
+    return false;
+  }
+
+  // Reject oversized payloads before invoking the Clipboard API or creating a
+  // hidden DOM element. Large writes block on permission prompts and can cause
+  // browser hangs — returning early avoids silent failures in fallback paths.
+  if (new Blob([text]).size > MAX_CLIPBOARD_TEXT_BYTES) {
     return false;
   }
 

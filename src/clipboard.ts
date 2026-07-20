@@ -22,12 +22,12 @@ function fallbackCopy(text: string): boolean {
     try {
       textarea.select();
       textarea.setSelectionRange(0, textarea.value.length);
-    } catch {
+    } catch (e) {
       // selection can fail in some browsers (e.g., off-screen textarea on mobile)
       // but execCommand("copy") may still succeed — proceed anyway.
     }
     success = document.execCommand("copy");
-  } catch {
+  } catch (err) {
     // ignore — success stays false
   } finally {
     try {
@@ -67,13 +67,7 @@ export async function probeClipboard(timeoutMs = CLIPBOARD_TIMEOUT_MS): Promise<
 
 /** Returns navigator.clipboard when available, null otherwise. */
 function getClipboardAPI(): Clipboard | null {
-  if (typeof navigator !== "undefined") {
-    const nav = navigator as { clipboard?: unknown };
-    if (nav.clipboard) {
-      return nav.clipboard as Clipboard;
-    }
-  }
-  return null;
+  return navigator?.clipboard ?? null;
 }
 
 /** True if modern Clipboard API or legacy execCommand path is available. No DOM mutation. */

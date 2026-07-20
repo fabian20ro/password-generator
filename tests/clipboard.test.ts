@@ -679,6 +679,40 @@ describe("copyTextToClipboard", () => {
     expect(result).toBe(false);
     clearTimeoutSpy.mockRestore();
   });
+
+  it("returns false early when text exceeds MAX_CLIPBOARD_TEXT_BYTES (no DOM manipulation)", async () => {
+    const createElementSpy = vi.fn();
+    vi.stubGlobal("document", {
+      createElement: createElementSpy,
+      execCommand: (_cmd: string) => true,
+      body: { appendChild: vi.fn(), removeChild: vi.fn() },
+    });
+
+    // ~12 KiB — well above the 10 KiB guard
+    const oversized = "x".repeat(12 * 1024);
+    const result = await copyTextToClipboard(undefined, oversized);
+
+    expect(result).toBe(false);
+    expect(createElementSpy).not.toHaveBeenCalled(); // rejected before DOM work
+    vi.unstubAllGlobals();
+  });
+
+  it("returns false when text is exactly one byte over MAX_CLIPBOARD_TEXT_BYTES", async () => {
+    const createElementSpy = vi.fn();
+    vi.stubGlobal("document", {
+      createElement: createElementSpy,
+      execCommand: (_cmd: string) => true,
+      body: { appendChild: vi.fn(), removeChild: vi.fn() },
+    });
+
+    // Just over the boundary — should still reject
+    const justOver = "x".repeat(10241);
+    const result = await copyTextToClipboard(undefined, justOver);
+
+    expect(result).toBe(false);
+    expect(createElementSpy).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
 });
 
 describe("probeClipboard", () => {

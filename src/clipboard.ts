@@ -39,6 +39,7 @@ function fallbackCopy(text: string): boolean {
 }
 
 export const CLIPBOARD_TIMEOUT_MS = 3000;
+export const MAX_CLIPBOARD_TEXT_BYTES = 10240; // ~10 KiB upper bound for clipboard payloads
 
 /** Probe: write empty string to Clipboard API, returns false on error/timeout. */
 export async function probeClipboard(timeoutMs = CLIPBOARD_TIMEOUT_MS): Promise<boolean> {
@@ -96,6 +97,13 @@ export async function copyTextToClipboard(
   timeoutMs = CLIPBOARD_TIMEOUT_MS,
 ): Promise<boolean> {
   if (typeof text !== "string" || text.trim().length === 0) {
+    return false;
+  }
+
+  // Reject oversized payloads before invoking the Clipboard API or creating a
+  // hidden DOM element. Large writes block on permission prompts and can cause
+  // browser hangs — returning early avoids silent failures in fallback paths.
+  if (new Blob([text]).size > MAX_CLIPBOARD_TEXT_BYTES) {
     return false;
   }
 

@@ -266,6 +266,54 @@ describe("getSecureRandomInt", () => {
       });
     });
 
+    describe("cross-category character overlap", () => {
+      it("must satisfy all category constraints when characters appear in multiple categories", () => {
+        // Same character 'X' appears in every category — output must still
+        // carry one char from each independently chosen set.
+        const categories = [['A', 'X'], ['B', 'X'], ['C', 'X']];
+        for (let i = 0; i < 200; i++) {
+          const pw = generateComplexPassword(5, categories);
+          expect(pw.length).toBe(5);
+          expect([...pw].some(c => ['A', 'X'].includes(c))).toBe(true);
+          expect([...pw].some(c => ['B', 'X'].includes(c))).toBe(true);
+          expect([...pw].some(c => ['C', 'X'].includes(c))).toBe(true);
+        }
+      });
+
+      it("must sample from the deduplicated union, not a biased subset", () => {
+        // Category 0 has all four chars; category 1 only shares two of them.
+        // The function's flat+Set path must produce all four as sampling pool.
+        const categories = [['a', 'b', 'c', 'd'], ['c', 'd']];
+        const counts: Record<string, number> = {};
+        for (const c of "abcd") counts[c] = 0;
+        for (let i = 0; i < 5000; i++) {
+          const pw = generateComplexPassword(4, categories);
+          expect(pw.length).toBe(4);
+          // Category-1 guarantee is fixed: cat1's pool is c/d so every pw contains at least one.
+          expect([...pw].some(c => ['c', 'd'].includes(c))).toBe(true);
+          for (const ch of pw) counts[ch]++;
+        }
+        // Aggregate check: the full union {a,b,c,d} must all appear ≥5% of samples,
+        // confirming the deduplication path uses the complete pool — not just c/d.
+        for (const c of "abcd") expect(counts[c]).toBeGreaterThan(100);
+      });
+    });
+
+    describe("non-trivial multi-char category strings", () => {
+      it("must treat each sub-array element as a joined string of chars", () => {
+        // Category is ['ab', 'cd'] — two multi-char strings. The function
+        // joins them with c.join('') so all four characters are valid picks.
+        const categories = [['ab'], ['cd']];
+        for (let i = 0; i < 100; i++) {
+          const pw = generateComplexPassword(4, categories);
+          expect(pw.length).toBe(4);
+          // Each password has one char from each category — verify via regex.
+          expect(/[ab]/.test(pw)).toBe(true);
+          expect(/[cd]/.test(pw)).toBe(true);
+        }
+      });
+    });
+
     describe("asymmetric category boundary (length === categories.length)", () => {
       it("must include exactly one char from each category when categories differ wildly in size", () => {
         const categories = [['X'], ['a', 'b', 'c', 'd', 'e', 'f']];

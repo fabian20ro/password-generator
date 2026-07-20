@@ -44,19 +44,40 @@ describe("getSecureRandomInt", () => {
     expect(val).toBeLessThan(UINT32_MODULUS);
   });
 
-  it("produces uniform distribution across full uint32 range (zero-rejection path)", () => {
-    const buckets = new Array(100).fill(0);
-    for (let i = 0; i < 200_000; i++) {
-      const val = getSecureRandomInt(UINT32_MODULUS);
-      expect(val).toBeGreaterThanOrEqual(0);
-      expect(val).toBeLessThan(UINT32_MODULUS);
-      buckets[Math.floor(val / (UINT32_MODULUS / 100))]++;
-    }
-    // Each bucket should receive ~2000 ± 5σ samples (Bonferroni correction for 100 independent bins).
-    const expected = 2000;
-    const tolerance = 5 * Math.sqrt(expected);
-    for (const count of buckets) {
-      expect(Math.abs(count - expected)).toBeLessThan(tolerance);
+  it("maps deterministic samples uniformly across the full uint32 range", () => {
+    const realCrypto = globalThis.crypto;
+    const bucketCount = 100;
+    const cycles = 20;
+    const samples = Array.from({ length: bucketCount }, (_, bucket) =>
+      Math.floor(((bucket + 0.5) * UINT32_MODULUS) / bucketCount),
+    );
+    let sampleIndex = 0;
+    const deterministicCrypto = {
+      getRandomValues(array: Uint32Array) {
+        array[0] = samples[sampleIndex % samples.length];
+        sampleIndex++;
+        return array;
+      },
+    };
+    Object.defineProperty(globalThis, "crypto", {
+      value: deterministicCrypto,
+      configurable: true,
+      writable: true,
+    });
+    try {
+      const buckets = new Array(bucketCount).fill(0);
+      for (let i = 0; i < bucketCount * cycles; i++) {
+        const value = getSecureRandomInt(UINT32_MODULUS);
+        buckets[Math.floor(value / (UINT32_MODULUS / bucketCount))]++;
+      }
+      expect(buckets).toEqual(new Array(bucketCount).fill(cycles));
+      expect(sampleIndex).toBe(bucketCount * cycles);
+    } finally {
+      Object.defineProperty(globalThis, "crypto", {
+        value: realCrypto,
+        configurable: true,
+        writable: true,
+      });
     }
   });
 

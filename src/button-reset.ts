@@ -44,6 +44,12 @@ export function scheduleButtonReset(
   }
 
   // Coerce null/undefined to the documented default; NaN → clamp to 0.
+  // Reject ±Infinity on raw input BEFORE Math.max(0, x) masks -Infinity as 0.
+  // NaN is permitted — existing contract clamps it to 0 after this guard.
+  if (typeof delayMs === "number" && !Number.isFinite(delayMs) && !Number.isNaN(delayMs)) {
+    throw new TypeError("delayMs must be finite");
+  }
+
   const effectiveDelay = (delayMs === null || delayMs === undefined)
     ? DEFAULT_RESET_DELAY_MS
     : Number.isNaN(delayMs) ? 0 : Math.max(0, delayMs);

@@ -197,6 +197,42 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
+  describe("Infinity / -Infinity rejection", () => {
+    it ("throws TypeError when delayMs is +Infinity", () => {
+      const fresh = { id: "inf-positive" };
+      expect(() => scheduleButtonReset(fresh, Infinity, vi.fn())).toThrow(TypeError);
+      // Must not schedule — no WeakMap entry leaked.
+      expect(resetTimeouts.has(fresh)).toBe(false);
+    });
+
+    it ("throws TypeError when delayMs is -Infinity", () => {
+      const fresh = { id: "inf-negative" };
+      expect(() => scheduleButtonReset(fresh, -Infinity, vi.fn())).toThrow(TypeError);
+      expect(resetTimeouts.has(fresh)).toBe(false);
+    });
+
+    it ("throws TypeError when delayMs is Number.POSITIVE_INFINITY", () => {
+      const fresh = { id: "pos-inf-named" };
+      expect(() => scheduleButtonReset(fresh, Number.POSITIVE_INFINITY, vi.fn())).toThrow(TypeError);
+      expect(resetTimeouts.has(fresh)).toBe(false);
+    });
+
+    it ("throws TypeError when delayMs is Number.NEGATIVE_INFINITY", () => {
+      const fresh = { id: "neg-inf-named" };
+      expect(() => scheduleButtonReset(fresh, Number.NEGATIVE_INFINITY, vi.fn())).toThrow(TypeError);
+      expect(resetTimeouts.has(fresh)).toBe(false);
+    });
+
+    it ("throws with the documented message", () => {
+      try {
+        scheduleButtonReset({ id: "msg" }, Infinity, vi.fn());
+      } catch (e) {
+        expect(e).toBeInstanceOf(TypeError);
+        expect((e as TypeError).message).toBe("delayMs must be finite");
+      }
+    });
+  });
+
   it ("handles multiple 0ms delays correctly", () => {
     const target = { id: "test" };
     const reset = vi.fn();

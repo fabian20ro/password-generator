@@ -115,14 +115,13 @@ const MAX_DIVERSITY_RETRIES = 20;
 const CLASS_SETS = [new Set(CHAR_CLASS_UPPER), new Set(CHAR_CLASS_LOWER), new Set(CHAR_CLASS_DIGIT)];
 
 function countDistinctClasses(pw: string): number {
-  let classes = 0;
+  const seen = [false, false, false];
   for (let i = 0; i < pw.length; i++) {
-    const c = pw[i];
-    if (CLASS_SETS[0].has(c)) classes++;
-    else if (CLASS_SETS[1].has(c)) classes++;
-    else if (CLASS_SETS[2].has(c)) classes++;
+    if (!seen[0] && CLASS_SETS[0].has(pw[i])) seen[0] = true;
+    else if (!seen[1] && CLASS_SETS[1].has(pw[i])) seen[1] = true;
+    else if (!seen[2] && CLASS_SETS[2].has(pw[i])) seen[2] = true;
   }
-  return classes;
+  return (seen[0] ? 1 : 0) + (seen[1] ? 1 : 0) + (seen[2] ? 1 : 0);
 }
 
 /** Options for `generateAll`. */

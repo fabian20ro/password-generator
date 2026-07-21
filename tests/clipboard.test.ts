@@ -2,6 +2,39 @@ import { describe, expect, it } from "vitest";
 import { vi } from "vitest";
 import { canCopyToClipboard, copyTextToClipboard, probeClipboard } from "../src/clipboard";
 
+type FallbackStubOptions = {
+  createElement?: (tag: string) => unknown;
+  execCommandReturns?: boolean | ((cmd: string) => boolean);
+  bodyExists?: boolean;
+  body?: Record<string, any>;
+};
+
+function createFallbackStub(options: FallbackStubOptions = {}): Record<string, any> {
+  const defaults = {
+    createElement: (_tag: string) => ({
+      value: "",
+      setAttribute: vi.fn(),
+      tabIndex: undefined as number | undefined,
+      style: { position: "", left: "" },
+      select: vi.fn(),
+      setSelectionRange: vi.fn((_start: number, _end: number) => {}),
+    }),
+    execCommandReturns: true as boolean,
+    bodyExists: true as boolean,
+  };
+
+  const opts = { ...defaults, ...options };
+
+  return {
+    createElement: options.createElement || opts.createElement,
+    execCommand:
+      typeof opts.execCommandReturns === "function"
+        ? (opts.execCommandReturns as (cmd: string) => boolean)
+        : (_cmd: string) => opts.execCommandReturns,
+    body: options.body ?? (opts.bodyExists ? { appendChild: vi.fn(), removeChild: vi.fn() } : null),
+  };
+}
+
 describe("canCopyToClipboard", () => {
   it("returns true when navigator.clipboard.writeText is a function (modern API)", async () => {
     const mockWriteText = vi.fn();
@@ -33,11 +66,9 @@ describe("canCopyToClipboard", () => {
       setSelectionRange: vi.fn((_start: number, _end: number) => {}),
     };
 
-    vi.stubGlobal("document", {
+    vi.stubGlobal("document", createFallbackStub({
       createElement: () => mockTextarea as unknown as HTMLTextAreaElement,
-      execCommand: (_cmd: string) => true,
-      body: { appendChild: vi.fn(), removeChild: vi.fn() },
-    });
+    }));
     // navigator is undefined by default in vitest
 
     expect(canCopyToClipboard()).toBe(true);
@@ -285,11 +316,9 @@ describe("copyTextToClipboard", () => {
       setSelectionRange: vi.fn((_start: number, _end: number) => {}),
     };
 
-    vi.stubGlobal("document", {
+    vi.stubGlobal("document", createFallbackStub({
       createElement: () => mockTextarea as unknown as HTMLTextAreaElement,
-      execCommand: (_cmd: string) => true,
-      body: { appendChild: vi.fn(), removeChild: vi.fn() },
-    });
+    }));
 
     const clipboard = {
       async writeText(): Promise<void> {
@@ -387,11 +416,9 @@ describe("copyTextToClipboard", () => {
       setSelectionRange: vi.fn((_start: number, _end: number) => {}),
     };
 
-    vi.stubGlobal("document", {
+    vi.stubGlobal("document", createFallbackStub({
       createElement: () => mockTextarea as unknown as HTMLTextAreaElement,
-      execCommand: (_cmd: string) => true,
-      body: { appendChild: vi.fn(), removeChild: vi.fn() },
-    });
+    }));
 
     const clipboard = {
       async writeText(): Promise<void> {
@@ -405,7 +432,7 @@ describe("copyTextToClipboard", () => {
   it("sets tabindex=-1 on fallback textarea for programmatic focusability", async () => {
     let capturedEl: unknown = null;
 
-    vi.stubGlobal("document", {
+    vi.stubGlobal("document", createFallbackStub({
       createElement: (tag: string) => {
         const el: Record<string, any> = {
           value: "",
@@ -418,9 +445,7 @@ describe("copyTextToClipboard", () => {
         capturedEl = el;
         return el as unknown as HTMLTextAreaElement;
       },
-      execCommand: (_cmd: string) => true,
-      body: { appendChild: vi.fn(), removeChild: vi.fn() },
-    });
+    }));
 
     await copyTextToClipboard(undefined, "secret");
 
@@ -444,14 +469,13 @@ describe("copyTextToClipboard", () => {
     };
 
     let execCommandCallCount = 0;
-    vi.stubGlobal("document", {
+    vi.stubGlobal("document", createFallbackStub({
       createElement: () => mockTextarea as unknown as HTMLTextAreaElement,
-      execCommand: (_cmd: string) => {
+      execCommandReturns: (_cmd: string) => {
         execCommandCallCount++;
         return false; // explicit failure — should not be retried or ignored away
       },
-      body: { appendChild: vi.fn(), removeChild: vi.fn() },
-    });
+    }));
 
     const clipboard = {
       async writeText(): Promise<void> {
@@ -473,13 +497,13 @@ describe("copyTextToClipboard", () => {
       setSelectionRange: vi.fn((_start: number, _end: number) => {}),
     };
 
-    vi.stubGlobal("document", {
+    vi.stubGlobal("document", createFallbackStub({
       createElement: () => mockTextarea as unknown as HTMLTextAreaElement,
-      execCommand: (_cmd: string) => {
+      execCommandReturns: (_cmd: string) => {
         throw new Error("execCommand not supported");
       },
       body: { appendChild: vi.fn(), removeChild: removeChildSpy },
-    });
+    }));
 
     const clipboard = {
       async writeText(): Promise<void> {

@@ -28,7 +28,13 @@ export function getSecureRandomInt(max: number, min: number = 0): number {
 
   const range = max - min;
   const threshold = UINT32_MODULUS - (UINT32_MODULUS % range);
-  const buf = new Uint32Array(1);
+
+  let buf: Uint32Array<ArrayBuffer>;
+  try {
+    buf = new Uint32Array(1) as Uint32Array<ArrayBuffer>;
+  } catch {
+    throw new Error("Crypto API unavailable — cannot generate secure random values");
+  }
 
   const getRandomValues = crypto!.bind(globalThis.crypto!);
 

@@ -110,31 +110,22 @@ export async function copyTextToClipboard(
     return false;
   }
 
-  if (clipboard && typeof clipboard.writeText === "function") {
-    try {
-      // Guard against writeText hanging indefinitely in slow/unresponsive pages.
-      // Normal writes complete in <50 ms, so 3 s is a generous upper bound that
-      // will not affect real users but prevents the app from deadlocking on edge
-      // cases (e.g., background tabs throttled by the browser). The timeout id
-      // is captured for cleanup regardless of resolution order.
-      let timer: ReturnType<typeof setTimeout> | undefined;
-      try {
-        await Promise.race([
-          clipboard.writeText(text),
-          new Promise<never>((_, reject) => {
-            timer = setTimeout(() => reject(new Error("Clipboard API timed out")), timeoutMs);
-          }),
-        ]);
-        return true;
-      } finally {
-        if (timer !== undefined) clearTimeout(timer);
-      }
-    } catch {
-      // writeText returned undefined (e.g., primitive boxed into object with no
-      // real method), threw, or polyfill flagged failure — fall back to legacy.
-      // We already possess the text; falling back cannot leak additional data,
-      // and writeText may throw non-Error values in edge cases (e.g., polyfills).
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    if (clipboard && typeof clipboard.writeText === "function") {
+      await Promise.race([
+        clipboard.writeText(text),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new Error("Clipboard API timed out")), timeoutMs);
+        }),
+      ]);
+      return true;
     }
+  } catch {
+    // writeText threw, resolved non-truthily, or timed out — fall back to legacy.
+    // We already possess the text; falling back cannot leak additional data.
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
   }
 
   // Fall back to legacy execCommand for older browsers / restricted contexts

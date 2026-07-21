@@ -312,6 +312,23 @@ describe("getSecureRandomInt", () => {
           expect(/[cd]/.test(pw)).toBe(true);
         }
       });
+
+      it("must sample uniformly across characters within multi-char categories", () => {
+        // Verifies the .join('') + spread path treats each character in a
+        // multi-char category as independently pickable with equal probability.
+        const categories = [['ab'], ['cd']];
+        const counts: Record<string, number> = {};
+        for (const c of "abcd") counts[c] = 0;
+        for (let i = 0; i < 5000; i++) {
+          const pw = generateComplexPassword(4, categories);
+          expect(pw.length).toBe(4);
+          for (const ch of pw) counts[ch]++;
+        }
+        // Each char appears in ~half the passwords × length=2 chars per password.
+        // With 10K total samples across 4 options, each should exceed 1500 (~4σ below mean).
+        const expected = (5000 * 2) / 4;
+        for (const c of "abcd") expect(counts[c]).toBeGreaterThan(1500);
+      });
     });
 
     describe("asymmetric category boundary (length === categories.length)", () => {

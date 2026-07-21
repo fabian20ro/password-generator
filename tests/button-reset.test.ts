@@ -197,6 +197,42 @@ describe("scheduleButtonReset", () => {
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
+  describe("Infinity / -Infinity rejection", () => {
+    it ("throws TypeError when delayMs is +Infinity", () => {
+      const fresh = { id: "inf-positive" };
+      expect(() => scheduleButtonReset(fresh, Infinity, vi.fn())).toThrow(TypeError);
+      // Must not schedule — no WeakMap entry leaked.
+      expect(resetTimeouts.has(fresh)).toBe(false);
+    });
+
+    it ("throws TypeError when delayMs is -Infinity", () => {
+      const fresh = { id: "inf-negative" };
+      expect(() => scheduleButtonReset(fresh, -Infinity, vi.fn())).toThrow(TypeError);
+      expect(resetTimeouts.has(fresh)).toBe(false);
+    });
+
+    it ("throws TypeError when delayMs is Number.POSITIVE_INFINITY", () => {
+      const fresh = { id: "pos-inf-named" };
+      expect(() => scheduleButtonReset(fresh, Number.POSITIVE_INFINITY, vi.fn())).toThrow(TypeError);
+      expect(resetTimeouts.has(fresh)).toBe(false);
+    });
+
+    it ("throws TypeError when delayMs is Number.NEGATIVE_INFINITY", () => {
+      const fresh = { id: "neg-inf-named" };
+      expect(() => scheduleButtonReset(fresh, Number.NEGATIVE_INFINITY, vi.fn())).toThrow(TypeError);
+      expect(resetTimeouts.has(fresh)).toBe(false);
+    });
+
+    it ("throws with the documented message", () => {
+      try {
+        scheduleButtonReset({ id: "msg" }, Infinity, vi.fn());
+      } catch (e) {
+        expect(e).toBeInstanceOf(TypeError);
+        expect((e as TypeError).message).toBe("delayMs must be finite");
+      }
+    });
+  });
+
   it ("handles multiple 0ms delays correctly", () => {
     const target = { id: "test" };
     const reset = vi.fn();
@@ -757,6 +793,32 @@ describe("cancelButtonReset", () => {
       expect(() => cancelButtonReset(null as any)).toThrow(/target/);
       expect(() => scheduleButtonReset(null as any, 100, reset)).toThrow(/target/);
     });
+
+    it ("throws TypeError with no-WeakMap mutation for null / undefined / primitive", () => {
+      // Consolidated from two previously duplicate guard blocks. Each invalid type
+      // must (a) throw TypeError, (b) leave a busy sentinel untouched, and (c) carry
+      // the documented message — asserted once here covers all three cases identically.
+      const reset = vi.fn();
+      const busyTarget = { id: "pre-guard" };
+      scheduleButtonReset(busyTarget, 100, reset);
+
+      for (const bad of [null as unknown as object, undefined as unknown as object, "string" as unknown as object]) {
+        const sentinel = { id: `guard-sentinel-${String(bad)}` };
+        expect(resetTimeouts.has(sentinel)).toBe(false);
+
+        try {
+          cancelButtonReset(bad);
+        } catch (e) {
+          expect(e).toBeInstanceOf(TypeError);
+          expect((e as TypeError).message).toBe("cancelButtonReset requires an object target");
+        }
+
+        expect(resetTimeouts.has(sentinel)).toBe(false);
+      }
+
+      // Busy sentinel must remain untouched — identity-stable reference.
+      expect(resetTimeouts.has(busyTarget)).toBe(true);
+    });
   });
 
   it ("cleans up the WeakMap entry during cancel", () => {
@@ -1092,55 +1154,6 @@ describe("cancelButtonReset", () => {
 
       // Busy should still fire at its time.
       vi.advanceTimersByTime(150);
-    });
-  });
-
-  describe("defensive guard", () => {
-    it ("throws when target is null (own contract)", () => {
-      const sentinel = { id: "cancel-null-sentinel" };
-      scheduleButtonReset({ id: "pre-cancel-guard" }, 100, vi.fn()); // ensure WeakMap populated
-      expect(resetTimeouts.has(sentinel)).toBe(false);
-      expect(() => cancelButtonReset(null as any)).toThrow(TypeError);
-      expect(resetTimeouts.has(sentinel)).toBe(false);
-    });
-
-    it ("throws when target is a primitive string (own contract)", () => {
-      const sentinel = { id: "cancel-primitive-sentinel" };
-      scheduleButtonReset({ id: "pre-cancel-guard2" }, 100, vi.fn()); // ensure WeakMap populated
-      expect(resetTimeouts.has(sentinel)).toBe(false);
-      expect(() => cancelButtonReset("string-key" as any)).toThrow(TypeError);
-      expect(resetTimeouts.has(sentinel)).toBe(false);
-    });
-
-    it ("throws when target is undefined (own contract)", () => {
-      const sentinel = { id: "cancel-undefined-sentinel" };
-      scheduleButtonReset({ id: "pre-cancel-guard3" }, 100, vi.fn()); // ensure WeakMap populated
-      expect(resetTimeouts.has(sentinel)).toBe(false);
-      expect(() => cancelButtonReset(undefined as any)).toThrow(TypeError);
-      expect(resetTimeouts.has(sentinel)).toBe(false);
-    });
-
-    it ("does not mutate WeakMap before throwing on null target", () => {
-      // Guard must fail fast — no WeakMap interaction on invalid input.
-      const busy = { id: "busy-cancel-guard" };
-      scheduleButtonReset(busy, 100, vi.fn());
-      expect(resetTimeouts.has(busy)).toBe(true);
-
-      expect(() => cancelButtonReset(null as any)).toThrow(TypeError);
-
-      // Busy target must remain intact — no partial cleanup triggered by invalid call.
-      expect(resetTimeouts.has(busy)).toBe(true);
-    });
-
-    it ("throws TypeError with the documented message", () => {
-      const reset = vi.fn();
-      scheduleButtonReset({ id: "pre-message" }, 100, reset); // ensure WeakMap populated
-      try {
-        cancelButtonReset(null as any);
-      } catch (e) {
-        expect(e).toBeInstanceOf(TypeError);
-        expect((e as TypeError).message).toBe("cancelButtonReset requires an object target");
-      }
     });
   });
 });

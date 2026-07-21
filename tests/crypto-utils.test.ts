@@ -28,6 +28,46 @@ describe("getSecureRandomInt", () => {
     expect(val).toBe(0);
   });
 
+  describe("min parameter", () => {
+    it("returns values in [min, max) with positive min", () => {
+      const min = 5;
+      const max = 20;
+      for (let i = 0; i < 100; i++) {
+        const val = getSecureRandomInt(max, min);
+        expect(val).toBeGreaterThanOrEqual(min);
+        expect(val).toBeLessThan(max);
+      }
+    });
+
+    it("preserves default behavior: min=0", () => {
+      const max = 10;
+      for (let i = 0; i < 50; i++) {
+        const val = getSecureRandomInt(max);
+        expect(val).toBeGreaterThanOrEqual(0);
+        expect(val).toBeLessThan(max);
+      }
+    });
+
+    it("throws if min is negative", () => {
+      expect(() => getSecureRandomInt(10, -1)).toThrow("Min must be a non-negative integer");
+    });
+
+    it("throws if min equals or exceeds max", () => {
+      expect(() => getSecureRandomInt(5, 5)).toThrow("Min must be less than max");
+      expect(() => getSecureRandomInt(5, 10)).toThrow("Min must be less than max");
+    });
+
+    it("throws if min is non-integer", () => {
+      expect(() => getSecureRandomInt(10, 2.5)).toThrow("Min must be a non-negative integer");
+    });
+
+    it("handles min=0, max=max correctly (boundary)", () => {
+      const val = getSecureRandomInt(100, 0);
+      expect(val).toBeGreaterThanOrEqual(0);
+      expect(val).toBeLessThan(100);
+    });
+  });
+
   it("throws if max exceeds UINT32_MODULUS", () => {
     expect(() => getSecureRandomInt(UINT32_MODULUS + 1)).toThrow("Max must be between 1 and UINT32_MODULUS");
   });

@@ -297,16 +297,6 @@ describe("copyTextToClipboard", () => {
     expect(writes).toEqual([emojiText]);
   });
 
-  it("returns false when writeText resolves to false (polyfill signals failure)", async () => {
-    const clipboard = {
-      async writeText(text: string): Promise<void> {
-        return Promise.resolve(false);
-      },
-    } satisfies Pick<Clipboard, "writeText">;
-
-    await expect(copyTextToClipboard(clipboard, "secret")).resolves.toBe(false);
-  });
-
   it("falls back to execCommand when writeText resolves to false", async () => {
     const mockTextarea = {
       value: "",

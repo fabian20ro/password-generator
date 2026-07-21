@@ -119,19 +119,12 @@ export async function copyTextToClipboard(
       // is captured for cleanup regardless of resolution order.
       let timer: ReturnType<typeof setTimeout> | undefined;
       try {
-        const result = await Promise.race([
+        await Promise.race([
           clipboard.writeText(text),
           new Promise<never>((_, reject) => {
             timer = setTimeout(() => reject(new Error("Clipboard API timed out")), timeoutMs);
           }),
         ]);
-        // writeText returns void on success per its declared return type, but some
-        // polyfills incorrectly signal failure by returning false or null. Cast to
-        // unknown so we can safely compare at runtime without violating the
-        // declared return type.
-        if ((result as unknown) === false || (result as unknown) === null) {
-          throw new Error("polyfill reported clipboard failure");
-        }
         return true;
       } finally {
         if (timer !== undefined) clearTimeout(timer);

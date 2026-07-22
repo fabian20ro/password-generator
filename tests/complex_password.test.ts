@@ -312,6 +312,32 @@ describe("getSecureRandomInt", () => {
           expect(/[cd]/.test(pw)).toBe(true);
         }
       });
+
+      it("must address every character within multi-char categories deterministically", () => {
+        const realCrypto = globalThis.crypto;
+        const samples = [1, 1, 2, 3, 3, 2, 1];
+        let sampleIndex = 0;
+        Object.defineProperty(globalThis, "crypto", {
+          configurable: true,
+          writable: true,
+          value: {
+            getRandomValues(array: Uint32Array) {
+              array[0] = samples[sampleIndex++];
+              return array;
+            },
+          },
+        });
+        try {
+          expect(generateComplexPassword(4, [['ab'], ['cd']])).toBe("bdcd");
+          expect(sampleIndex).toBe(samples.length);
+        } finally {
+          Object.defineProperty(globalThis, "crypto", {
+            configurable: true,
+            writable: true,
+            value: realCrypto,
+          });
+        }
+      });
     });
 
     describe("asymmetric category boundary (length === categories.length)", () => {

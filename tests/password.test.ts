@@ -179,6 +179,25 @@ describe("generatePassword", () => {
     expect(bCount).toBeGreaterThanOrEqual(800);
   });
 
+  it("heavily skewed duplicate charset achieves uniform distribution after dedup", () => {
+    // "aaaaab" has 5 'a' and 1 'b' — 6 positions, 2 unique chars.
+    // Without dedup, bias would be ~83%/17%. With dedup it must equalize to ~50/50.
+    const skewedCharset = "aaaaab";
+    const counts = new Map<string, number>();
+    for (let i = 0; i < 4000; i++) {
+      const pw = generatePasswordWithCharset(1, skewedCharset);
+      const char = pw[0];
+      counts.set(char, (counts.get(char) ?? 0) + 1);
+    }
+    const aCount = counts.get("a") ?? 0;
+    const bCount = counts.get("b") ?? 0;
+    // Each unique char must get roughly equal share — tolerate ±25% for statistical variance.
+    expect(aCount).toBeGreaterThanOrEqual(1400);
+    expect(bCount).toBeGreaterThanOrEqual(1400);
+    expect(aCount).toBeLessThanOrEqual(2600);
+    expect(bCount).toBeLessThanOrEqual(2600);
+  });
+
   it("deduplication ensures effective charset length matches unique chars", () => {
     // The dedup normalization must reduce a duplicate charset to exactly its Set size —
     // otherwise getSecureRandomInt would index beyond the true unique count.

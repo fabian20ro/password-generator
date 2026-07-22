@@ -213,6 +213,18 @@ describe("generatePassword", () => {
     }
   });
 
+  it("handles charset that deduplicates to exactly one unique character (degenerate boundary)", () => {
+    // When all chars in a duplicated charset collapse to one unique char,
+    // generatePasswordWithCharset must still return correct-length output
+    // without infinite-looping or producing characters outside the single unique set.
+    const degenerateCharset = "aaa";
+    for (let i = 0; i < 200; i++) {
+      const pw = generatePasswordWithCharset(50, degenerateCharset);
+      expect(pw).toHaveLength(50);
+      expect([...pw].every(c => c === "a")).toBe(true);
+    }
+  });
+
   it("produces only characters from the provided custom charset (hex)", () => {
     // Custom hex-only charset — verify output is strictly limited to those chars
     const hexCharset = "0123456789abcdef";

@@ -313,21 +313,30 @@ describe("getSecureRandomInt", () => {
         }
       });
 
-      it("must sample uniformly across characters within multi-char categories", () => {
-        // Verifies the .join('') + spread path treats each character in a
-        // multi-char category as independently pickable with equal probability.
-        const categories = [['ab'], ['cd']];
-        const counts: Record<string, number> = {};
-        for (const c of "abcd") counts[c] = 0;
-        for (let i = 0; i < 5000; i++) {
-          const pw = generateComplexPassword(4, categories);
-          expect(pw.length).toBe(4);
-          for (const ch of pw) counts[ch]++;
+      it("must address every character within multi-char categories deterministically", () => {
+        const realCrypto = globalThis.crypto;
+        const samples = [1, 1, 2, 3, 3, 2, 1];
+        let sampleIndex = 0;
+        Object.defineProperty(globalThis, "crypto", {
+          configurable: true,
+          writable: true,
+          value: {
+            getRandomValues(array: Uint32Array) {
+              array[0] = samples[sampleIndex++];
+              return array;
+            },
+          },
+        });
+        try {
+          expect(generateComplexPassword(4, [['ab'], ['cd']])).toBe("bdcd");
+          expect(sampleIndex).toBe(samples.length);
+        } finally {
+          Object.defineProperty(globalThis, "crypto", {
+            configurable: true,
+            writable: true,
+            value: realCrypto,
+          });
         }
-        // Each char appears in ~half the passwords × length=2 chars per password.
-        // With 10K total samples across 4 options, each should exceed 1500 (~4σ below mean).
-        const expected = (5000 * 2) / 4;
-        for (const c of "abcd") expect(counts[c]).toBeGreaterThan(1500);
       });
     });
 

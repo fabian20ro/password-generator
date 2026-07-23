@@ -1,5 +1,8 @@
 export const UINT32_MODULUS = 0x1_0000_0000;
 
+/** Maximum rejection-sampling iterations before aborting. */
+const MAX_ATTEMPTS = 256;
+
 /**
  * Generates a random integer in the range [min, max) using rejection sampling
  * to avoid modulo bias.
@@ -38,13 +41,18 @@ export function getSecureRandomInt(max: number, min: number = 0): number {
 
   const getRandomValues = crypto!.bind(globalThis.crypto!);
 
+  let attempts = 0;
   do {
     try {
       getRandomValues(buf);
     } catch {
       throw new Error("Crypto API unavailable — cannot generate secure random values");
     }
-  } while (buf[0] >= threshold);
+  } while (++attempts < MAX_ATTEMPTS && buf[0] >= threshold);
+
+  if (buf[0] >= threshold) {
+    throw new Error("Rejection sampling exhausted after " + MAX_ATTEMPTS + " attempts");
+  }
 
   return min + (buf[0] % range);
 }

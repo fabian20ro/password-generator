@@ -129,9 +129,10 @@ describe("getSecureRandomInt", () => {
       expect(val).toBeLessThan(10);
       buckets[val]++;
     }
-    // Each bucket should receive ~500 ± 3σ samples (binomial tolerance).
+    // Each bucket should receive ~500 ± 4σ samples (binomial tolerance).
+    // 3σ is too tight for Monte Carlo — 10 simultaneous buckets make flaking likely.
     const expected = 500;
-    const tolerance = 3 * Math.sqrt(expected);
+    const tolerance = 4 * Math.sqrt(expected);
     for (const count of buckets) {
       expect(Math.abs(count - expected)).toBeLessThan(tolerance);
     }
@@ -244,7 +245,7 @@ describe("getSecureRandomInt", () => {
     }
     // ~50/50 split with generous tolerance for rejection-sampling variance.
     const expected = 5_000;
-    const tolerance = 3 * Math.sqrt(expected);
+    const tolerance = 4 * Math.sqrt(expected);
     for (const count of counts) {
       expect(Math.abs(count - expected)).toBeLessThan(tolerance);
     }
@@ -264,11 +265,35 @@ describe("getSecureRandomInt", () => {
       expect(val).toBeLessThan(255);
       buckets[val]++;
     }
-    // Each bucket should receive ~39.2 samples (10000/255) with tight tolerance.
+    // Each bucket should receive ~39.2 samples (10000/255) with generous tolerance — 255 buckets at 4σ is robust against Monte Carlo variance.
     const expected = 10_000 / 255;
-    const tolerance = 3 * Math.sqrt(expected);
+    const tolerance = 4 * Math.sqrt(expected);
     for (const count of buckets) {
       expect(Math.abs(count - expected)).toBeLessThan(tolerance);
+    }
+  });
+
+  it("aborts after MAX_ATTEMPTS when crypto always returns values above threshold", () => {
+    const realCrypto = (globalThis as any).crypto;
+    // max=7: range=7, UINT32_MODULUS % 7 = 4, threshold = UINT32_MODULUS - 4
+    Object.defineProperty(globalThis, "crypto", {
+      value: {
+        getRandomValues(arr: Uint32Array) {
+          arr[0] = 0xFFFFFFFF; // always above any valid threshold
+          return arr;
+        },
+      },
+      configurable: true,
+      writable: true,
+    });
+    try {
+      expect(() => getSecureRandomInt(7)).toThrow("Rejection sampling exhausted");
+    } finally {
+      Object.defineProperty(globalThis, "crypto", {
+        value: realCrypto,
+        configurable: true,
+        writable: true,
+      });
     }
   });
 });

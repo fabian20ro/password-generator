@@ -2,6 +2,7 @@ import { generateAll } from "./password";
 import { copyTextToClipboard } from "./clipboard";
 import { scheduleButtonReset } from "./button-reset";
 import { generateUsernames } from "./username";
+import { generateComplexPassword, CHARS as CHARSET_UPPER_LOWER_DIGIT } from "./password";
 
 const COPY_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M3.5 10.5h-1a1.5 1.5 0 0 1-1.5-1.5v-6a1.5 1.5 0 0 1 1.5-1.5h6a1.5 1.5 0 0 1 1.5 1.5v1"/></svg>`;
 
@@ -16,6 +17,13 @@ const ERROR_COPY_LABEL = "Copy failed";
 
 
 const USERNAME_COUNT = 10;
+
+// Category definitions for complex password generation
+const CATEGORY_DEFS: { id: string; label: string; chars: string }[] = [
+  { id: "upper", label: "Uppercase (A-Z)", chars: CHARSET_UPPER_LOWER_DIGIT.substring(0, 26) },
+  { id: "lower", label: "Lowercase (a-z)", chars: CHARSET_UPPER_LOWER_DIGIT.substring(26, 52) },
+  { id: "digits", label: "Digits (0-9)", chars: CHARSET_UPPER_LOWER_DIGIT.substring(52) },
+];
 
 const statusEl = document.getElementById("status") as HTMLParagraphElement;
 if (statusEl) statusEl.setAttribute("role", "status");
@@ -101,17 +109,45 @@ function renderRows(container: HTMLDivElement, values: string[]): void {
   });
 }
 
+function getSelectedCategories(): string[][] {
+  const categories: string[][] = [];
+  for (const def of CATEGORY_DEFS) {
+    const cb = document.getElementById(`cat-${def.id}`) as HTMLInputElement;
+    if (cb?.checked && def.chars.length > 0) {
+      categories.push([def.chars]);
+    }
+  }
+  return categories;
+}
+
 function generate(): void {
   const passwordContainer = document.getElementById("passwords") as HTMLDivElement;
   const usernameContainer = document.getElementById("usernames") as HTMLDivElement;
 
-  const passwords = generateAll();
+  const categories = getSelectedCategories();
+  let passwords: string[];
+
+  if (categories.length > 0) {
+    // Complex mode: generate one password per category for direct copy-paste,
+    // plus the combined complex password.
+    const complexLen = 24;
+    const categoryPasswords = categories.map(cat => generateComplexPassword(complexLen, [cat]));
+    const combined = generateComplexPassword(complexLen, categories);
+    passwords = [...categoryPasswords, combined];
+  } else {
+    passwords = generateAll();
+  }
+
   const usernames = generateUsernames(USERNAME_COUNT);
 
   renderRows(passwordContainer, passwords);
   renderRows(usernameContainer, usernames);
 
-  announceStatus(`Generated ${passwords.length} new passwords and ${usernames.length} usernames.`);
+  if (categories.length > 0) {
+    announceStatus(`Generated ${passwords.length} complex passwords.`);
+  } else {
+    announceStatus(`Generated ${passwords.length} new passwords and ${usernames.length} usernames.`);
+  }
 }
 
 document.getElementById("regenerate")?.addEventListener("click", generate);

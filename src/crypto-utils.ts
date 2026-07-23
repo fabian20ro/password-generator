@@ -51,7 +51,7 @@ export function getSecureRandomInt(max: number, min: number = 0): number {
   } while (++attempts < MAX_ATTEMPTS && buf[0] >= threshold);
 
   if (buf[0] >= threshold) {
-    throw new Error("Crypto API unavailable — cannot generate secure random values");
+    throw new Error("Rejection sampling exhausted after " + MAX_ATTEMPTS + " attempts");
   }
 
   return min + (buf[0] % range);

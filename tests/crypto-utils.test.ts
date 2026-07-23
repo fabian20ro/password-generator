@@ -286,7 +286,7 @@ describe("getSecureRandomInt", () => {
       writable: true,
     });
     try {
-      expect(() => getSecureRandomInt(7)).toThrow("Crypto API unavailable");
+      expect(() => getSecureRandomInt(7)).toThrow("Rejection sampling exhausted");
     } finally {
       Object.defineProperty(globalThis, "crypto", {
         value: realCrypto,

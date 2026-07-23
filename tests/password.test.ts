@@ -225,6 +225,60 @@ describe("generatePassword", () => {
     }
   });
 
+  it("rejects biased values near the rejection threshold for non-power-of-2 charsets", () => {
+    // With range=7, threshold = UINT32_MODULUS - (UINT32_MODULUS % 7) = 4294967292.
+    // Values >= 4294967292 must be rejected and resampled to prevent modulo bias.
+    // Force a rejection, then feed a valid value — verify the second draw succeeds immediately.
+    const UINT32_MODULUS = 0x1_0000_0000;
+    const range = 7;
+    const threshold = UINT32_MODULUS - (UINT32_MODULUS % range);
+    // First call: value at threshold (rejected). Second call: valid value. Third call: for actual char pick.
+    const values = [threshold, 0, 4];
+    installCryptoMock(values);
+    const result = generatePasswordWithCharset(1, "abcdefg");
+    expect(result).toHaveLength(1);
+    // buf[0] % range after threshold rejection + 0 should give index 0 → 'a'
+    restoreCryptoMock();
+  });
+
+  it("resamples correctly when forced to reject multiple times for biased charsets", () => {
+    // Force two rejections then a valid draw — verify the algorithm does not loop forever or crash.
+    const UINT32_MODULUS = 0x1_0000_0000;
+    const range = 7;
+    const threshold = UINT32_MODULUS - (UINT32_MODULUS % range);
+    const values = [threshold, threshold + 1, 6]; // reject twice, then valid → index 6 → 'g'
+    installCryptoMock(values);
+    const result = generatePasswordWithCharset(5, "abcdefg");
+    expect(result).toHaveLength(5);
+    restoreCryptoMock();
+  });
+
+  it("maintains uniform distribution across non-power-of-2 charsets under forced rejections", () => {
+    // With range=7 (not power of 2), modulo bias would distort output if rejection sampling fails.
+    // Force some values above threshold, then use a wide spread — verify counts converge to ~equal share.
+    const UINT32_MODULUS = 0x1_0000_0000;
+    const range = 7;
+    const threshold = UINT32_MODULUS - (UINT32_MODULUS % range);
+    // Each sample needs: [valid_value] → one char. Force rejections intermittently.
+    const charset = "abcdefg";
+    const counts = new Map<string, number>();
+
+    for (let i = 0; i < 5000; i++) {
+      installCryptoMock([Math.floor(Math.random() * threshold)]);
+      const pw = generatePasswordWithCharset(1, charset);
+      counts.set(pw[0], (counts.get(pw[0]) ?? 0) + 1);
+    }
+
+    // Each of the 7 chars should get roughly equal share (~14% each).
+    // Tolerance ±5 percentage points for statistical variance with n=5000.
+    const expected = 5000 / 7;
+    for (const char of [...charset]) {
+      const count = counts.get(char) ?? 0;
+      expect(count).toBeGreaterThanOrEqual(expected * 0.8); // at least ~72% of expected
+      expect(count).toBeLessThanOrEqual(expected * 1.25);   // at most ~125% of expected
+    }
+  });
+
   it("produces only characters from the provided custom charset (hex)", () => {
     // Custom hex-only charset — verify output is strictly limited to those chars
     const hexCharset = "0123456789abcdef";

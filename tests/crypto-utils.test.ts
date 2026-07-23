@@ -271,4 +271,28 @@ describe("getSecureRandomInt", () => {
       expect(Math.abs(count - expected)).toBeLessThan(tolerance);
     }
   });
+
+  it("aborts after MAX_ATTEMPTS when crypto always returns values above threshold", () => {
+    const realCrypto = (globalThis as any).crypto;
+    // max=7: range=7, UINT32_MODULUS % 7 = 4, threshold = UINT32_MODULUS - 4
+    Object.defineProperty(globalThis, "crypto", {
+      value: {
+        getRandomValues(arr: Uint32Array) {
+          arr[0] = 0xFFFFFFFF; // always above any valid threshold
+          return arr;
+        },
+      },
+      configurable: true,
+      writable: true,
+    });
+    try {
+      expect(() => getSecureRandomInt(7)).toThrow("Crypto API unavailable");
+    } finally {
+      Object.defineProperty(globalThis, "crypto", {
+        value: realCrypto,
+        configurable: true,
+        writable: true,
+      });
+    }
+  });
 });
